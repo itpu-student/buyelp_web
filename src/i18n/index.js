@@ -1,0 +1,215 @@
+export const messages = {
+  en: {
+    nav: {
+      home: "Home",
+      search: "Search",
+      profile: "Profile",
+      admin: "Admin",
+      login: "Login",
+      register: "Register",
+      logout: "Logout",
+    },
+    home: {
+      hero_title: "Discover the Best Places",
+      hero_subtitle: "in Uzbekistan",
+      hero_desc: "Find restaurants, services, and hidden gems near you. Real reviews from real people.",
+      hero_cta: "Explore Now",
+      hero_search_placeholder: "Search places, restaurants, services…",
+      categories_title: "Browse by Category",
+      featured_title: "Featured Places",
+      toprated_title: "Top Rated",
+      see_all: "See All",
+    },
+    categories: {
+      all: "All",
+      restaurants: "Restaurants",
+      auto: "Auto Services",
+      health: "Health",
+      activities: "Activities",
+      sports: "Sports",
+      tabiat: "Tabiat (Nature)",
+    },
+    place: {
+      reviews: "Reviews",
+      write_review: "Write a Review",
+      call_now: "Call Now",
+      address: "Address",
+      phone: "Phone",
+      hours: "Hours",
+      no_reviews: "No reviews yet. Be the first!",
+      submit_review: "Submit Review",
+      your_rating: "Your Rating",
+      your_review: "Your Review",
+      review_placeholder: "Share your experience…",
+      open_now: "Open Now",
+      closed: "Closed",
+    },
+    auth: {
+      login_title: "Welcome Back",
+      login_subtitle: "Sign in to your BuYelp account",
+      register_title: "Join BuYelp",
+      register_subtitle: "Create your free account today",
+      email: "Email",
+      password: "Password",
+      name: "Full Name",
+      confirm_password: "Confirm Password",
+      login_btn: "Sign In",
+      register_btn: "Create Account",
+      no_account: "Don't have an account?",
+      have_account: "Already have an account?",
+      signup_link: "Sign Up",
+      signin_link: "Sign In",
+    },
+    profile: {
+      title: "My Profile",
+      my_reviews: "My Reviews",
+      edit_profile: "Edit Profile",
+      joined: "Joined",
+      total_reviews: "Reviews",
+    },
+    admin: {
+      title: "Admin Panel",
+      businesses: "Business Listings",
+      reviews: "Reviews",
+      users: "Users",
+      approve: "Approve",
+      reject: "Reject",
+      delete: "Delete",
+      status: "Status",
+      pending: "Pending",
+      approved: "Approved",
+    },
+    search: {
+      title: "Find Places",
+      placeholder: "Search by name…",
+      filter: "Filter",
+      no_results: "No places found. Try a different search.",
+      results_for: "Results for",
+    },
+    common: {
+      rating: "Rating",
+      reviews_count: "reviews",
+      loading: "Loading…",
+      back: "Back",
+      save: "Save",
+      cancel: "Cancel",
+    },
+  },
+  uz: {
+    nav: {
+      home: "Bosh sahifa",
+      search: "Qidirish",
+      profile: "Profil",
+      admin: "Admin",
+      login: "Kirish",
+      register: "Ro'yxatdan o'tish",
+      logout: "Chiqish",
+    },
+    home: {
+      hero_title: "Eng Yaxshi Joylarni Toping",
+      hero_subtitle: "O'zbekistonda",
+      hero_desc: "Yaqinizda restoranlar, xizmatlar va yashirin joylarni toping. Haqiqiy odamlarning haqiqiy sharhlari.",
+      hero_cta: "Ko'rish",
+      hero_search_placeholder: "Joylar, restoranlar, xizmatlarni qidiring…",
+      categories_title: "Kategoriya bo'yicha ko'ring",
+      featured_title: "Tanlangan Joylar",
+      toprated_title: "Eng Yuqori Baholangan",
+      see_all: "Hammasini ko'rish",
+    },
+    categories: {
+      all: "Hammasi",
+      restaurants: "Restoranlar",
+      auto: "Avto Xizmatlar",
+      health: "Sog'liqni Saqlash",
+      activities: "Faoliyatlar",
+      sports: "Sport",
+      tabiat: "Tabiat",
+    },
+    place: {
+      reviews: "Sharhlar",
+      write_review: "Sharh yozing",
+      call_now: "Qo'ng'iroq qiling",
+      address: "Manzil",
+      phone: "Telefon",
+      hours: "Ish vaqti",
+      no_reviews: "Hali sharh yo'q. Birinchi bo'ling!",
+      submit_review: "Sharh yuborish",
+      your_rating: "Bahoingiz",
+      your_review: "Sharh",
+      review_placeholder: "Tajribangizni ulashing…",
+      open_now: "Ochiq",
+      closed: "Yopiq",
+    },
+    auth: {
+      login_title: "Xush kelibsiz",
+      login_subtitle: "BuYelp hisobingizga kiring",
+      register_title: "BuYelpga qo'shiling",
+      register_subtitle: "Bepul hisob yarating",
+      email: "Email",
+      password: "Parol",
+      name: "To'liq ism",
+      confirm_password: "Parolni tasdiqlang",
+      login_btn: "Kirish",
+      register_btn: "Hisob yaratish",
+      no_account: "Hisobingiz yo'qmi?",
+      have_account: "Hisobingiz bormi?",
+      signup_link: "Ro'yxatdan o'ting",
+      signin_link: "Kiring",
+    },
+    profile: {
+      title: "Mening Profilim",
+      my_reviews: "Mening Sharhlarim",
+      edit_profile: "Profilni tahrirlash",
+      joined: "Qo'shilgan",
+      total_reviews: "Sharh",
+    },
+    admin: {
+      title: "Admin Panel",
+      businesses: "Biznes ro'yxatlari",
+      reviews: "Sharhlar",
+      users: "Foydalanuvchilar",
+      approve: "Tasdiqlash",
+      reject: "Rad etish",
+      delete: "O'chirish",
+      status: "Holat",
+      pending: "Kutilmoqda",
+      approved: "Tasdiqlangan",
+    },
+    search: {
+      title: "Joylarni Toping",
+      placeholder: "Ism bo'yicha qidiring…",
+      filter: "Filtr",
+      no_results: "Hech narsa topilmadi. Boshqacha qidirib ko'ring.",
+      results_for: "Natijalar",
+    },
+    common: {
+      rating: "Baho",
+      reviews_count: "sharh",
+      loading: "Yuklanmoqda…",
+      back: "Orqaga",
+      save: "Saqlash",
+      cancel: "Bekor qilish",
+    },
+  },
+}
+
+import { reactive } from "vue"
+
+export const i18nState = reactive({
+  locale: localStorage.getItem("buyelp_lang") || "en",
+})
+
+export function setLocale(lang) {
+  i18nState.locale = lang
+  localStorage.setItem("buyelp_lang", lang)
+}
+
+export function t(keyPath) {
+  const keys = keyPath.split(".")
+  let val = messages[i18nState.locale]
+  for (const k of keys) {
+    if (!val) return keyPath
+    val = val[k]
+  }
+  return val || keyPath
+}
