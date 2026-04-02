@@ -62,7 +62,12 @@ const getOffset = (index) => {
   height: var(--star-size);
   border-radius: 2px;
   overflow: hidden;
-  background: var(--border-light, #f1f5f9);
+  background: var(--surface-2, #f1f5f9); 
+}
+.star-bg {
+  position: absolute;
+  inset: 0;
+  background: #cbd5e1; /* Clear intermediate gray for better contrast */
 }
 
 .star-fill {
@@ -90,5 +95,8 @@ const getOffset = (index) => {
 /* data-theme compatibility */
 [data-theme="dark"] .star-mask {
   fill: var(--surface, #141c2e);
+}
+[data-theme="dark"] .star-bg {
+  background: #334155; /* Slate 700 for dark mode contrast */
 }
 </style>
