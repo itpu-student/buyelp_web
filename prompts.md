@@ -226,5 +226,14 @@ change UI of showing stars
 
 
 
+==========================
+
+square star ratings are good for flot-numeric values: 4.7, 4.5, 4.2, ..., which is used for general rating
+but for user's personal rating, I liked the way in branch feat/star-rating-0
+
+also I liked color of star from feat/star-rating-0
+
+==========================
+
 
 

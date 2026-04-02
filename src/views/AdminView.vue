@@ -85,7 +85,7 @@
                 <td>
                   <RouterLink :to="`/place/${rv.placeId}`" class="table-link">{{ rv.placeName }}</RouterLink>
                 </td>
-                <td><div class="flex items-center gap-2"><StarRating :rating="rv.rating" :size="14" /> {{ rv.rating }}</div></td>
+                <td><div class="flex items-center gap-2"><StarRating :rating="rv.rating" :size="14" mode="simple" /> {{ rv.rating }}</div></td>
                 <td class="td-review">{{ rv.text }}</td>
                 <td>{{ rv.date }}</td>
                 <td class="td-actions">

@@ -1,23 +1,31 @@
 <template>
-  <div class="star-rating" :style="{ '--star-size': size + 'px' }">
-    <div v-for="i in 5" :key="i" class="star-box">
-      <!-- Background of the box (gray) -->
-      <div class="star-bg"></div>
-      
-      <!-- Colored fill of the box -->
-      <div 
-        class="star-fill" 
-        :style="{ 
-          width: getOffset(i) + '%',
-          backgroundColor: color || 'var(--accent)'
-        }"
-      ></div>
-
-      <!-- Star mask (white star shape cutout) -->
-      <svg viewBox="0 0 24 24" class="star-mask" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-      </svg>
-    </div>
+  <div class="star-rating" :class="{ simple: mode === 'simple' }" :style="{ '--star-size': size + 'px' }">
+    <template v-if="mode === 'square'">
+      <div v-for="i in 5" :key="'sq-' + i" class="star-box">
+        <div class="star-bg"></div>
+        <div 
+          class="star-fill" 
+          :style="{ 
+            width: getOffset(i) + '%',
+            backgroundColor: color || 'var(--accent)'
+          }"
+        ></div>
+        <svg viewBox="0 0 24 24" class="star-mask" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+        </svg>
+      </div>
+    </template>
+    <template v-else>
+      <span 
+        v-for="i in 5" 
+        :key="'sm-' + i" 
+        class="star-char"
+        :class="{ active: i <= Math.round(rating) }"
+        :style="{ color: i <= Math.round(rating) ? (color || 'var(--accent)') : 'var(--border)' }"
+      >
+        {{ i <= Math.round(rating) ? '★' : '☆' }}
+      </span>
+    </template>
   </div>
 </template>
 
@@ -25,7 +33,8 @@
 const props = defineProps({
   rating: { type: Number, required: true, default: 0 },
   size: { type: Number, default: 18 },
-  color: { type: String, default: '' }
+  color: { type: String, default: '' },
+  mode: { type: String, default: 'square' } // 'square' or 'simple'
 })
 
 const getOffset = (index) => {
@@ -40,6 +49,11 @@ const getOffset = (index) => {
 .star-rating {
   display: inline-flex;
   gap: 2px;
+  line-height: 1;
+}
+
+.star-rating.simple {
+  gap: 1px;
 }
 
 .star-box {
@@ -48,7 +62,7 @@ const getOffset = (index) => {
   height: var(--star-size);
   border-radius: 2px;
   overflow: hidden;
-  background: var(--border-light, #f1f5f9); /* Default gray bg */
+  background: var(--border-light, #f1f5f9);
 }
 
 .star-fill {
@@ -65,7 +79,12 @@ const getOffset = (index) => {
   left: 0;
   width: 100%;
   height: 100%;
-  fill: var(--surface, #ffffff); /* Matches background surface */
+  fill: var(--surface, #ffffff);
+}
+
+.star-char {
+  font-size: var(--star-size);
+  user-select: none;
 }
 
 /* data-theme compatibility */

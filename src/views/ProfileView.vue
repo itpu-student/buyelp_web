@@ -41,7 +41,7 @@
                 <RouterLink :to="`/place/${r.placeId}`" class="my-review-place">
                   {{ r.placeName }}
                 </RouterLink>
-                <StarRating :rating="r.rating" :size="14" />
+                <StarRating :rating="r.rating" :size="15" mode="simple" />
               </div>
               <p class="my-review-text">{{ r.text }}</p>
               <span class="my-review-date text-xs text-muted">{{ formatDate(r.date) }}</span>

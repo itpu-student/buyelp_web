@@ -12,7 +12,7 @@
         <span class="author-name">{{ review.author }}</span>
         <span class="review-date">{{ formatDate(review.date) }}</span>
       </div>
-      <StarRating :rating="review.rating" :size="14" />
+      <StarRating :rating="review.rating" :size="15" mode="simple" />
     </div>
     <p class="review-text">{{ review.text }}</p>
   </div>
