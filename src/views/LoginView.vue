@@ -64,12 +64,12 @@
     <!-- Decorative side -->
     <div class="auth-deco" aria-hidden="true">
       <img
-        src="https://images.unsplash.com/photo-1596956470007-2bf6095e7e16?w=900&q=80"
-        alt="Tashkent"
+        src="/login_bg.png"
+        alt="Do'stlar birga vaqt o'tkazmoqda"
         class="deco-image"
       />
       <div class="deco-overlay">
-        <p class="deco-quote">"Discover the real Uzbekistan, one review at a time."</p>
+        <p class="deco-quote">“Choyxona, tog', stadion — do'stlar bilan har joy yoqimli.”</p>
       </div>
     </div>
   </div>

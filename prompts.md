@@ -203,3 +203,28 @@ feel free to  ask any questions
 **Which pages should I build in this first phase?**: All Core Pages (Recommended)
 
 
+==============================================================================
+
+lets update design by our purpase:
+- make people closer
+- uzbek people can find places to hang out, spend time together with friends, family, colleagues like:
+> going to choyxona, sauna, nature(tog'ga borish, picknik,...), playing football, tenis, pingpong, ...
+> so app needs to be more human:
+>  I want you to update ptotos: 
+>  photo in login&register pages
+
+
+
+
+==============================================================================
+
+
+change UI of showing stars
+4.5 star looks good in yelp.com but here it looks like 4 star `1/2` as you can see, it needs to be changed
+
+
+
+
+
+
+

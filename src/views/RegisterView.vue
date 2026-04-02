@@ -70,12 +70,12 @@
 
     <div class="auth-deco" aria-hidden="true">
       <img
-        src="https://images.unsplash.com/photo-1591522810850-58128c5fb089?w=900&q=80"
-        alt="Samarkand"
+        src="/register_bg.jpeg"
+        alt="Do'stlar bilan futbol o'ynamoqda"
         class="deco-image"
       />
       <div class="deco-overlay">
-        <p class="deco-quote">"Join thousands of Uzbekistan locals sharing their favourite spots."</p>
+        <p class="deco-quote">“Futbol, piknik, sauna — yaqinlaringiz bilan birga bo'ling.”</p>
       </div>
     </div>
   </div>

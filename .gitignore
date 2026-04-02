@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+
+
+# serten files
+public/b20_in_chorsu.jpeg
+

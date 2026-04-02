@@ -5,14 +5,15 @@
       <div class="hero-bg">
         <div class="hero-gradient"></div>
         <img
-          src="https://images.unsplash.com/photo-1587560699334-cc4ff634909a?w=1600&q=80"
-          alt="Tashkent city"
+          src="/home_bg.jpeg"
+          alt="Do'stlar bilan vaqt o'tkazish"
           class="hero-image"
         />
+
       </div>
       <div class="container hero-content">
         <div class="hero-text">
-          <div class="hero-eyebrow">🇺🇿 Uzbekistan's Local Review Platform</div>
+          <div class="hero-eyebrow">🤝 Do'stlar, oila, hamkasblar bilan birga bo'ling</div>
           <h1 class="hero-title">
             {{ t('home.hero_title') }}<br />
             <span class="hero-title-accent">{{ t('home.hero_subtitle') }}</span>
@@ -37,11 +38,11 @@
 
           <!-- Quick stats -->
           <div class="hero-stats">
-            <div class="stat"><span class="stat-num">13+</span><span class="stat-label">Places</span></div>
+            <div class="stat"><span class="stat-num">13+</span><span class="stat-label">Joylar</span></div>
             <div class="stat-divider"></div>
-            <div class="stat"><span class="stat-num">6</span><span class="stat-label">Categories</span></div>
+            <div class="stat"><span class="stat-num">6</span><span class="stat-label">Kategoriya</span></div>
             <div class="stat-divider"></div>
-            <div class="stat"><span class="stat-num">2K+</span><span class="stat-label">Reviews</span></div>
+            <div class="stat"><span class="stat-num">2K+</span><span class="stat-label">Sharhlar</span></div>
           </div>
         </div>
       </div>
