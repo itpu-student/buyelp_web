@@ -44,7 +44,7 @@
                   <RouterLink :to="`/place/${p.id}`" class="table-link">{{ p.name.en }}</RouterLink>
                 </td>
                 <td><span class="badge badge-neutral">{{ t(`categories.${p.category}`) }}</span></td>
-                <td><span class="stars small">★</span> {{ p.rating }}</td>
+                <td><div class="flex items-center gap-2"><StarRating :rating="p.rating" :size="14" /> {{ p.rating }}</div></td>
                 <td>{{ p.reviewCount }}</td>
                 <td>
                   <span class="badge" :class="p.isOpen ? 'badge-success' : 'badge-danger'">
@@ -85,7 +85,7 @@
                 <td>
                   <RouterLink :to="`/place/${rv.placeId}`" class="table-link">{{ rv.placeName }}</RouterLink>
                 </td>
-                <td><span class="stars small">★</span> {{ rv.rating }}</td>
+                <td><div class="flex items-center gap-2"><StarRating :rating="rv.rating" :size="14" /> {{ rv.rating }}</div></td>
                 <td class="td-review">{{ rv.text }}</td>
                 <td>{{ rv.date }}</td>
                 <td class="td-actions">
@@ -155,6 +155,7 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { t } from '../i18n/index.js'
 import { places as allPlaces } from '../data/places.js'
+import StarRating from '../components/StarRating.vue'
 
 const router = useRouter()
 const activeTab = ref('businesses')

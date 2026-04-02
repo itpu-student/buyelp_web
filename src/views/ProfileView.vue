@@ -41,9 +41,7 @@
                 <RouterLink :to="`/place/${r.placeId}`" class="my-review-place">
                   {{ r.placeName }}
                 </RouterLink>
-                <div class="stars small-stars">
-                  <span v-for="n in 5" :key="n">{{ n <= r.rating ? '★' : '☆' }}</span>
-                </div>
+                <StarRating :rating="r.rating" :size="14" />
               </div>
               <p class="my-review-text">{{ r.text }}</p>
               <span class="my-review-date text-xs text-muted">{{ formatDate(r.date) }}</span>
@@ -64,6 +62,7 @@
 import { computed } from 'vue'
 import { t } from '../i18n/index.js'
 import { store } from '../store/index.js'
+import StarRating from '../components/StarRating.vue'
 
 function formatDate(d) {
   return new Date(d).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })

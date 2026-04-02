@@ -99,7 +99,7 @@
               <span class="top-addr">{{ place.address[locale] || place.address.en }}</span>
             </div>
             <div class="top-rating">
-              <span class="stars">★</span>
+              <StarRating :rating="place.rating" :size="16" />
               <span class="rating-val">{{ place.rating.toFixed(1) }}</span>
             </div>
           </RouterLink>
@@ -115,6 +115,7 @@ import { useRouter } from 'vue-router'
 import { t, i18nState } from '../i18n/index.js'
 import { getFeaturedPlaces, getTopRated, places } from '../data/places.js'
 import PlaceCard from '../components/PlaceCard.vue'
+import StarRating from '../components/StarRating.vue'
 
 const router = useRouter()
 const locale = i18nState

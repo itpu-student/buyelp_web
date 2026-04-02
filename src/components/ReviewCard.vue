@@ -12,15 +12,15 @@
         <span class="author-name">{{ review.author }}</span>
         <span class="review-date">{{ formatDate(review.date) }}</span>
       </div>
-      <div class="stars review-stars">
-        <span v-for="n in 5" :key="n">{{ n <= review.rating ? '★' : '☆' }}</span>
-      </div>
+      <StarRating :rating="review.rating" :size="14" />
     </div>
     <p class="review-text">{{ review.text }}</p>
   </div>
 </template>
 
 <script setup>
+import StarRating from './StarRating.vue'
+
 defineProps({
   review: { type: Object, required: true },
 })

@@ -20,7 +20,7 @@
           </div>
           <h1 class="place-hero-title">{{ placeName }}</h1>
           <div class="place-hero-rating">
-            <span class="stars">{{ starString }}</span>
+            <StarRating :rating="place.rating" :size="24" />
             <span class="rating-big">{{ place.rating.toFixed(1) }}</span>
             <span class="review-count-hero">({{ place.reviewCount }} {{ t('common.reviews_count') }})</span>
           </div>
@@ -119,12 +119,12 @@
             <!-- Rating breakdown -->
             <div class="rating-card card">
               <div class="rating-big-display">
-                <span class="rating-number">{{ place.rating.toFixed(1) }}</span>
-                <div>
-                  <div class="stars" style="font-size: 1.3rem;">{{ starString }}</div>
-                  <div class="text-muted text-xs">{{ place.reviewCount }} {{ t('common.reviews_count') }}</div>
-                </div>
+              <span class="rating-number">{{ place.rating.toFixed(1) }}</span>
+              <div>
+                <StarRating :rating="place.rating" :size="20" />
+                <div class="text-muted text-xs">{{ place.reviewCount }} {{ t('common.reviews_count') }}</div>
               </div>
+            </div>
             </div>
           </aside>
         </div>
@@ -140,6 +140,7 @@ import { t, i18nState } from '../i18n/index.js'
 import { getPlaceById } from '../data/places.js'
 import { store } from '../store/index.js'
 import ReviewCard from '../components/ReviewCard.vue'
+import StarRating from '../components/StarRating.vue'
 
 const route = useRoute()
 const place = getPlaceById(route.params.id)
@@ -160,13 +161,6 @@ const categoryIcons = {
   activities: '🏔️', sports: '⚽', tabiat: '🌿',
 }
 const categoryIcon = computed(() => categoryIcons[place?.category] || '📍')
-
-const starString = computed(() => {
-  const r = place?.rating || 0
-  const full = Math.floor(r)
-  const half = r % 1 >= 0.5
-  return '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(5 - full - (half ? 1 : 0))
-})
 
 const allReviews = computed(() => [...(place?.reviews || []), ...extraReviews.value])
 

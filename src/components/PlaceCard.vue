@@ -13,7 +13,7 @@
     <div class="card-body">
       <h3 class="card-name">{{ placeName }}</h3>
       <div class="card-rating">
-        <span class="stars">{{ starString }}</span>
+        <StarRating :rating="place.rating" :size="16" />
         <span class="rating-value">{{ place.rating.toFixed(1) }}</span>
         <span class="review-count">({{ place.reviewCount }} {{ t('common.reviews_count') }})</span>
       </div>
@@ -28,6 +28,7 @@
 <script setup>
 import { computed } from 'vue'
 import { t, i18nState } from '../i18n/index.js'
+import StarRating from './StarRating.vue'
 
 const props = defineProps({
   place: { type: Object, required: true },
@@ -49,11 +50,6 @@ const placeDesc = computed(() => {
   return desc.length > 90 ? desc.substring(0, 90) + '…' : desc
 })
 const categoryIcon = computed(() => categoryIcons[props.place.category] || '📍')
-const starString = computed(() => {
-  const full = Math.floor(props.place.rating)
-  const half = props.place.rating % 1 >= 0.5
-  return '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(5 - full - (half ? 1 : 0))
-})
 </script>
 
 <style scoped>
