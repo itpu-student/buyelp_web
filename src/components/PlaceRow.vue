@@ -2,12 +2,15 @@
   <article class="place-row" :class="{ 'place-row--closed': !place.isOpen }">
     <!-- ① Carousel of images -->
     <div class="place-row__carousel">
-      <div class="carousel__track" ref="trackRef">
+      <!-- Sliding track: all images in a row, translated to show the active one -->
+      <div
+        class="carousel__track"
+        :style="{ transform: `translateX(-${activeSlide * 100}%)` }"
+      >
         <div
           v-for="(img, i) in images"
           :key="i"
           class="carousel__slide"
-          :class="{ 'carousel__slide--active': i === activeSlide }"
         >
           <img :src="img" :alt="`${placeName} photo ${i + 1}`" loading="lazy" />
         </div>
@@ -158,7 +161,6 @@ const categoryIcon = computed(() => categoryIcons[props.place.category] || '📍
 const images = computed(() => props.place.images ?? [])
 
 const activeSlide = ref(0)
-const trackRef = ref(null)
 
 function next() {
   activeSlide.value = (activeSlide.value + 1) % images.value.length
@@ -201,22 +203,21 @@ function prev() {
   flex-shrink: 0;
 }
 
+/* Sliding track — all slides in one horizontal row */
 .carousel__track {
+  display: flex;
   width: 100%;
   height: 100%;
-  position: relative;
+  transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
 }
 
 .carousel__slide {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transition: opacity 0.45s ease;
-}
-
-.carousel__slide--active {
-  opacity: 1;
-  position: relative;
+  /* Each slide takes exact full width of the viewport — never shrinks */
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  min-height: 220px;
 }
 
 .carousel__slide img {
