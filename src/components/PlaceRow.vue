@@ -140,10 +140,7 @@ const props = defineProps({
 // ─── Localized computed text ──────────────────────────────────────────────────
 const placeName = computed(() => props.place.name[i18nState.locale] || props.place.name.en)
 const placeAddress = computed(() => props.place.address[i18nState.locale] || props.place.address.en)
-const placeDesc = computed(() => {
-  const d = props.place.description[i18nState.locale] || props.place.description.en
-  return d.length > 130 ? d.substring(0, 130) + '…' : d
-})
+const placeDesc = computed(() => props.place.description[i18nState.locale] || props.place.description.en)
 
 // ─── Category icons ───────────────────────────────────────────────────────────
 const categoryIcons = {
@@ -175,6 +172,7 @@ function prev() {
 .place-row {
   display: grid;
   grid-template-columns: 280px 1fr 220px;
+  grid-template-rows: 240px; /* fixed row height — all items identical */
   gap: 0;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -182,7 +180,7 @@ function prev() {
   overflow: hidden;
   box-shadow: var(--shadow-sm);
   transition: box-shadow var(--transition-slow), transform var(--transition-slow);
-  min-height: 220px;
+  height: 240px;
 }
 
 .place-row:hover {
@@ -197,8 +195,7 @@ function prev() {
 /* ─── ① Carousel ─────────────────────────────────────────────────────────────── */
 .place-row__carousel {
   position: relative;
-  height: 100%;
-  min-height: 220px;
+  height: 240px; /* matches row fixed height */
   overflow: hidden;
   flex-shrink: 0;
 }
@@ -213,11 +210,9 @@ function prev() {
 }
 
 .carousel__slide {
-  /* Each slide takes exact full width of the viewport — never shrinks */
   flex: 0 0 100%;
   width: 100%;
-  height: 100%;
-  min-height: 220px;
+  height: 240px;
 }
 
 .carousel__slide img {
@@ -225,7 +220,6 @@ function prev() {
   height: 100%;
   object-fit: cover;
   display: block;
-  min-height: 220px;
 }
 
 /* (carousel badges removed — info now shown in panel) */
@@ -348,7 +342,14 @@ function prev() {
   font-size: 0.82rem;
   color: var(--text-2);
   line-height: 1.55;
-  flex: 1;
+  /* always exactly 1 line with ellipsis */
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  line-clamp: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
 }
 
 .place-row__meta {
