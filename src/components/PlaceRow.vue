@@ -13,16 +13,7 @@
         </div>
       </div>
 
-      <!-- Badges -->
-      <div class="carousel__badge carousel__badge--category">
-        {{ categoryIcon }} {{ t(`categories.${place.category}`) }}
-      </div>
-      <div
-        class="carousel__badge carousel__badge--status"
-        :class="place.isOpen ? 'open' : 'closed'"
-      >
-        {{ place.isOpen ? t('place.open_now') : t('place.closed') }}
-      </div>
+
 
       <!-- Nav arrows (only when >1 image) -->
       <template v-if="images.length > 1">
@@ -63,6 +54,19 @@
           </div>
         </div>
 
+        <!-- Status + Category tags -->
+        <div class="place-row__tags">
+          <span
+            class="place-row__tag place-row__tag--status"
+            :class="place.isOpen ? 'open' : 'closed'"
+          >
+            {{ place.isOpen ? t('place.open_now') : t('place.closed') }}
+          </span>
+          <span class="place-row__tag place-row__tag--category">
+            {{ categoryIcon }} {{ t(`categories.${place.category}`) }}
+          </span>
+        </div>
+
         <p class="place-row__address">
           <span class="place-row__icon">📍</span>
           {{ placeAddress }}
@@ -81,7 +85,7 @@
           </span>
         </div>
 
-        <span class="place-row__cta">View details →</span>
+
       </div>
     </RouterLink>
 
@@ -223,35 +227,7 @@ function prev() {
   min-height: 220px;
 }
 
-/* Badges */
-.carousel__badge {
-  position: absolute;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
-  border-radius: var(--radius-full);
-  font-size: 0.72rem;
-  font-weight: 600;
-  backdrop-filter: blur(8px);
-  pointer-events: none;
-  z-index: 2;
-}
-
-.carousel__badge--category {
-  bottom: 10px;
-  left: 10px;
-  background: rgba(0, 0, 0, 0.55);
-  color: #fff;
-}
-
-.carousel__badge--status {
-  top: 10px;
-  right: 10px;
-}
-
-.carousel__badge--status.open { background: rgba(34, 197, 94, 0.9); color: #fff; }
-.carousel__badge--status.closed { background: rgba(239, 68, 68, 0.9); color: #fff; }
+/* (carousel badges removed — info now shown in panel) */
 
 /* Arrow buttons */
 .carousel__btn {
@@ -391,16 +367,30 @@ function prev() {
   gap: 4px;
 }
 
-.place-row__cta {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--primary);
-  margin-top: 4px;
-  transition: color var(--transition);
+/* ── Status + Category tags ── */
+.place-row__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
-.place-row__info:hover .place-row__cta {
-  color: var(--primary-dark);
+.place-row__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.place-row__tag--status.open   { background: rgba(34, 197, 94, 0.15); color: #16a34a; }
+.place-row__tag--status.closed { background: rgba(239, 68, 68,  0.15); color: #dc2626; }
+
+.place-row__tag--category {
+  background: var(--surface-2);
+  color: var(--text-2);
+  border: 1px solid var(--border);
 }
 
 .place-row__icon {
