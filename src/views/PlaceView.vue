@@ -8,7 +8,7 @@
     <template v-else>
       <!-- ──── Hero image ──── -->
       <div class="place-hero">
-        <img :src="place.image" :alt="placeName" class="place-hero-img" />
+        <img :src="place.images[0]" :alt="placeName" class="place-hero-img" />
         <div class="place-hero-overlay"></div>
         <div class="place-hero-content container">
           <RouterLink to="/search" class="back-link">← {{ t('common.back') }}</RouterLink>

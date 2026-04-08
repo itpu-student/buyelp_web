@@ -1,7 +1,7 @@
 <template>
   <RouterLink :to="`/place/${place.id}`" class="place-card card">
     <div class="card-image-wrap">
-      <img :src="place.image" :alt="placeName" class="card-image" loading="lazy" />
+      <img :src="place.images[0]" :alt="placeName" class="card-image" loading="lazy" />
       <div class="card-category-badge">
         <span>{{ categoryIcon }}</span>
         {{ t(`categories.${place.category}`) }}

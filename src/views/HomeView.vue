@@ -93,7 +93,7 @@
             class="top-item card"
           >
             <span class="top-rank">#{{ idx + 1 }}</span>
-            <img :src="place.image" :alt="place.name.en" class="top-image" />
+            <img :src="place.images[0]" :alt="place.name.en" class="top-image" />
             <div class="top-info">
               <span class="top-name">{{ place.name[locale] || place.name.en }}</span>
               <span class="top-addr">{{ place.address[locale] || place.address.en }}</span>

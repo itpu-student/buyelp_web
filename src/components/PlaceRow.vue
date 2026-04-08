@@ -151,13 +151,7 @@ const categoryIcon = computed(() => categoryIcons[props.place.category] || '📍
  * Currently places only have one `image` field, but the data model
  * may later gain an `images[]` array – this handles both.
  */
-const images = computed(() => {
-  if (Array.isArray(props.place.images) && props.place.images.length) {
-    return props.place.images
-  }
-  if (props.place.image) return [props.place.image]
-  return []
-})
+const images = computed(() => props.place.images ?? [])
 
 const activeSlide = ref(0)
 const trackRef = ref(null)
