@@ -34,9 +34,9 @@
         </button>
       </div>
 
-      <!-- Results -->
-      <div v-if="filteredPlaces.length" class="grid-3">
-        <PlaceCard
+      <!-- Results — row layout: carousel | info | map -->
+      <div v-if="filteredPlaces.length" class="place-row-list">
+        <PlaceRow
           v-for="place in filteredPlaces"
           :key="place.id"
           :place="place"
@@ -55,7 +55,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { t } from '../i18n/index.js'
 import { searchPlaces } from '../data/places.js'
-import PlaceCard from '../components/PlaceCard.vue'
+import PlaceRow from '../components/PlaceRow.vue'
 
 const route = useRoute()
 const query = ref('')
@@ -124,6 +124,12 @@ const filteredPlaces = computed(() =>
   flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 28px;
+}
+
+.place-row-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .empty-state {
