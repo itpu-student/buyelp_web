@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tashkent SVG Lat/Lon Marker</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: Arial, sans-serif;
+    }
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #f6f7fb;
+      color: #111;
+    }
+    .layout {
+      max-width: 980px;
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+    }
+    .panel {
+      background: #fff;
+      border: 1px solid #d6d9e1;
+      border-radius: 10px;
+      padding: 14px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+    #svgHost {
+      width: 100%;
+      line-height: 0;
+      border: 1px solid #d6d9e1;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+    }
+    #svgHost svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(120px, 1fr));
+      gap: 10px;
+    }
+    .grid4 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(140px, 1fr));
+      gap: 10px;
+    }
+    label {
+      font-size: 13px;
+      color: #303545;
+      display: block;
+      margin-bottom: 4px;
+    }
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid #c8ccda;
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 14px;
+    }
+    .actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    button {
+      border: 1px solid #c8ccda;
+      border-radius: 8px;
+      background: #fff;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button.primary {
+      background: #1f4ae0;
+      border-color: #1f4ae0;
+      color: #fff;
+    }
+    #status {
+      margin-top: 10px;
+      font-size: 13px;
+      color: #2d3347;
+    }
+    .hint {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #5b647f;
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <div class="panel">
+      <div id="svgHost">Loading SVG...</div>
+    </div>
+
+    <div class="panel">
+      <div class="grid">
+        <div>
+          <label for="lat">Latitude</label>
+          <input id="lat" type="number" step="any" value="41.3123363" />
+        </div>
+        <div>
+          <label for="lon">Longitude</label>
+          <input id="lon" type="number" step="any" value="69.2787079" />
+        </div>
+      </div>
+
+      <p class="hint">
+        Bounds below define the lat/lon-to-SVG scale. Defaults are calibrated from two known map corner points inside this SVG.
+      </p>
+      <div class="grid4">
+        <div>
+          <label for="minLat">Min lat (south)</label>
+          <input id="minLat" type="number" step="any" value="41.16899" />
+        </div>
+        <div>
+          <label for="maxLat">Max lat (north)</label>
+          <input id="maxLat" type="number" step="any" value="41.398351" />
+        </div>
+        <div>
+          <label for="minLon">Min lon (west)</label>
+          <input id="minLon" type="number" step="any" value="69.11736" />
+        </div>
+        <div>
+          <label for="maxLon">Max lon (east)</label>
+          <input id="maxLon" type="number" step="any" value="69.41007" />
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="plotBtn" class="primary" type="button">Plot Red Dot</button>
+        <button id="resetBtn" type="button">Reset Bounds</button>
+      </div>
+      <div id="status">Ready.</div>
+    </div>
+  </div>
+
+  <script>
+    const DEFAULT_BOUNDS = {
+      // Bounds from your final tuned configuration
+      minLat: 41.16899,
+      maxLat: 41.398351,
+      minLon: 69.11736,
+      maxLon: 69.41007
+    };
+
+    const host = document.getElementById("svgHost");
+    const statusEl = document.getElementById("status");
+    const latEl = document.getElementById("lat");
+    const lonEl = document.getElementById("lon");
+    const minLatEl = document.getElementById("minLat");
+    const maxLatEl = document.getElementById("maxLat");
+    const minLonEl = document.getElementById("minLon");
+    const maxLonEl = document.getElementById("maxLon");
+    const plotBtn = document.getElementById("plotBtn");
+    const resetBtn = document.getElementById("resetBtn");
+
+    let svgEl = null;
+    let markerEl = null;
+    let drawnBounds = null;
+
+    function parseNum(inputEl) {
+      return Number(inputEl.value);
+    }
+
+    function readGeoBounds() {
+      return {
+        minLat: parseNum(minLatEl),
+        maxLat: parseNum(maxLatEl),
+        minLon: parseNum(minLonEl),
+        maxLon: parseNum(maxLonEl)
+      };
+    }
+
+    function validateBounds(bounds) {
+      if (!Number.isFinite(bounds.minLat) || !Number.isFinite(bounds.maxLat) ||
+          !Number.isFinite(bounds.minLon) || !Number.isFinite(bounds.maxLon)) {
+        throw new Error("Bounds must be valid numbers.");
+      }
+      if (bounds.maxLat <= bounds.minLat) {
+        throw new Error("maxLat must be greater than minLat.");
+      }
+      if (bounds.maxLon <= bounds.minLon) {
+        throw new Error("maxLon must be greater than minLon.");
+      }
+    }
+
+    function calcDrawnBounds(svg) {
+      const paths = Array.from(svg.querySelectorAll("path"));
+      if (paths.length === 0) {
+        throw new Error("No path elements found in SVG.");
+      }
+
+      let minX = Infinity;
+      let minY = Infinity;
+      let maxX = -Infinity;
+      let maxY = -Infinity;
+
+      for (const p of paths) {
+        const b = p.getBBox();
+        minX = Math.min(minX, b.x);
+        minY = Math.min(minY, b.y);
+        maxX = Math.max(maxX, b.x + b.width);
+        maxY = Math.max(maxY, b.y + b.height);
+      }
+
+      return { minX, minY, maxX, maxY };
+    }
+
+    function geoToSvgXY(lat, lon, geo, map) {
+      const lonRatio = (lon - geo.minLon) / (geo.maxLon - geo.minLon);
+      const latRatio = (lat - geo.minLat) / (geo.maxLat - geo.minLat);
+      const x = map.minX + lonRatio * (map.maxX - map.minX);
+      const y = map.maxY - latRatio * (map.maxY - map.minY);
+      return { x, y, lonRatio, latRatio };
+    }
+
+    function placeMarker(x, y) {
+      if (!markerEl) {
+        markerEl = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        markerEl.setAttribute("r", "7");
+        markerEl.setAttribute("fill", "#e11d2e");
+        markerEl.setAttribute("stroke", "#ffffff");
+        markerEl.setAttribute("stroke-width", "2");
+        markerEl.id = "latLonMarker";
+        svgEl.appendChild(markerEl);
+      }
+      markerEl.setAttribute("cx", String(x));
+      markerEl.setAttribute("cy", String(y));
+    }
+
+    function plotFromInputs() {
+      try {
+        const lat = parseNum(latEl);
+        const lon = parseNum(lonEl);
+        if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+          throw new Error("Latitude and longitude must be valid numbers.");
+        }
+        if (!svgEl || !drawnBounds) {
+          throw new Error("SVG not loaded yet.");
+        }
+
+        const geo = readGeoBounds();
+        validateBounds(geo);
+
+        const { x, y, lonRatio, latRatio } = geoToSvgXY(lat, lon, geo, drawnBounds);
+        placeMarker(x, y);
+
+        const outside =
+          lonRatio < 0 || lonRatio > 1 || latRatio < 0 || latRatio > 1;
+
+        statusEl.textContent =
+          `Plotted at SVG x=${x.toFixed(2)}, y=${y.toFixed(2)}.` +
+          (outside ? " Input is outside configured geographic bounds." : "");
+      } catch (err) {
+        statusEl.textContent = err instanceof Error ? err.message : "Failed to plot marker.";
+      }
+    }
+
+    async function loadSvg() {
+      try {
+        const response = await fetch("./public/Tashkent_map_with_captions.svg");
+        if (!response.ok) {
+          throw new Error("Could not load ./public/Tashkent_map_with_captions.svg");
+        }
+        const text = await response.text();
+        const doc = new DOMParser().parseFromString(text, "image/svg+xml");
+        svgEl = doc.documentElement;
+
+        if (!svgEl.getAttribute("viewBox")) {
+          const width = Number(svgEl.getAttribute("width")) || 920;
+          const height = Number(svgEl.getAttribute("height")) || 920;
+          svgEl.setAttribute("viewBox", `0 0 ${width} ${height}`);
+        }
+
+        host.innerHTML = "";
+        host.appendChild(svgEl);
+
+        drawnBounds = calcDrawnBounds(svgEl);
+        plotFromInputs();
+      } catch (err) {
+        host.textContent = "Failed to load SVG.";
+        statusEl.textContent = err instanceof Error ? err.message : "Unknown load error.";
+      }
+    }
+
+    plotBtn.addEventListener("click", plotFromInputs);
+    [latEl, lonEl, minLatEl, maxLatEl, minLonEl, maxLonEl].forEach((el) => {
+      el.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          plotFromInputs();
+        }
+      });
+    });
+
+    resetBtn.addEventListener("click", () => {
+      minLatEl.value = String(DEFAULT_BOUNDS.minLat);
+      maxLatEl.value = String(DEFAULT_BOUNDS.maxLat);
+      minLonEl.value = String(DEFAULT_BOUNDS.minLon);
+      maxLonEl.value = String(DEFAULT_BOUNDS.maxLon);
+      plotFromInputs();
+    });
+
+    loadSvg();
+
+    function printAllInputs() {
+      console.log("lat", latEl.value);
+      console.log("lon", lonEl.value);
+      console.log("minLat", minLatEl.value);
+      console.log("maxLat", maxLatEl.value);
+      console.log("minLon", minLonEl.value);
+      console.log("maxLon", maxLonEl.value);
+    }
+
+  </script>
+</body>
+</html>
+
+
+<!-- 
+
+41.356290, 69.343769 => point where `МИРЗОУЛУГБЕКСКИЙ` and `ЮНУСАБАДСКИЙ` top right conected corner
+
+41.311037, 69.259934 => point where `ЧИЛАНЗАРСКИЙ` top right corner
+
+
+41.342523, 69.336609
+
+
+[Log] lat – "41.356290"
+[Log] lon – "69.343769"
+[Log] minLat – "41.143449"
+[Log] maxLat – "41.404061"
+[Log] minLon – "69.117361"
+[Log] maxLon – "69.410074"
+
+
+
+[Log] lat – "41.311037"
+[Log] lon – "69.259934"
+[Log] minLat – "41.143449"
+[Log] maxLat – "41.414061"
+[Log] minLon – "69.117361"
+[Log] maxLon – "69.410074"
+
+-->
