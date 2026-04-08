@@ -70,10 +70,9 @@ export const places = [
     lat: 41.35510,
     lon: 69.33800,
     images: [
-      "https://images.unsplash.com/photo-1570611640714-22ee9b18d671?w=800&q=80",
+      "https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?w=800&q=80",
       "https://images.unsplash.com/photo-1625047509248-ec889cbff17f?w=800&q=80",
       "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=800&q=80",
-      "https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?w=800&q=80",
     ],
     hours: "08:00 – 20:00",
     isOpen: true,
