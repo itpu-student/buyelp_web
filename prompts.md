@@ -233,7 +233,27 @@ but for user's personal rating, I liked the way in branch feat/star-rating-0
 
 also I liked color of star from feat/star-rating-0
 
-==========================
+==============================================================================
 
 
+make component SvgMapItem.vue for showing svg map with lon&lat
+for not just use `public/Tashkent_map_with_captions.svg` but make it the way it can be chnaged, letter it will be dynamic
+
+==============================================================================
+
+
+I want to update service items view:
+
+it is using cards fot this, I want to redesign it
+I want to show rows of service items, not cards
+
+one row => [carusel like many pictures] releted text data [svg map with lon&lat]
+
+one row will have 3 parts: 
+1. carusel like many pictures
+2. releted text data
+3. svg map with lon&lat
+
+
+==============================================================================
 
