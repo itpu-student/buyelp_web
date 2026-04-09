@@ -1,7 +1,7 @@
 <template>
   <article class="place-row" :class="{ 'place-row--closed': !place.isOpen }">
     <!-- ① Carousel of images -->
-    <div class="place-row__carousel">
+    <RouterLink :to="`/place/${place.id}`" class="place-row__carousel">
       <!-- Sliding track: all images in a row, translated to show the active one -->
       <div
         class="carousel__track"
@@ -16,19 +16,17 @@
         </div>
       </div>
 
-
-
       <!-- Nav arrows (only when >1 image) -->
       <template v-if="images.length > 1">
         <button
           class="carousel__btn carousel__btn--prev"
           aria-label="Previous photo"
-          @click.prevent="prev"
+          @click.prevent.stop="prev"
         >&#8592;</button>
         <button
           class="carousel__btn carousel__btn--next"
           aria-label="Next photo"
-          @click.prevent="next"
+          @click.prevent.stop="next"
         >&#8594;</button>
 
         <!-- Dots -->
@@ -39,11 +37,11 @@
             class="carousel__dot"
             :class="{ 'carousel__dot--active': i === activeSlide }"
             :aria-label="`Photo ${i + 1}`"
-            @click.prevent="activeSlide = i"
+            @click.prevent.stop="activeSlide = i"
           />
         </div>
       </template>
-    </div>
+    </RouterLink>
 
     <!-- ② Text / info panel -->
     <RouterLink :to="`/place/${place.id}`" class="place-row__info">
@@ -195,9 +193,11 @@ function prev() {
 /* ─── ① Carousel ─────────────────────────────────────────────────────────────── */
 .place-row__carousel {
   position: relative;
+  display: block;
   height: 240px; /* matches row fixed height */
   overflow: hidden;
   flex-shrink: 0;
+  cursor: pointer;
 }
 
 /* Sliding track — all slides in one horizontal row */
@@ -220,6 +220,7 @@ function prev() {
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* (carousel badges removed — info now shown in panel) */

@@ -349,10 +349,7 @@ export const places = [
     lat: 41.34107,
     lon: 69.33744,
     images: [
-      "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&q=80",
-      "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80",
       "https://images.unsplash.com/photo-1521017432531-fbd92d768814?w=800&q=80",
-      "https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=800&q=80",
     ],
     hours: "08:00 – 22:00",
     isOpen: true,
