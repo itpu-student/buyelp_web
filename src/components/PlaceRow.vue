@@ -177,13 +177,22 @@ function prev() {
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
-  transition: box-shadow var(--transition-slow), transform var(--transition-slow);
+  transition: box-shadow 0.3s ease;
   height: 240px;
 }
 
 .place-row:hover {
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-3px);
+  box-shadow:
+    -6px 0 20px rgba(0, 0, 0, 0.08),
+    -16px 0 48px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="dark"] .place-row:hover {
+  box-shadow:
+    -6px 0 24px rgba(200, 200, 200, 0.08),
+    -16px 0 48px rgba(180, 180, 180, 0.06),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
 }
 
 .place-row--closed {
