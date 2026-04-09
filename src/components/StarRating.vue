@@ -80,11 +80,15 @@ const getOffset = (index) => {
 
 .star-mask {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: 5%;
+  left: 5%;
+  width: 90%;
+  height: 90%;
   fill: var(--surface, #ffffff);
+  stroke: var(--surface, #ffffff);
+  stroke-width: 3.2;
+  stroke-linejoin: round;
+  paint-order: stroke;
 }
 
 .star-char {
@@ -95,6 +99,7 @@ const getOffset = (index) => {
 /* data-theme compatibility */
 [data-theme="dark"] .star-mask {
   fill: var(--surface, #141c2e);
+  stroke: var(--surface, #141c2e);
 }
 [data-theme="dark"] .star-bg {
   background: #334155; /* Slate 700 for dark mode contrast */
