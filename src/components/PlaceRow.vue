@@ -96,7 +96,6 @@
         :lat="place.lat ?? null"
         :lon="place.lon ?? null"
         :svgSrc="mapSrc"
-        :geoBounds="geoBounds"
         :show-coords="true"
       />
       <div v-if="place.lat == null" class="place-row__map-placeholder">
@@ -121,17 +120,6 @@ const props = defineProps({
   mapSrc: {
     type: String,
     default: '/Tashkent_map_with_captions.svg',
-  },
-
-  /** Geographic bounds for the SVG map. Calibrated for the default Tashkent map. */
-  geoBounds: {
-    type: Object,
-    default: () => ({
-      minLat: 41.16899,
-      maxLat: 41.398351,
-      minLon: 69.11736,
-      maxLon: 69.41007,
-    }),
   },
 })
 

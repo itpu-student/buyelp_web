@@ -42,17 +42,12 @@ const props = defineProps({
   },
 
   /**
-   * Geographic bounding box for the SVG map.
-   * These defaults are calibrated for Tashkent_map_with_captions.svg.
+   * Optional override for geographic bounding box.
+   * If not provided, the component reads s101-geodata-* attributes from the SVG.
    */
   geoBounds: {
     type: Object,
-    default: () => ({
-      minLat: 41.16899,
-      maxLat: 41.398351,
-      minLon: 69.11736,
-      maxLon: 69.41007,
-    }),
+    default: null,
   },
 
   /** Marker circle radius in SVG user units. */
@@ -82,6 +77,7 @@ const loadError = ref(null)
 let svgEl = null
 let markerEl = null
 let drawnBounds = null
+const geoBoundsFromSvg = ref(null)
 
 /** Compute the bounding box covered by all <path> elements in the loaded SVG. */
 function calcDrawnBounds(svg) {
@@ -96,6 +92,19 @@ function calcDrawnBounds(svg) {
     maxY = Math.max(maxY, b.y + b.height)
   }
   return { minX, minY, maxX, maxY }
+}
+
+/**
+ * Extract geographic bounds from s101-geodata-* attributes on the SVG root element.
+ * Expected attributes: s101-geodata-min-lat, s101-geodata-max-lat, s101-geodata-min-lon, s101-geodata-max-lon
+ */
+function extractGeoBounds(svg) {
+  const minLat = parseFloat(svg.getAttribute('s101-geodata-min-lat'))
+  const maxLat = parseFloat(svg.getAttribute('s101-geodata-max-lat'))
+  const minLon = parseFloat(svg.getAttribute('s101-geodata-min-lon'))
+  const maxLon = parseFloat(svg.getAttribute('s101-geodata-max-lon'))
+  if ([minLat, maxLat, minLon, maxLon].some(Number.isNaN)) return null
+  return { minLat, maxLat, minLon, maxLon }
 }
 
 /** Convert geographic lat/lon to SVG x/y coordinates. */
@@ -153,9 +162,15 @@ function placeMarker(x, y) {
   }
 }
 
+/** Resolve the active geo bounds: prop override > SVG-embedded > null */
+function activeGeoBounds() {
+  return props.geoBounds || geoBoundsFromSvg.value || null
+}
+
 function updateMarker() {
-  if (!svgEl || !drawnBounds || props.lat == null || props.lon == null) return
-  const { x, y } = geoToSvg(props.lat, props.lon, props.geoBounds, drawnBounds)
+  const geo = activeGeoBounds()
+  if (!svgEl || !drawnBounds || !geo || props.lat == null || props.lon == null) return
+  const { x, y } = geoToSvg(props.lat, props.lon, geo, drawnBounds)
   placeMarker(x, y)
 }
 
@@ -186,6 +201,9 @@ async function loadSvg() {
     svgEl.style.width = '100%'
     svgEl.style.height = '100%'
     svgEl.style.display = 'block'
+
+    // Extract geo bounds from SVG data attributes before appending
+    geoBoundsFromSvg.value = extractGeoBounds(svgEl)
 
     svgHost.value.appendChild(svgEl)
     svgLoaded.value = true

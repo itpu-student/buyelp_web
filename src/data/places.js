@@ -121,6 +121,8 @@ export const places = [
     },
     rating: 4.8,
     reviewCount: 256,
+    lat: 41.3880,
+    lon: 69.3200,
     images: [
       "https://images.unsplash.com/photo-1551632811-561732d1e306?w=800&q=80",
       "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=800&q=80",
@@ -147,6 +149,8 @@ export const places = [
     },
     rating: 4.3,
     reviewCount: 118,
+    lat: 41.3385,
+    lon: 69.3470,
     images: [
       "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80",
       "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=800&q=80",
@@ -171,6 +175,8 @@ export const places = [
     },
     rating: 4.9,
     reviewCount: 389,
+    lat: 41.3720,
+    lon: 69.1530,
     images: [
       "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80",
       "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80",
@@ -197,6 +203,8 @@ export const places = [
     },
     rating: 4.2,
     reviewCount: 64,
+    lat: 41.3480,
+    lon: 69.2100,
     images: [
       "https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?w=800&q=80",
       "https://images.unsplash.com/photo-1607860108855-64acf2078ed9?w=800&q=80",
@@ -221,6 +229,8 @@ export const places = [
     },
     rating: 4.6,
     reviewCount: 201,
+    lat: 41.3650,
+    lon: 69.3880,
     images: [
       "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&q=80",
       "https://images.unsplash.com/photo-1510798831971-661eb04b3739?w=800&q=80",
@@ -247,6 +257,8 @@ export const places = [
     },
     rating: 4.4,
     reviewCount: 92,
+    lat: 41.3120,
+    lon: 69.2580,
     images: [
       "https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=800&q=80",
       "https://images.unsplash.com/photo-1666214280557-f1b5022eb634?w=800&q=80",
@@ -271,6 +283,8 @@ export const places = [
     },
     rating: 4.1,
     reviewCount: 77,
+    lat: 41.2250,
+    lon: 69.2750,
     images: [
       "https://images.unsplash.com/photo-1530549387789-4c1017266635?w=800&q=80",
       "https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?w=800&q=80",
@@ -295,6 +309,8 @@ export const places = [
     },
     rating: 4.8,
     reviewCount: 445,
+    lat: 41.2400,
+    lon: 69.3720,
     images: [
       "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=800&q=80",
       "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800&q=80",
@@ -320,6 +336,8 @@ export const places = [
     },
     rating: 4.7,
     reviewCount: 133,
+    lat: 41.2650,
+    lon: 69.1850,
     images: [
       "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80",
       "https://images.unsplash.com/photo-1445307806294-bff7f67ff225?w=800&q=80",
