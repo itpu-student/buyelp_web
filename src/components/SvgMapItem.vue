@@ -18,6 +18,7 @@
 
 <script setup>
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import { defaultMarkerStyle } from './svgMapMarkers.js'
 
 const props = defineProps({
   /**
@@ -96,7 +97,6 @@ function calcDrawnBounds(svg) {
 
 /**
  * Extract geographic bounds from s101-geodata-* attributes on the SVG root element.
- * Expected attributes: s101-geodata-min-lat, s101-geodata-max-lat, s101-geodata-min-lon, s101-geodata-max-lon
  */
 function extractGeoBounds(svg) {
   const minLat = parseFloat(svg.getAttribute('s101-geodata-min-lat'))
@@ -116,52 +116,6 @@ function geoToSvg(lat, lon, geo, map) {
   return { x, y }
 }
 
-/** Create or move the SVG marker. */
-function placeMarker(x, y) {
-  if (!svgEl) return
-  if (!markerEl) {
-    // Outer glow ring
-    const glow = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
-    glow.setAttribute('r', String(props.markerRadius * 2))
-    glow.setAttribute('fill', props.markerColor)
-    glow.setAttribute('opacity', '0.2')
-    glow.id = 'latLonGlow'
-    svgEl.appendChild(glow)
-
-    // Main dot
-    markerEl = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
-    markerEl.setAttribute('r', String(props.markerRadius))
-    markerEl.setAttribute('fill', props.markerColor)
-    markerEl.setAttribute('stroke', '#ffffff')
-    markerEl.setAttribute('stroke-width', '2.5')
-    markerEl.id = 'latLonMarker'
-    svgEl.appendChild(markerEl)
-
-    // Pulse animation
-    const style = document.createElementNS('http://www.w3.org/2000/svg', 'style')
-    style.textContent = `
-      #latLonGlow { animation: svgPulse 2s ease-in-out infinite; transform-origin: ${x}px ${y}px; }
-      @keyframes svgPulse { 0%,100%{opacity:0.15;transform:scale(1)} 50%{opacity:0.35;transform:scale(1.4)} }
-    `
-    svgEl.appendChild(style)
-
-    const glowEl = svgEl.querySelector('#latLonGlow')
-    if (glowEl) {
-      glowEl.setAttribute('cx', String(x))
-      glowEl.setAttribute('cy', String(y))
-      glowEl.style.transformOrigin = `${x}px ${y}px`
-    }
-  }
-  markerEl.setAttribute('cx', String(x))
-  markerEl.setAttribute('cy', String(y))
-
-  const glowEl = svgEl.querySelector('#latLonGlow')
-  if (glowEl) {
-    glowEl.setAttribute('cx', String(x))
-    glowEl.setAttribute('cy', String(y))
-  }
-}
-
 /** Resolve the active geo bounds: prop override > SVG-embedded > null */
 function activeGeoBounds() {
   return props.geoBounds || geoBoundsFromSvg.value || null
@@ -171,7 +125,10 @@ function updateMarker() {
   const geo = activeGeoBounds()
   if (!svgEl || !drawnBounds || !geo || props.lat == null || props.lon == null) return
   const { x, y } = geoToSvg(props.lat, props.lon, geo, drawnBounds)
-  placeMarker(x, y)
+  markerEl = defaultMarkerStyle(svgEl, markerEl, x, y, {
+    radius: props.markerRadius,
+    color: props.markerColor,
+  })
 }
 
 async function loadSvg() {
