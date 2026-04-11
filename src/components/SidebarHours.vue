@@ -23,9 +23,10 @@
     </div>
     <transition name="expand">
       <div v-if="fullWeekOpen" class="weekly-hours">
-        <div v-for="row in weekRows" :key="row.label" class="day-row" :class="{ today: isToday(row.key) }">
-          <span class="day-name">{{ row.label }}</span>
-          <span class="day-hours">{{ row.hours }}</span>
+        <div class="hours-grid">
+          <div v-for="row in gridOrder" :key="row.label" class="day-row" :class="{ today: isToday(row.key), 'is-sun': row.key === 'sun' }">
+            <span class="day-hours">{{ row.hours }}</span>
+          </div>
         </div>
       </div>
     </transition>
@@ -65,7 +66,7 @@ const weekRows = computed(() => {
   if (wh && typeof wh === "object") {
     return WEEKLY_HOURS_ORDER.map((key, i) => {
       const d = new Date(2024, 0, 1 + i)
-      const label = d.toLocaleDateString(tag, { weekday: "long" })
+      const label = d.toLocaleDateString(tag, { weekday: "short" })
       const h = wh[key]
       const hours = h != null && String(h).trim() ? String(h).trim() : "—"
       return { label, hours, key }
@@ -74,9 +75,16 @@ const weekRows = computed(() => {
   const fallback = resolveTodayHours(p) ?? "—"
   return WEEKLY_HOURS_ORDER.map((key, i) => {
     const d = new Date(2024, 0, 1 + i)
-    const label = d.toLocaleDateString(tag, { weekday: "long" })
+    const label = d.toLocaleDateString(tag, { weekday: "short" })
     return { label, hours: fallback, key }
   })
+})
+
+const gridOrder = computed(() => {
+  const rows = weekRows.value
+  if (rows.length < 7) return rows
+  // Desired Order: Mon, Thu, Tue, Fri, Wed, Sat, Sun
+  return [rows[0], rows[3], rows[1], rows[4], rows[2], rows[5], rows[6]]
 })
 </script>
 
@@ -161,39 +169,65 @@ const weekRows = computed(() => {
 
 .weekly-hours {
   margin-top: 4px;
-  padding: 12px 12px 12px 42px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  padding: 16px 12px;
   border-top: 1px solid var(--border-light);
+}
+
+.hours-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 120px);
+  gap: 12px 24px;
+  justify-content: center;
+  position: relative;
+}
+
+.hours-grid::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 40px; /* Ends before Sunday */
+  border-left: 1px dashed var(--border-light);
+  transform: translateX(-50%);
 }
 
 .day-row {
   display: flex;
-  justify-content: space-between;
-  font-size: 0.9rem;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
   color: var(--text);
+  white-space: nowrap;
+}
+
+.day-row.is-sun {
+  grid-column: span 2;
+  padding-top: 8px;
+  margin-top: 4px;
+  border-top: 1px dashed var(--border-light);
 }
 
 .day-row.today {
-  font-weight: 700;
   color: var(--primary);
-}
-
-.day-name {
-  font-weight: 500;
-  width: 100px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 
 .day-hours {
   color: var(--text-2);
-  text-align: right;
+  font-weight: 500;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.today .day-hours {
+  /* color: var(--text); */
+  font-weight: 700;
 }
 
 .expand-enter-active,
 .expand-leave-active {
   transition: all 0.3s ease;
-  max-height: 300px;
+  max-height: 400px;
   overflow: hidden;
   opacity: 1;
 }
