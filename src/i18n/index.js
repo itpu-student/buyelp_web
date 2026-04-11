@@ -43,6 +43,10 @@ export const messages = {
       review_placeholder: "Share your experience…",
       open_now: "Open Now",
       closed: "Closed",
+      today_hours: "Today",
+      full_week_hours: "Full week hours",
+      directions: "Directions",
+      hours_unknown: "Hours not listed",
     },
     auth: {
       login_title: "Welcome Back",
@@ -139,6 +143,10 @@ export const messages = {
       review_placeholder: "Tajribangizni ulashing…",
       open_now: "Ochiq",
       closed: "Yopiq",
+      today_hours: "Bugun",
+      full_week_hours: "Haftalik ish vaqti",
+      directions: "Yo'nalish",
+      hours_unknown: "Ish vaqti ko'rsatilmagan",
     },
     auth: {
       login_title: "Xush kelibsiz",

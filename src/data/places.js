@@ -14,16 +14,36 @@ export const places = [
     lat: 41.31017,
     lon: 69.27994,
     images: [
-      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80",
-      "https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=800&q=80",
-      "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800&q=80",
       "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=800&q=80",
+      "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800&q=80",
+      "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&q=80",
+      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80",
+      "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80",
+      "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=800&q=80",
+      "https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?w=800&q=80",
+      "https://images.unsplash.com/photo-1481070414801-51fd732d7184?w=800&q=80",
+      "https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=800&q=80",
     ],
-    hours: "08:00 – 23:00",
+    weeklyHours: {
+      mon: "08:00 – 23:00",
+      tue: "08:00 – 23:00",
+      wed: "08:00 – 23:00",
+      thu: "08:00 – 23:00",
+      fri: "08:00 – 23:00",
+      sat: "09:00 – 00:00",
+      sun: "09:00 – 22:00",
+    },
     isOpen: true,
     featured: true,
     reviews: [
-      { id: "r1", author: "Aziz T.", rating: 5, text: "Best plov in all of Tashkent! Incredible atmosphere.", date: "2025-03-10" },
+      {
+        id: "r1",
+        author: "Aziz T.",
+        rating: 5,
+        text: "Best plov in all of Tashkent! Incredible atmosphere.",
+        date: "2025-03-10",
+        images: ["https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=80"]
+      },
       { id: "r2", author: "Malika R.", rating: 4, text: "Love the garden setting. A bit crowded on weekends.", date: "2025-02-28" },
       { id: "r3", author: "Jasur K.", rating: 5, text: "Authentic flavors, great service. Will definitely return.", date: "2025-01-15" },
     ],
@@ -46,8 +66,21 @@ export const places = [
       "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80",
       "https://images.unsplash.com/photo-1424847651672-bf20a4b0982b?w=800&q=80",
       "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800&q=80",
+      "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=800&q=80",
+      "https://images.unsplash.com/photo-1544148103-0773bf10d330?w=800&q=80",
+      "https://images.unsplash.com/photo-1551218808-94e220e084d2?w=800&q=80",
+      "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=800&q=80",
+      "https://images.unsplash.com/photo-1537047902294-62a40c20a6ae?w=800&q=80",
     ],
-    hours: "11:00 – 24:00",
+    weeklyHours: {
+      mon: "11:00 – 24:00",
+      tue: "11:00 – 24:00",
+      wed: "11:00 – 24:00",
+      thu: "11:00 – 24:00",
+      fri: "11:00 – 01:00",
+      sat: "12:00 – 02:00",
+      sun: "12:00 – 23:00",
+    },
     isOpen: true,
     featured: true,
     reviews: [
@@ -73,8 +106,21 @@ export const places = [
       "https://images.unsplash.com/photo-1487754180451-c456f719a1fc?w=800&q=80",
       "https://images.unsplash.com/photo-1530046339160-ce3e530c7d2f?w=800&q=80",
       "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=800&q=80",
+      "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&q=80",
+      "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=800&q=80",
+      "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800&q=80",
+      "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800&q=80",
+      "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?w=800&q=80",
     ],
-    hours: "08:00 – 20:00",
+    weeklyHours: {
+      mon: "08:00 – 20:00",
+      tue: "08:00 – 20:00",
+      wed: "08:00 – 20:00",
+      thu: "08:00 – 20:00",
+      fri: "08:00 – 20:00",
+      sat: "09:00 – 18:00",
+      sun: "Closed",
+    },
     isOpen: true,
     featured: false,
     reviews: [
@@ -100,8 +146,20 @@ export const places = [
       "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=800&q=80",
       "https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=800&q=80",
       "https://images.unsplash.com/photo-1631815588090-d4bfec5b1ccb?w=800&q=80",
+      "https://images.unsplash.com/photo-1516549655169-df83a0774514?w=800&q=80",
+      "https://images.unsplash.com/photo-1512678080530-7760d81faba6?w=800&q=80",
+      "https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800&q=80",
+      "https://images.unsplash.com/photo-1504813184591-01572f98c85f?w=800&q=80",
     ],
-    hours: "08:00 – 22:00",
+    weeklyHours: {
+      mon: "08:00 – 22:00",
+      tue: "08:00 – 22:00",
+      wed: "08:00 – 22:00",
+      thu: "08:00 – 22:00",
+      fri: "08:00 – 22:00",
+      sat: "09:00 – 18:00",
+      sun: "Closed",
+    },
     isOpen: true,
     featured: true,
     reviews: [
@@ -128,8 +186,20 @@ export const places = [
       "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=800&q=80",
       "https://images.unsplash.com/photo-1522163182402-834f871fd851?w=800&q=80",
       "https://images.unsplash.com/photo-1527004013197-933c4bb611b3?w=800&q=80",
+      "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80",
+      "https://images.unsplash.com/photo-1445307806294-bff7f67ff225?w=800&q=80",
+      "https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?w=800&q=80",
+      "https://images.unsplash.com/photo-1510672981848-a1c4f1cb5ccf?w=800&q=80",
     ],
-    hours: "09:00 – 18:00",
+    weeklyHours: {
+      mon: "09:00 – 18:00",
+      tue: "09:00 – 18:00",
+      wed: "09:00 – 18:00",
+      thu: "09:00 – 18:00",
+      fri: "09:00 – 18:00",
+      sat: "09:00 – 20:00",
+      sun: "09:00 – 20:00",
+    },
     isOpen: true,
     featured: true,
     reviews: [
@@ -155,14 +225,27 @@ export const places = [
       "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80",
       "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=800&q=80",
       "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=800&q=80",
+      "https://images.unsplash.com/photo-1574673133241-7ef84a224735?w=800&q=80",
+      "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=80",
+      "https://images.unsplash.com/photo-1534258936925-c58bed479fcb?w=800&q=80",
+      "https://images.unsplash.com/photo-1593079831268-3381b0db4a77?w=800&q=80",
     ],
-    hours: "06:00 – 23:00",
+    weeklyHours: {
+      mon: "06:00 – 23:00",
+      tue: "06:00 – 23:00",
+      wed: "06:00 – 23:00",
+      thu: "06:00 – 23:00",
+      fri: "06:00 – 23:00",
+      sat: "08:00 – 21:00",
+      sun: "08:00 – 21:00",
+    },
     isOpen: true,
     featured: false,
     reviews: [
       { id: "r12", author: "Timur R.", rating: 4, text: "Great equipment and the pool is very clean.", date: "2025-03-08" },
     ],
   },
+/*
   {
     id: "7",
     name: { en: "Beldersay Nature Reserve", uz: "Beldersay Tabiat Qo'riqxonasi" },
@@ -380,6 +463,32 @@ export const places = [
     ],
   },
 ]
+*/
+]
+
+/** Keys in `weeklyHours` objects; order Mon → Sun (matches `en-US` short weekday, lowercased). */
+export const WEEKLY_HOURS_ORDER = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+
+export function weeklyHoursDayKey(date = new Date()) {
+  return date.toLocaleDateString("en-US", { weekday: "short" }).toLowerCase()
+}
+
+/**
+ * Today's hours from `place.hours` or `place.weeklyHours` for the current weekday.
+ * Returns null if nothing usable is available.
+ */
+export function resolveTodayHours(place) {
+  if (!place) return null
+  const legacy = typeof place.hours === "string" ? place.hours.trim() : ""
+  if (legacy) return legacy
+  const wh = place.weeklyHours
+  if (wh && typeof wh === "object") {
+    const key = weeklyHoursDayKey()
+    const v = wh[key]
+    if (v != null && String(v).trim()) return String(v).trim()
+  }
+  return null
+}
 
 export function getPlaceById(id) {
   return places.find((p) => p.id === id) || null
