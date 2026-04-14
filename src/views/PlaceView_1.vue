@@ -160,6 +160,15 @@
               </a>
 
               <SidebarHours :place="place" />
+              
+              <div class="sidebar-map-wrap">
+                <SvgMapItem
+                  :lat="place.lat ?? null"
+                  :lon="place.lon ?? null"
+                  svgSrc="/Tashkent_map_with_captions.svg"
+                  :show-coords="false"
+                />
+              </div>
             </div>
           </aside>
         </div>
@@ -177,6 +186,7 @@ import { store } from "../store/index.js"
 import ReviewCard from "../components/ReviewCard.vue"
 import StarRating from "../components/StarRating.vue"
 import SidebarHours from "../components/SidebarHours.vue"
+import SvgMapItem from "../components/SvgMapItem.vue"
 
 const route = useRoute()
 const place = computed(() => getPlaceById(route.params.id))
@@ -537,7 +547,7 @@ function submitReview() {
 
 .place-grid {
   display: grid;
-  grid-template-columns: 1fr 300px;
+  grid-template-columns: 1fr 360px;
   gap: 40px;
   align-items: start;
 }
@@ -679,6 +689,18 @@ function submitReview() {
 .address-multiline {
   color: var(--text);
   font-weight: 500;
+}
+
+.sidebar-map-wrap {
+  margin-top: 16px;
+  padding: 12px;
+  background: var(--surface-2);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  min-height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .expand-enter-active,

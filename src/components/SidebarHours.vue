@@ -25,6 +25,7 @@
       <div v-if="fullWeekOpen" class="weekly-hours">
         <div class="hours-grid">
           <div v-for="row in gridOrder" :key="row.label" class="day-row" :class="{ today: isToday(row.key), 'is-sun': row.key === 'sun' }">
+            <span class="day-label">{{ row.label }}</span>
             <span class="day-hours">{{ row.hours }}</span>
           </div>
         </div>
@@ -66,7 +67,7 @@ const weekRows = computed(() => {
   if (wh && typeof wh === "object") {
     return WEEKLY_HOURS_ORDER.map((key, i) => {
       const d = new Date(2024, 0, 1 + i)
-      const label = d.toLocaleDateString(tag, { weekday: "short" })
+      const label = d.toLocaleDateString(tag, { weekday: "short" }).slice(0, 2)
       const h = wh[key]
       const hours = h != null && String(h).trim() ? String(h).trim() : "—"
       return { label, hours, key }
@@ -75,7 +76,7 @@ const weekRows = computed(() => {
   const fallback = resolveTodayHours(p) ?? "—"
   return WEEKLY_HOURS_ORDER.map((key, i) => {
     const d = new Date(2024, 0, 1 + i)
-    const label = d.toLocaleDateString(tag, { weekday: "short" })
+    const label = d.toLocaleDateString(tag, { weekday: "short" }).slice(0, 2)
     return { label, hours: fallback, key }
   })
 })
@@ -209,8 +210,21 @@ const gridOrder = computed(() => {
 
 .day-row.today {
   color: var(--primary);
-  text-decoration: underline;
-  text-underline-offset: 4px;
+  border-bottom: 1.5px solid var(--primary);
+  padding-bottom: 1px;
+}
+
+.day-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-2);
+  text-transform: capitalize;
+  min-width: 18px;
+  margin-right: 6px;
+}
+
+.today .day-label {
+
 }
 
 .day-hours {
