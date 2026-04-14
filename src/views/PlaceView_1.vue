@@ -547,7 +547,7 @@ function submitReview() {
 
 .place-grid {
   display: grid;
-  grid-template-columns: 1fr 360px;
+  grid-template-columns: minmax(0, 65%) minmax(0, 35%);
   gap: 40px;
   align-items: start;
 }
