@@ -15,6 +15,25 @@
       <StarRating :rating="review.rating" :size="15" mode="simple" />
     </div>
     <p class="review-text">{{ review.text }}</p>
+    
+    <!-- Review Images (Yelp style) -->
+    <div v-if="review.images && review.images.length" class="review-images">
+      <img
+        v-for="(img, idx) in review.images"
+        :key="idx"
+        :src="img"
+        alt="Review photo"
+        class="review-photo-sm"
+        loading="lazy"
+      />
+    </div>
+    <img
+      v-else-if="review.image"
+      :src="review.image"
+      alt=""
+      class="review-photo"
+      loading="lazy"
+    />
   </div>
 </template>
 
@@ -76,5 +95,29 @@ function formatDate(dateStr) {
   font-size: 0.9rem;
   color: var(--text-2);
   line-height: 1.6;
+}
+
+.review-photo {
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.review-images {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.review-photo-sm {
+  width: 160px;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
 }
 </style>

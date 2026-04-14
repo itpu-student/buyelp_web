@@ -78,7 +78,7 @@
         <div class="place-row__meta">
           <span class="place-row__meta-item">
             <span class="place-row__icon">🕐</span>
-            {{ place.hours }}
+            {{ hoursSummary }}
           </span>
           <span v-if="place.phone" class="place-row__meta-item">
             <span class="place-row__icon">📞</span>
@@ -110,6 +110,7 @@
 import { ref, computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { t, i18nState } from '../i18n/index.js'
+import { resolveTodayHours } from '../data/places.js'
 import StarRating from './StarRating.vue'
 import SvgMapItem from './SvgMapItem.vue'
 
@@ -134,6 +135,8 @@ const categoryIcons = {
   activities: '🏔️', sports: '⚽', tabiat: '🌿',
 }
 const categoryIcon = computed(() => categoryIcons[props.place.category] || '📍')
+
+const hoursSummary = computed(() => resolveTodayHours(props.place) ?? t('place.hours_unknown'))
 
 // ─── Carousel ─────────────────────────────────────────────────────────────────
 /**
