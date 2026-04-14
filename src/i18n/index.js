@@ -98,6 +98,15 @@ export const messages = {
       save: "Save",
       cancel: "Cancel",
     },
+    days_short: {
+      mon: "Mo",
+      tue: "Tu",
+      wed: "We",
+      thu: "Th",
+      fri: "Fr",
+      sat: "Sa",
+      sun: "Su",
+    },
   },
   uz: {
     nav: {
@@ -197,6 +206,15 @@ export const messages = {
       back: "Orqaga",
       save: "Saqlash",
       cancel: "Bekor qilish",
+    },
+    days_short: {
+      mon: "Du",
+      tue: "Se",
+      wed: "Ch",
+      thu: "Pa",
+      fri: "Ju",
+      sat: "Sh",
+      sun: "Ya",
     },
   },
 }

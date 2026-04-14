@@ -62,21 +62,20 @@ const todayHoursDisplay = computed(() => {
 const weekRows = computed(() => {
   const p = props.place
   if (!p) return []
-  const tag = locale.locale === "uz" ? "uz-UZ" : "en-US"
+  // Track locale so this re-runs on language change
+  locale.locale
   const wh = p.weeklyHours
   if (wh && typeof wh === "object") {
-    return WEEKLY_HOURS_ORDER.map((key, i) => {
-      const d = new Date(2024, 0, 1 + i)
-      const label = d.toLocaleDateString(tag, { weekday: "short" }).slice(0, 2)
+    return WEEKLY_HOURS_ORDER.map((key) => {
+      const label = t(`days_short.${key}`)
       const h = wh[key]
       const hours = h != null && String(h).trim() ? String(h).trim() : "—"
       return { label, hours, key }
     })
   }
   const fallback = resolveTodayHours(p) ?? "—"
-  return WEEKLY_HOURS_ORDER.map((key, i) => {
-    const d = new Date(2024, 0, 1 + i)
-    const label = d.toLocaleDateString(tag, { weekday: "short" }).slice(0, 2)
+  return WEEKLY_HOURS_ORDER.map((key) => {
+    const label = t(`days_short.${key}`)
     return { label, hours: fallback, key }
   })
 })
