@@ -1,9 +1,12 @@
 import { reactive } from "vue"
 
+const STORAGE_KEY = "buyelp_auth"
+const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null")
+
 export const store = reactive({
   // Auth state
-  isLoggedIn: false,
-  user: null,
+  isLoggedIn: saved?.isLoggedIn ?? false,
+  user: saved?.user ?? null,
 
   // Mock user data
   mockUser: {
@@ -18,15 +21,21 @@ export const store = reactive({
     ],
   },
 
+  _persist() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ isLoggedIn: this.isLoggedIn, user: this.user }))
+  },
+
   login(email, password) {
     // Mock login - accept any credentials
     this.isLoggedIn = true
     this.user = { ...this.mockUser }
+    this._persist()
   },
 
   logout() {
     this.isLoggedIn = false
     this.user = null
+    this._persist()
   },
 
   register(name, email, password) {
@@ -39,5 +48,6 @@ export const store = reactive({
       joined: new Date().toISOString().split("T")[0],
       reviews: [],
     }
+    this._persist()
   },
 })
