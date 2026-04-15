@@ -10,6 +10,7 @@
 
   --bg: #f8fafc;
   --surface: #ffffff;
+  --surface-1a: #e2e8f0;
   --surface-2: #f1f5f9;
   --border: #e2e8f0;
   --border-light: #f1f5f9;
@@ -39,7 +40,8 @@
 [data-theme="dark"] {
   --bg: #0b1120;
   --surface: #141c2e;
-  --surface-2: #161f30;
+  --surface-1a: #161f30;
+  --surface-2: #1e2a3e;
   --border: #253047;
   --border-light: #1e2a3e;
   --text: #f1f5f9;

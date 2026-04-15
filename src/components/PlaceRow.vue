@@ -289,7 +289,7 @@ function prev() {
 }
 
 .place-row__info:hover {
-  background: var(--surface-2);
+  background: var(--surface-1a);
 }
 
 .place-row__info-inner {
