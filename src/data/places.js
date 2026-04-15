@@ -14,18 +14,108 @@ export const places = [
     lat: 41.31017,
     lon: 69.27994,
     images: [
-      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80",
-      "https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=800&q=80",
-      "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800&q=80",
       "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=800&q=80",
+      "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800&q=80",
+      "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&q=80",
+      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80",
+      "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80",
+      "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=800&q=80",
+      "https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?w=800&q=80",
+      "https://images.unsplash.com/photo-1481070414801-51fd732d7184?w=800&q=80",
+      "https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=800&q=80",
     ],
-    hours: "08:00 – 23:00",
+    weeklyHours: {
+      mon: "08:00 – 23:00",
+      tue: "08:00 – 23:00",
+      wed: "08:00 – 23:00",
+      thu: "08:00 – 23:00",
+      fri: "08:00 – 23:00",
+      sat: "09:00 – 00:00",
+      sun: "09:00 – 22:00",
+    },
     isOpen: true,
     featured: true,
     reviews: [
-      { id: "r1", author: "Aziz T.", rating: 5, text: "Best plov in all of Tashkent! Incredible atmosphere.", date: "2025-03-10" },
-      { id: "r2", author: "Malika R.", rating: 4, text: "Love the garden setting. A bit crowded on weekends.", date: "2025-02-28" },
-      { id: "r3", author: "Jasur K.", rating: 5, text: "Authentic flavors, great service. Will definitely return.", date: "2025-01-15" },
+      {
+        id: "r1",
+        author: "Aziz T.",
+        rating: 5,
+        text: "Hands down the best plov I've ever had in all of Tashkent. The rice is perfectly cooked — each grain separate and fragrant with cumin and barberry. The lamb was fall-off-the-bone tender. Sat in the garden under the grape vines and it felt like stepping back in time. The staff were warm and unhurried, which I really appreciated. Already planning my next visit!",
+        date: "2025-03-10",
+        images: [
+          "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=80",
+          "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&q=80",
+        ],
+      },
+      {
+        id: "r2",
+        author: "Malika R.",
+        rating: 4,
+        text: "Love the garden setting — it's genuinely one of the most charming outdoor dining spaces in the city. The shashlik skewers were smoky and juicy, and the non bread straight from the tandir was phenomenal. Only reason I'm giving 4 stars instead of 5 is that it gets quite crowded on Friday evenings and the wait for a table was nearly 30 minutes. Definitely come early or book ahead on weekends.",
+        date: "2025-02-28",
+        images: [
+          "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&q=80",
+          "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=400&q=80",
+          "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=80",
+          "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=400&q=80",
+          "https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=400&q=80",
+          "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&q=80",
+          "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&q=80",
+          "https://images.unsplash.com/photo-1481070414801-51fd732d7184?w=400&q=80",
+        ],
+      },
+      {
+        id: "r3",
+        author: "Jasur K.",
+        rating: 5,
+        text: "Authentic flavors that take you straight to your grandmother's kitchen. The lagman soup was rich and hearty, with hand-pulled noodles and a broth that tasted like it had been simmering for hours. Great service — our waiter checked in without being intrusive and made excellent recommendations. The samsa pastries as a starter were crisp and perfectly spiced. Will definitely be returning with family.",
+        date: "2025-01-15",
+        images: [
+          "https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=400&q=80",
+          "https://images.unsplash.com/photo-1481070414801-51fd732d7184?w=400&q=80",
+        ],
+      },
+      {
+        id: "r1a",
+        author: "Lola B.",
+        rating: 5,
+        text: "We celebrated my husband's birthday here and the team went above and beyond. They set up a corner of the garden with a little surprise cake and brought out fresh fruit without us asking. The manti dumplings were enormous and filled generously with spiced minced meat. Honestly the whole evening felt special. The fairy lights strung through the garden at night create a magical atmosphere. Cannot recommend highly enough.",
+        date: "2025-03-22",
+        images: [
+          "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=400&q=80",
+          "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=400&q=80",
+        ],
+      },
+      {
+        id: "r1b",
+        author: "Timur N.",
+        rating: 4,
+        text: "Really solid traditional Uzbek food in a beautiful setting. I ordered the dimlama (vegetable and meat stew) which was warming and full of flavour. Portion sizes are very generous — I couldn't finish my plate. The only minor issue was that the tea took a while to arrive and was lukewarm by the time it came. Everything else was excellent though, including the freshly squeezed apricot juice. Would come back.",
+        date: "2025-03-01",
+        images: [
+          "https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?w=400&q=80",
+        ],
+      },
+      {
+        id: "r1c",
+        author: "Sarvar O.",
+        rating: 3,
+        text: "The food itself is genuinely tasty and the ambience is lovely, but I had a frustrating experience with the billing — we were charged for a dish we didn't order and it took a while to get it corrected. When it was sorted out the manager was apologetic. I'd probably give it another shot because the plov really is exceptional, but it dampened the experience a bit. Hopefully just a one-off.",
+        date: "2025-02-10",
+        images: [],
+      },
+      {
+        id: "r1d",
+        author: "Yulduz M.",
+        rating: 5,
+        text: "Came here on a friend's recommendation and I completely understand the hype now. The garden is absolutely stunning in spring — flowers everywhere and the sound of a small fountain in the background. We ordered the full spread: plov, shashlik, samsa, lagman, and chak-chak for dessert. Everything was excellent. The staff were friendly and patient with our large group of 10. Prices are reasonable for the quality. This is my new favourite place in Tashkent.",
+        date: "2025-04-02",
+        images: [
+          "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&q=80",
+          "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=80",
+          "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&q=80",
+        ],
+      },
     ],
   },
   {
@@ -46,13 +136,64 @@ export const places = [
       "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80",
       "https://images.unsplash.com/photo-1424847651672-bf20a4b0982b?w=800&q=80",
       "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800&q=80",
+      "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=800&q=80",
+      "https://images.unsplash.com/photo-1544148103-0773bf10d330?w=800&q=80",
+      "https://images.unsplash.com/photo-1551218808-94e220e084d2?w=800&q=80",
+      "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=800&q=80",
+      "https://images.unsplash.com/photo-1537047902294-62a40c20a6ae?w=800&q=80",
     ],
-    hours: "11:00 – 24:00",
+    weeklyHours: {
+      mon: "11:00 – 24:00",
+      tue: "11:00 – 24:00",
+      wed: "11:00 – 24:00",
+      thu: "11:00 – 24:00",
+      fri: "11:00 – 01:00",
+      sat: "12:00 – 02:00",
+      sun: "12:00 – 23:00",
+    },
     isOpen: true,
     featured: true,
     reviews: [
-      { id: "r4", author: "Dilnoza A.", rating: 5, text: "Gorgeous interior, the samsa and shurpa were outstanding!", date: "2025-03-05" },
-      { id: "r5", author: "Bobur M.", rating: 4, text: "Pricey but worth it for special occasions.", date: "2025-02-14" },
+      {
+        id: "r4",
+        author: "Dilnoza A.",
+        rating: 5,
+        text: "Karavan is in a league of its own when it comes to ambience. Walking in feels like entering a caravanserai from the Silk Road era — the arched ceilings, intricate tilework, and hanging lanterns are breathtaking. But the food matches the setting: the samsa were golden and flaky with a juicy minced lamb filling, and the shurpa broth was deeply flavoured with vegetables and fragrant herbs. Service was attentive and polished. A real gem.",
+        date: "2025-03-05",
+        images: [
+          "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&q=80",
+          "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=400&q=80",
+        ],
+      },
+      {
+        id: "r5",
+        author: "Bobur M.",
+        rating: 4,
+        text: "Yes, it's pricey by Tashkent standards, but for a special occasion it's absolutely worth it. Took my wife here for our anniversary and the staff organised a beautiful table by the courtyard fountain. The kebab platter for two was outstanding — tender, smoky, and perfectly seasoned. The wine list is also surprisingly good with some decent Georgian options. Would have given 5 stars but the dessert menu felt a bit thin.",
+        date: "2025-02-14",
+        images: [
+          "https://images.unsplash.com/photo-1424847651672-bf20a4b0982b?w=400&q=80",
+        ],
+      },
+      {
+        id: "r5a",
+        author: "Kamola Y.",
+        rating: 5,
+        text: "I've been to a lot of upscale restaurants in Central Asia and Karavan sits right at the top. The bread basket alone — different types of non, breadsticks, and lavash — was enough to make me happy. Then the tandoor-baked quail arrived and I was completely won over. The spice blend is subtle and complex. The interior design is jaw-dropping for photos too. If you only eat at one restaurant in Tashkent, make it this one.",
+        date: "2025-03-18",
+        images: [
+          "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=400&q=80",
+          "https://images.unsplash.com/photo-1544148103-0773bf10d330?w=400&q=80",
+        ],
+      },
+      {
+        id: "r5b",
+        author: "Ravshan D.",
+        rating: 3,
+        text: "Great setting and decent food but service let it down on our visit. We waited almost 25 minutes to have our order taken on a Thursday evening when the restaurant wasn't even full. The plov was good but not exceptional for the price. The architectural interior is genuinely stunning though, so I can see why people love it. Maybe we caught them on an off night — might give it another try.",
+        date: "2025-01-25",
+        images: [],
+      },
     ],
   },
   {
@@ -73,13 +214,55 @@ export const places = [
       "https://images.unsplash.com/photo-1487754180451-c456f719a1fc?w=800&q=80",
       "https://images.unsplash.com/photo-1530046339160-ce3e530c7d2f?w=800&q=80",
       "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=800&q=80",
+      "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&q=80",
+      "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=800&q=80",
+      "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800&q=80",
+      "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800&q=80",
+      "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?w=800&q=80",
     ],
-    hours: "08:00 – 20:00",
+    weeklyHours: {
+      mon: "08:00 – 20:00",
+      tue: "08:00 – 20:00",
+      wed: "08:00 – 20:00",
+      thu: "08:00 – 20:00",
+      fri: "08:00 – 20:00",
+      sat: "09:00 – 18:00",
+      sun: "Closed",
+    },
     isOpen: true,
     featured: false,
     reviews: [
-      { id: "r6", author: "Sherzod B.", rating: 5, text: "Fixed my transmission in one day. Fair price!", date: "2025-03-01" },
-      { id: "r7", author: "Nodir V.", rating: 4, text: "Good service, a bit of a wait but they did a thorough job.", date: "2025-01-20" },
+      {
+        id: "r6",
+        author: "Sherzod B.",
+        rating: 5,
+        text: "Brought my Chevrolet Malibu in for a transmission rebuild that two other garages had quoted at astronomical prices. AutoPro diagnosed it accurately in under an hour and fixed it the same day at nearly half the price. The mechanic walked me through exactly what was wrong, showed me the worn parts, and explained each step of the repair. Transparent, professional, and fast. Genuinely one of the best auto service experiences I've had.",
+        date: "2025-03-01",
+        images: [
+          "https://images.unsplash.com/photo-1487754180451-c456f719a1fc?w=400&q=80",
+        ],
+      },
+      {
+        id: "r7",
+        author: "Nodir V.",
+        rating: 4,
+        text: "Solid and thorough service. They did a full inspection, oil change, and brake pad replacement on my Nexia 3. The technicians clearly know what they're doing and didn't try to upsell me on unnecessary parts, which I really appreciated. The wait was about 2.5 hours but they have a comfortable waiting area with Wi-Fi and tea, so it wasn't bad. Pricing felt fair. Would use them again for regular maintenance.",
+        date: "2025-01-20",
+        images: [
+          "https://images.unsplash.com/photo-1530046339160-ce3e530c7d2f?w=400&q=80",
+          "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=400&q=80",
+        ],
+      },
+      {
+        id: "r7a",
+        author: "Ulmas T.",
+        rating: 5,
+        text: "My engine light came on the evening before a long road trip to Samarkand and I was panicking. AutoPro opened at 8am and they plugged in their diagnostic tool straight away. Turned out to be a faulty oxygen sensor — they had the part in stock and it was replaced within 90 minutes. The road trip went perfectly. These guys literally saved my plans. Staff were calm, efficient, and the price was more than fair. Five stars without hesitation.",
+        date: "2025-02-18",
+        images: [
+          "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=400&q=80",
+        ],
+      },
     ],
   },
   {
@@ -100,8 +283,20 @@ export const places = [
       "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=800&q=80",
       "https://images.unsplash.com/photo-1586773860418-d37222d8fce3?w=800&q=80",
       "https://images.unsplash.com/photo-1631815588090-d4bfec5b1ccb?w=800&q=80",
+      "https://images.unsplash.com/photo-1516549655169-df83a0774514?w=800&q=80",
+      "https://images.unsplash.com/photo-1512678080530-7760d81faba6?w=800&q=80",
+      "https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800&q=80",
+      "https://images.unsplash.com/photo-1504813184591-01572f98c85f?w=800&q=80",
     ],
-    hours: "08:00 – 22:00",
+    weeklyHours: {
+      mon: "08:00 – 22:00",
+      tue: "08:00 – 22:00",
+      wed: "08:00 – 22:00",
+      thu: "08:00 – 22:00",
+      fri: "08:00 – 22:00",
+      sat: "09:00 – 18:00",
+      sun: "Closed",
+    },
     isOpen: true,
     featured: true,
     reviews: [
@@ -128,8 +323,20 @@ export const places = [
       "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=800&q=80",
       "https://images.unsplash.com/photo-1522163182402-834f871fd851?w=800&q=80",
       "https://images.unsplash.com/photo-1527004013197-933c4bb611b3?w=800&q=80",
+      "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80",
+      "https://images.unsplash.com/photo-1445307806294-bff7f67ff225?w=800&q=80",
+      "https://images.unsplash.com/photo-1478131143081-80f7f84ca84d?w=800&q=80",
+      "https://images.unsplash.com/photo-1510672981848-a1c4f1cb5ccf?w=800&q=80",
     ],
-    hours: "09:00 – 18:00",
+    weeklyHours: {
+      mon: "09:00 – 18:00",
+      tue: "09:00 – 18:00",
+      wed: "09:00 – 18:00",
+      thu: "09:00 – 18:00",
+      fri: "09:00 – 18:00",
+      sat: "09:00 – 20:00",
+      sun: "09:00 – 20:00",
+    },
     isOpen: true,
     featured: true,
     reviews: [
@@ -155,14 +362,27 @@ export const places = [
       "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80",
       "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?w=800&q=80",
       "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?w=800&q=80",
+      "https://images.unsplash.com/photo-1574673133241-7ef84a224735?w=800&q=80",
+      "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=80",
+      "https://images.unsplash.com/photo-1534258936925-c58bed479fcb?w=800&q=80",
+      "https://images.unsplash.com/photo-1593079831268-3381b0db4a77?w=800&q=80",
     ],
-    hours: "06:00 – 23:00",
+    weeklyHours: {
+      mon: "06:00 – 23:00",
+      tue: "06:00 – 23:00",
+      wed: "06:00 – 23:00",
+      thu: "06:00 – 23:00",
+      fri: "06:00 – 23:00",
+      sat: "08:00 – 21:00",
+      sun: "08:00 – 21:00",
+    },
     isOpen: true,
     featured: false,
     reviews: [
       { id: "r12", author: "Timur R.", rating: 4, text: "Great equipment and the pool is very clean.", date: "2025-03-08" },
     ],
   },
+/*
   {
     id: "7",
     name: { en: "Beldersay Nature Reserve", uz: "Beldersay Tabiat Qo'riqxonasi" },
@@ -380,6 +600,32 @@ export const places = [
     ],
   },
 ]
+*/
+]
+
+/** Keys in `weeklyHours` objects; order Mon → Sun (matches `en-US` short weekday, lowercased). */
+export const WEEKLY_HOURS_ORDER = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+
+export function weeklyHoursDayKey(date = new Date()) {
+  return date.toLocaleDateString("en-US", { weekday: "short" }).toLowerCase()
+}
+
+/**
+ * Today's hours from `place.hours` or `place.weeklyHours` for the current weekday.
+ * Returns null if nothing usable is available.
+ */
+export function resolveTodayHours(place) {
+  if (!place) return null
+  const legacy = typeof place.hours === "string" ? place.hours.trim() : ""
+  if (legacy) return legacy
+  const wh = place.weeklyHours
+  if (wh && typeof wh === "object") {
+    const key = weeklyHoursDayKey()
+    const v = wh[key]
+    if (v != null && String(v).trim()) return String(v).trim()
+  }
+  return null
+}
 
 export function getPlaceById(id) {
   return places.find((p) => p.id === id) || null

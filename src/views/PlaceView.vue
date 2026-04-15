@@ -6,46 +6,88 @@
     </div>
 
     <template v-else>
-      <!-- ──── Hero image ──── -->
-      <div class="place-hero">
-        <img :src="place.images[0]" :alt="placeName" class="place-hero-img" />
-        <div class="place-hero-overlay"></div>
-        <div class="place-hero-content container">
-          <RouterLink to="/search" class="back-link">← {{ t('common.back') }}</RouterLink>
-          <div class="place-hero-badges">
-            <span class="badge badge-primary">{{ categoryIcon }} {{ t(`categories.${place.category}`) }}</span>
-            <span class="badge" :class="place.isOpen ? 'badge-success' : 'badge-danger'">
-              {{ place.isOpen ? t('place.open_now') : t('place.closed') }}
-            </span>
+      <div class="place-header-wrap">
+        <div v-if="galleryImages.length" class="carousel-outer">
+          <div ref="carouselViewportRef" class="carousel-viewport" role="region" aria-label="Place photos">
+            <div class="carousel__track" :style="galleryTrackStyle">
+              <div
+                v-for="(src, i) in galleryImages"
+                :key="i"
+                class="carousel__slide"
+                :style="{ width: `${gallerySlideWidthPx}px` }"
+              >
+                <img :src="src" :alt="`${placeName} — ${i + 1}`" class="carousel__img" loading="lazy" />
+              </div>
+            </div>
+
+            <template v-if="galleryMaxStart > 0">
+              <button
+                type="button"
+                class="carousel__btn carousel__btn--prev"
+                aria-label="Previous photo"
+                @click="galleryPrev"
+              >
+                &#8592;
+              </button>
+              <button
+                type="button"
+                class="carousel__btn carousel__btn--next"
+                aria-label="Next photo"
+                @click="galleryNext"
+              >
+                &#8594;
+              </button>
+              <div class="carousel__dots">
+                <button
+                  v-for="i in galleryDotCount"
+                  :key="i - 1"
+                  type="button"
+                  class="carousel__dot"
+                  :class="{ 'carousel__dot--active': i - 1 === galleryStartIndex }"
+                  :aria-label="`Photo position ${i}`"
+                  @click="galleryStartIndex = i - 1"
+                />
+              </div>
+            </template>
           </div>
-          <h1 class="place-hero-title">{{ placeName }}</h1>
-          <div class="place-hero-rating">
-            <StarRating :rating="place.rating" :size="24" />
-            <span class="rating-big">{{ place.rating.toFixed(1) }}</span>
-            <span class="review-count-hero">({{ place.reviewCount }} {{ t('common.reviews_count') }})</span>
+        </div>
+
+        <div v-else class="carousel-placeholder">No photos</div>
+
+        <div class="container place-header-inner">
+          <!-- <RouterLink to="/search" class="back-link">← {{ t("common.back") }}</RouterLink> -->
+
+          <div class="place-title-block">
+            <h1 class="place-title">{{ placeName }}</h1>
+            <div class="place-title-meta">
+              <span class="cat-pill">{{ categoryIcon }} {{ t(`categories.${place.category}`) }}</span>
+            </div>
+            <div class="place-rating-row">
+              <StarRating :rating="place.rating" :size="22" />
+              <span class="rating-num">{{ place.rating.toFixed(1) }}</span>
+              <span class="review-count">({{ place.reviewCount }} {{ t("common.reviews_count") }})</span>
+              <span class="meta-dot" aria-hidden="true">·</span>
+              <span class="status-pill" :class="place.isOpen ? 'open' : 'closed'">
+                {{ place.isOpen ? t("place.open_now") : t("place.closed") }}
+              </span>
+              <span class="meta-dot" aria-hidden="true">·</span>
+              <span class="today-line">
+                <span class="today-label">{{ t("place.today_hours") }}:</span>
+                {{ todayHoursDisplay }}
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
       <div class="container place-body">
         <div class="place-grid">
-          <!-- ──── Main column ──── -->
           <div class="place-main">
-            <!-- Description -->
             <section class="info-section">
-              <p class="place-desc">{{ placeDesc }}</p>
-            </section>
+              <h2 class="section-title">{{ t("place.reviews") }}</h2>
 
-            <div class="divider"></div>
-
-            <!-- Reviews -->
-            <section class="info-section">
-              <h2 class="section-title">{{ t('place.reviews') }}</h2>
-
-              <!-- Write review -->
-              <div class="review-form card" v-if="store.isLoggedIn">
-                <h3 class="form-title">{{ t('place.write_review') }}</h3>
-                <!-- Star picker -->
+              <div v-if="store.isLoggedIn" class="review-form card">
+                <h3 class="form-title">{{ t("place.write_review") }}</h3>
                 <div class="star-picker">
                   <span
                     v-for="n in 5"
@@ -55,7 +97,8 @@
                     @mouseenter="hoverRating = n"
                     @mouseleave="hoverRating = 0"
                     @click="newRating = n"
-                  >★</span>
+                    >★</span
+                  >
                 </div>
                 <textarea
                   v-model="newReviewText"
@@ -63,68 +106,76 @@
                   class="form-input"
                   rows="3"
                 ></textarea>
-                <button class="btn btn-primary" @click="submitReview">
-                  {{ t('place.submit_review') }}
-                </button>
+                <button class="btn btn-primary" @click="submitReview">{{ t("place.submit_review") }}</button>
                 <div v-if="reviewSubmitted" class="submitted-msg">
                   ✅ Review submitted! (Demo mode — not persisted)
                 </div>
               </div>
               <div v-else class="review-login-nudge">
                 <p>
-                  <RouterLink to="/login" class="text-primary font-semibold">{{ t('auth.signin_link') }}</RouterLink>
+                  <RouterLink to="/login" class="text-primary font-semibold">{{ t("auth.signin_link") }}</RouterLink>
                   to write a review.
                 </p>
               </div>
 
-              <!-- Existing reviews -->
               <div v-if="place.reviews.length" class="reviews-list">
                 <ReviewCard v-for="r in allReviews" :key="r.id" :review="r" />
               </div>
-              <p v-else class="text-muted text-sm">{{ t('place.no_reviews') }}</p>
+              <p v-else class="text-muted text-sm">{{ t("place.no_reviews") }}</p>
             </section>
           </div>
 
-          <!-- ──── Sidebar ──── -->
           <aside class="place-sidebar">
-            <!-- Call CTA -->
-            <a :href="`tel:${place.phone}`" class="btn btn-primary btn-lg call-btn">
-              📞 {{ t('place.call_now') }}
-            </a>
-
-            <div class="info-card card">
-              <div class="info-row">
-                <span class="info-icon">📍</span>
-                <div>
-                  <div class="info-label">{{ t('place.address') }}</div>
-                  <div class="info-value">{{ placeAddress }}</div>
-                </div>
-              </div>
-              <div class="info-row">
-                <span class="info-icon">📞</span>
-                <div>
-                  <div class="info-label">{{ t('place.phone') }}</div>
-                  <a :href="`tel:${place.phone}`" class="info-value text-primary">{{ place.phone }}</a>
-                </div>
-              </div>
-              <div class="info-row">
-                <span class="info-icon">🕐</span>
-                <div>
-                  <div class="info-label">{{ t('place.hours') }}</div>
-                  <div class="info-value">{{ place.hours }}</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Rating breakdown -->
-            <div class="rating-card card">
-              <div class="rating-big-display">
-              <span class="rating-number">{{ place.rating.toFixed(1) }}</span>
-              <div>
+            <div class="sidebar-card card">
+              <div class="sidebar-rating">
                 <StarRating :rating="place.rating" :size="20" />
-                <div class="text-muted text-xs">{{ place.reviewCount }} {{ t('common.reviews_count') }}</div>
+                <span class="rating-num">{{ place.rating.toFixed(1) }}</span>
+                <span class="review-count">({{ place.reviewCount }} {{ t("common.reviews_count") }})</span>
               </div>
-            </div>
+              <div class="divider-sidebar"></div>
+
+              <div v-if="placeDesc" class="sidebar-desc">
+                {{ placeDesc }}
+              </div>
+              <div v-if="placeDesc" class="divider-sidebar"></div>
+
+              <a :href="telHref" class="sidebar-line is-link">
+                <span class="side-icon" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path
+                      d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"
+                    />
+                  </svg>
+                </span>
+                <span class="side-text">{{ place.phone }}</span>
+              </a>
+
+              <a
+                :href="mapsUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="sidebar-line is-link"
+                :aria-label="t('place.directions')"
+              >
+                <span class="side-icon" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
+                </span>
+                <span class="side-text address-multiline">{{ placeAddress }}</span>
+              </a>
+
+              <SidebarHours :place="place" />
+              
+              <div class="sidebar-map-wrap">
+                <SvgMapItem
+                  :lat="place.lat ?? null"
+                  :lon="place.lon ?? null"
+                  svgSrc="/Tashkent_map_with_captions.svg"
+                  :show-coords="false"
+                />
+              </div>
             </div>
           </aside>
         </div>
@@ -134,130 +185,397 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { useRoute } from 'vue-router'
-import { t, i18nState } from '../i18n/index.js'
-import { getPlaceById } from '../data/places.js'
-import { store } from '../store/index.js'
-import ReviewCard from '../components/ReviewCard.vue'
-import StarRating from '../components/StarRating.vue'
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from "vue"
+import { useRoute } from "vue-router"
+import { t, i18nState } from "../i18n/index.js"
+import { getPlaceById, resolveTodayHours } from "../data/places.js"
+import { store } from "../store/index.js"
+import ReviewCard from "../components/ReviewCard.vue"
+import StarRating from "../components/StarRating.vue"
+import SidebarHours from "../components/SidebarHours.vue"
+import SvgMapItem from "../components/SvgMapItem.vue"
 
 const route = useRoute()
-const place = getPlaceById(route.params.id)
+const place = computed(() => getPlaceById(route.params.id))
 
 const newRating = ref(0)
 const hoverRating = ref(0)
-const newReviewText = ref('')
+const newReviewText = ref("")
 const reviewSubmitted = ref(false)
 const extraReviews = ref([])
 
+const carouselViewportRef = ref(null)
+const viewportWidth = ref(0)
+/** Leftmost visible image index (Yelp-style strip). */
+const galleryStartIndex = ref(0)
+
+/** Min width per visible tile; viewport splits evenly with no gaps (flush strip, like PlaceRow / Instagram). */
+const GALLERY_MIN_SLIDE = 196
+const GALLERY_MAX_VISIBLE = 4
+
+let galleryResizeObserver = null
+
 const locale = i18nState
-const placeName = computed(() => place?.name[locale.locale] || place?.name.en)
-const placeAddress = computed(() => place?.address[locale.locale] || place?.address.en)
-const placeDesc = computed(() => place?.description[locale.locale] || place?.description.en)
+const placeName = computed(() => {
+  const p = place.value
+  return p?.name[locale.locale] || p?.name.en
+})
+const placeAddress = computed(() => {
+  const p = place.value
+  return p?.address[locale.locale] || p?.address.en
+})
+const placeDesc = computed(() => {
+  const p = place.value
+  return p?.description[locale.locale] || p?.description.en
+})
+
+const galleryImages = computed(() => place.value?.images?.filter(Boolean) || [])
+
+const galleryVisibleCount = computed(() => {
+  const n = galleryImages.value.length
+  const w = viewportWidth.value
+  if (!n) return 1
+  if (!w) return 1
+  const raw = Math.floor(w / GALLERY_MIN_SLIDE)
+  const v = Math.max(1, Math.min(GALLERY_MAX_VISIBLE, raw || 1, n))
+  return v
+})
+
+const gallerySlideWidthPx = computed(() => {
+  const w = viewportWidth.value
+  const v = galleryVisibleCount.value
+  if (!w || v < 1) return 280
+  return w / v
+})
+
+const galleryMaxStart = computed(() =>
+  Math.max(0, galleryImages.value.length - galleryVisibleCount.value)
+)
+
+const galleryDotCount = computed(() => galleryMaxStart.value + 1)
+
+const galleryTrackStyle = computed(() => ({
+  transform: `translateX(-${galleryStartIndex.value * gallerySlideWidthPx.value}px)`,
+  transition: "transform 0.38s cubic-bezier(0.4, 0, 0.2, 1)",
+}))
+
+const telHref = computed(() => {
+  const raw = place.value?.phone || ""
+  return `tel:${raw.replace(/\s/g, "")}`
+})
+
+const mapsUrl = computed(() => {
+  const p = place.value
+  if (!p) return "#"
+  const q = encodeURIComponent(placeAddress.value || "")
+  if (p.lat != null && p.lon != null) {
+    return `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lon}`
+  }
+  return `https://www.google.com/maps/search/?api=1&query=${q}`
+})
 
 const categoryIcons = {
-  restaurants: '🍽️', auto: '🚗', health: '🏥',
-  activities: '🏔️', sports: '⚽', tabiat: '🌿',
+  restaurants: "🍽️",
+  auto: "🚗",
+  health: "🏥",
+  activities: "🏔️",
+  sports: "⚽",
+  tabiat: "🌿",
 }
-const categoryIcon = computed(() => categoryIcons[place?.category] || '📍')
+const categoryIcon = computed(() => categoryIcons[place.value?.category] || "📍")
 
-const allReviews = computed(() => [...(place?.reviews || []), ...extraReviews.value])
+const allReviews = computed(() => [...(place.value?.reviews || []), ...extraReviews.value])
+
+const todayHoursDisplay = computed(() => {
+  const line = resolveTodayHours(place.value)
+  return line ?? t("place.hours_unknown")
+})
+
+function measureGalleryViewport() {
+  const el = carouselViewportRef.value
+  viewportWidth.value = el ? el.clientWidth : 0
+}
+
+/** Number of scroll positions (wraps: last ↔ first). */
+function galleryPositionCount() {
+  return galleryMaxStart.value + 1
+}
+
+function galleryPrev() {
+  const n = galleryPositionCount()
+  if (n <= 1) return
+  galleryStartIndex.value = (galleryStartIndex.value - 1 + n) % n
+}
+
+function galleryNext() {
+  const n = galleryPositionCount()
+  if (n <= 1) return
+  galleryStartIndex.value = (galleryStartIndex.value + 1) % n
+}
+
+watch(galleryMaxStart, (max) => {
+  if (galleryStartIndex.value > max) galleryStartIndex.value = max
+})
+
+watch(
+  () => route.params.id,
+  () => {
+    galleryStartIndex.value = 0
+    nextTick(measureGalleryViewport)
+  }
+)
+
+onMounted(() => {
+  nextTick(() => {
+    measureGalleryViewport()
+    const el = carouselViewportRef.value
+    if (el && typeof ResizeObserver !== "undefined") {
+      galleryResizeObserver = new ResizeObserver(() => measureGalleryViewport())
+      galleryResizeObserver.observe(el)
+    }
+  })
+})
+
+onBeforeUnmount(() => {
+  galleryResizeObserver?.disconnect()
+  galleryResizeObserver = null
+})
 
 function submitReview() {
   if (!newRating.value || !newReviewText.value.trim()) return
   extraReviews.value.unshift({
     id: `new-${Date.now()}`,
-    author: store.user?.name || 'You',
+    author: store.user?.name || "You",
     rating: newRating.value,
     text: newReviewText.value.trim(),
-    date: new Date().toISOString().split('T')[0],
+    date: new Date().toISOString().split("T")[0],
   })
   newRating.value = 0
-  newReviewText.value = ''
+  newReviewText.value = ""
   reviewSubmitted.value = true
   setTimeout(() => (reviewSubmitted.value = false), 3000)
 }
 </script>
 
 <style scoped>
-/* Hero */
-.place-hero {
-  position: relative;
-  height: 420px;
-  overflow: hidden;
+.place-header-wrap {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0;
 }
 
-.place-hero-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.place-hero-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 60%, transparent 100%);
-}
-
-.place-hero-content {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  padding-bottom: 28px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.place-header-inner {
+  padding-top: 20px;
+  padding-bottom: 20px;
 }
 
 .back-link {
-  color: rgba(255,255,255,0.7);
+  display: inline-block;
+  color: var(--text-2);
   font-size: 0.85rem;
   font-weight: 500;
+  margin-bottom: 16px;
   transition: color var(--transition);
 }
 
-.back-link:hover { color: #fff; }
-
-.place-hero-badges {
-  display: flex;
-  gap: 8px;
+.back-link:hover {
+  color: var(--primary);
 }
 
-.place-hero-title {
-  font-size: clamp(1.6rem, 4vw, 2.4rem);
+.place-title {
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
   font-weight: 800;
-  color: #fff;
+  color: var(--text);
   line-height: 1.2;
+  margin-bottom: 8px;
 }
 
-.place-hero-rating {
+.cat-pill {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-2);
+  margin-bottom: 12px;
+}
+
+.place-rating-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  font-size: 0.9rem;
+  color: var(--text-2);
+}
+
+.rating-num {
+  font-weight: 800;
+  color: var(--text);
+}
+
+.review-count {
+  color: var(--text-3);
+}
+
+.meta-dot {
+  color: var(--text-3);
+  user-select: none;
+}
+
+.status-pill.open {
+  color: #16a34a;
+  font-weight: 700;
+}
+
+.status-pill.closed {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.today-line {
+  color: var(--text-2);
+}
+
+.today-label {
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Carousel — full-bleed left/right (like PlaceView_new.vue photo-carousel-wrapper) */
+.carousel-outer {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+  padding-inline: 0;
+  padding-top: 12px;
+  padding-bottom: 16px;
+}
+
+.carousel-viewport {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  border-radius: 0;
+  background: var(--surface-2);
+}
+
+.carousel__track {
+  display: flex;
+  width: max-content;
+  height: 100%;
+  will-change: transform;
+}
+
+.carousel__slide {
+  flex: 0 0 auto;
+  flex-shrink: 0;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: var(--border);
+}
+
+.carousel__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.carousel__btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  font-size: 0.95rem;
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: #fff;
+  justify-content: center;
+  transition: background var(--transition);
+  border: none;
+  cursor: pointer;
+  line-height: 1;
 }
 
-.stars { color: var(--accent); font-size: 1.1rem; letter-spacing: 2px; }
-.rating-big { font-size: 1.3rem; font-weight: 800; }
-.review-count-hero { font-size: 0.85rem; color: rgba(255,255,255,0.7); }
+.carousel__btn:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.carousel__btn--prev {
+  left: 10px;
+}
+
+.carousel__btn--next {
+  right: 10px;
+}
+
+.carousel__dots {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 5px;
+  z-index: 3;
+}
+
+.carousel__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  padding: 0;
+  transition: background var(--transition), transform var(--transition);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
+}
+
+.carousel__dot--active {
+  background: #fff;
+  transform: scale(1.3);
+}
+
+.carousel-placeholder {
+  width: 100%;
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-3);
+}
 
 /* Body */
-.place-body { padding-top: 32px; padding-bottom: 80px; }
+.place-body {
+  padding-top: 32px;
+  padding-bottom: 80px;
+}
 
 .place-grid {
   display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 32px;
+  grid-template-columns: minmax(0, 65%) minmax(0, 35%);
+  gap: 40px;
   align-items: start;
 }
 
-.info-section { margin-bottom: 32px; }
-.place-desc { color: var(--text-2); line-height: 1.8; font-size: 1rem; }
+.info-section {
+  margin-bottom: 32px;
+}
 
-/* Review form */
+.sidebar-desc {
+  color: var(--text-2);
+  line-height: 1.6;
+  font-size: 0.95rem;
+  padding-bottom: 4px;
+}
+
+.divider-sidebar {
+  height: 1px;
+  background: var(--border-light);
+  margin: 8px 0 12px;
+}
+
 .review-form {
   padding: 20px;
   margin: 20px 0;
@@ -266,7 +584,10 @@ function submitReview() {
   gap: 14px;
 }
 
-.form-title { font-size: 1rem; font-weight: 700; }
+.form-title {
+  font-size: 1rem;
+  font-weight: 700;
+}
 
 .star-picker {
   display: flex;
@@ -281,9 +602,13 @@ function submitReview() {
 }
 
 .star-pick.active,
-.star-pick.hover { color: var(--accent); }
+.star-pick.hover {
+  color: var(--accent);
+}
 
-.star-pick:hover { transform: scale(1.15); }
+.star-pick:hover {
+  transform: scale(1.15);
+}
 
 .submitted-msg {
   font-size: 0.875rem;
@@ -308,66 +633,133 @@ function submitReview() {
 .place-sidebar {
   position: sticky;
   top: calc(var(--nav-height) + 20px);
+}
+
+.sidebar-card {
+  padding: 18px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 0;
 }
 
-.call-btn {
-  width: 100%;
-  font-size: 1rem;
-  padding: 16px;
-}
-
-.info-card {
-  padding: 20px;
+.sidebar-rating {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.info-row {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-}
-
-.info-icon { font-size: 1.1rem; flex-shrink: 0; padding-top: 2px; }
-
-.info-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-3);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 2px;
-}
-
-.info-value {
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
   font-size: 0.9rem;
+  color: var(--text-2);
+  padding-bottom: 4px;
+}
+
+.sidebar-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.sidebar-line:last-of-type {
+  border-bottom: none;
+}
+
+.sidebar-line.is-link {
+  text-decoration: none;
+  color: inherit;
+  transition: background var(--transition);
+  margin: 0 -12px;
+  padding-left: 12px;
+  padding-right: 12px;
+  border-radius: var(--radius-sm);
+}
+
+.sidebar-line.is-link:hover {
+  background: var(--surface-2);
+}
+
+.side-icon {
+  flex-shrink: 0;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+.side-icon.sm {
+  margin-top: 0;
+}
+
+.side-text {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.45;
+}
+
+.sidebar-line.is-link .side-text {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.address-multiline {
   color: var(--text);
   font-weight: 500;
 }
 
-.rating-card { padding: 20px; }
-
-.rating-big-display {
+.sidebar-map-wrap {
+  margin-top: 16px;
+  padding: 12px;
+  background: var(--surface-2);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  min-height: 180px;
   display: flex;
   align-items: center;
-  gap: 16px;
+  justify-content: center;
 }
 
-.rating-number {
-  font-size: 3rem;
-  font-weight: 800;
-  color: var(--text);
-  line-height: 1;
+.expand-enter-active,
+.expand-leave-active {
+  transition: all 0.3s ease;
+  max-height: 300px;
+  overflow: hidden;
+  opacity: 1;
 }
 
-.not-found { text-align: center; padding: 80px 0; }
+.expand-enter-from,
+.expand-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+
+.not-found {
+  text-align: center;
+  padding: 80px 0;
+}
 
 @media (max-width: 900px) {
-  .place-grid { grid-template-columns: 1fr; }
-  .place-sidebar { position: static; }
+  .place-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .place-sidebar {
+    position: static;
+  }
+
+  .carousel__btn {
+    width: 30px;
+    height: 30px;
+    font-size: 0.85rem;
+  }
+
+  .carousel__btn--prev {
+    left: 6px;
+  }
+
+  .carousel__btn--next {
+    right: 6px;
+  }
 }
 </style>
