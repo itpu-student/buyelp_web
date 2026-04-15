@@ -47,6 +47,8 @@ export const messages = {
       full_week_hours: "Full week hours",
       directions: "Directions",
       hours_unknown: "Hours not listed",
+      save: "Save",
+      saved: "Saved",
     },
     auth: {
       login_title: "Welcome Back",
@@ -156,6 +158,8 @@ export const messages = {
       full_week_hours: "Haftalik ish vaqti",
       directions: "Yo'nalish",
       hours_unknown: "Ish vaqti ko'rsatilmagan",
+      save: "Saqlash",
+      saved: "Saqlangan",
     },
     auth: {
       login_title: "Xush kelibsiz",

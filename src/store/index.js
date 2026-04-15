@@ -1,12 +1,17 @@
 import { reactive } from "vue"
 
 const STORAGE_KEY = "buyelp_auth"
+const SAVED_PLACES_KEY = "buyelp_saved_places"
 const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null")
+const savedPlaces = JSON.parse(localStorage.getItem(SAVED_PLACES_KEY) || "[]")
 
 export const store = reactive({
   // Auth state
   isLoggedIn: saved?.isLoggedIn ?? false,
   user: saved?.user ?? null,
+
+  // Saved (bookmarked) place IDs
+  savedPlaceIds: Array.isArray(savedPlaces) ? savedPlaces : [],
 
   // Mock user data
   mockUser: {
@@ -36,6 +41,18 @@ export const store = reactive({
     this.isLoggedIn = false
     this.user = null
     this._persist()
+  },
+
+  isPlaceSaved(placeId) {
+    return this.savedPlaceIds.includes(String(placeId))
+  },
+
+  toggleSavedPlace(placeId) {
+    const id = String(placeId)
+    const i = this.savedPlaceIds.indexOf(id)
+    if (i === -1) this.savedPlaceIds.push(id)
+    else this.savedPlaceIds.splice(i, 1)
+    localStorage.setItem(SAVED_PLACES_KEY, JSON.stringify(this.savedPlaceIds))
   },
 
   register(name, email, password) {

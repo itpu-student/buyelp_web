@@ -58,7 +58,32 @@
           <!-- <RouterLink to="/search" class="back-link">‚Üê {{ t("common.back") }}</RouterLink> -->
 
           <div class="place-title-block">
-            <h1 class="place-title">{{ placeName }}</h1>
+            <div class="place-title-row">
+              <h1 class="place-title">{{ placeName }}</h1>
+              <button
+                type="button"
+                class="save-btn"
+                :class="{ 'save-btn--active': isSaved }"
+                :aria-pressed="isSaved"
+                :aria-label="isSaved ? t('place.saved') : t('place.save')"
+                @click="toggleSaved"
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  :fill="isSaved ? 'currentColor' : 'none'"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                </svg>
+                <span>{{ isSaved ? t("place.saved") : t("place.save") }}</span>
+              </button>
+            </div>
             <div class="place-title-meta">
               <span class="cat-pill">{{ categoryIcon }} {{ t(`categories.${place.category}`) }}</span>
             </div>
@@ -266,6 +291,12 @@ const categoryIcon = computed(() => categoryIcons[place.value?.category] || "üì
 
 const allReviews = computed(() => [...(place.value?.reviews || []), ...extraReviews.value])
 
+const isSaved = computed(() => !!place.value && store.isPlaceSaved(place.value.id))
+
+function toggleSaved() {
+  if (place.value) store.toggleSavedPlace(place.value.id)
+}
+
 const todayHoursDisplay = computed(() => {
   const line = resolveTodayHours(place.value)
   return line ?? t("place.hours_unknown")
@@ -368,12 +399,56 @@ function handleReviewSubmit(payload) {
   color: var(--primary);
 }
 
+.place-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
 .place-title {
   font-size: clamp(1.75rem, 4vw, 2.25rem);
   font-weight: 800;
   color: var(--text);
   line-height: 1.2;
-  margin-bottom: 8px;
+  margin-bottom: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.save-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
+  margin-top: 4px;
+}
+
+.save-btn:hover {
+  background: var(--surface-2);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.save-btn--active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.save-btn--active:hover {
+  background: var(--primary);
+  color: #fff;
 }
 
 .cat-pill {
