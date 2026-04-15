@@ -32,14 +32,14 @@
                 class="badge optional-rating-btn"
                 :class="{ active: showCoinRow || priceLevel > 0 }"
                 aria-label="Price level"
-                @click="showCoinRow = !showCoinRow"
+                @click="toggleCoinRow"
               >💲</button>
               <button
                 type="button"
                 class="badge optional-rating-btn"
                 :class="{ active: showRecommendRow || recommendLevel > 0 }"
                 aria-label="Recommend"
-                @click="showRecommendRow = !showRecommendRow"
+                @click="toggleRecommendRow"
               >✔️</button>
             </div>
           </div>
@@ -88,7 +88,7 @@
           <div class="media-row">
             <label class="media-add">
               <input type="file" accept="image/*,video/*" multiple hidden @change="onMedia" />
-              <span>📷 Add photos</span>
+              <span>➕ Add media</span>
             </label>
             <div v-if="media.length" class="media-thumbs">
               <div v-for="(m, i) in media" :key="i" class="thumb">
@@ -140,6 +140,26 @@ const recommendHints = ['Avoid', 'Mixed', 'Okay', 'Recommended', 'Must-try']
 const canSubmit = computed(() => rating.value > 0 && text.value.trim().length > 0)
 
 function open() { isOpen.value = true }
+
+function toggleCoinRow() {
+  if (showCoinRow.value || priceLevel.value > 0) {
+    showCoinRow.value = false
+    priceLevel.value = 0
+    hoverCoin.value = 0
+  } else {
+    showCoinRow.value = true
+  }
+}
+
+function toggleRecommendRow() {
+  if (showRecommendRow.value || recommendLevel.value > 0) {
+    showRecommendRow.value = false
+    recommendLevel.value = 0
+    hoverRecommend.value = 0
+  } else {
+    showRecommendRow.value = true
+  }
+}
 
 function close() {
   isOpen.value = false
