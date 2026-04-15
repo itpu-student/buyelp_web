@@ -1,5 +1,5 @@
 <template>
-  <div class="svg-map-item" ref="hostRef">
+  <div class="svg-map-item" ref="hostRef" v-on:click="openInGoogleMaps">
     <div v-if="loadError" class="svg-map-error">
       <span class="svg-map-error-icon">🗺️</span>
       <span>{{ loadError }}</span>
@@ -193,6 +193,13 @@ onBeforeUnmount(() => {
   markerEl = null
   drawnBounds = null
 })
+
+function openInGoogleMaps() {
+  if (props.lat == null || props.lon == null) return
+  const url = `https://www.google.com/maps/search/?api=1&query=${props.lat},${props.lon}`
+  window.open(url, '_blank', 'noopener,noreferrer')
+}
+
 </script>
 
 <style scoped>
