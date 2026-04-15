@@ -99,9 +99,9 @@
             v-for="(src, i) in lbImages"
             :key="i"
             class="lb-slide"
-            @click.self="closeLightbox"
+            @click="closeLightbox"
           >
-            <img :src="src" :alt="`Photo ${i + 1}`" class="lb-img" @click.stop />
+            <img :src="src" :alt="`Photo ${i + 1}`" class="lb-img" />
           </div>
         </div>
       </div>

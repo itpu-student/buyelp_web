@@ -127,6 +127,13 @@
 
           <aside class="place-sidebar">
             <div class="sidebar-card card">
+              <div class="sidebar-rating">
+                <StarRating :rating="place.rating" :size="20" />
+                <span class="rating-num">{{ place.rating.toFixed(1) }}</span>
+                <span class="review-count">({{ place.reviewCount }} {{ t("common.reviews_count") }})</span>
+              </div>
+              <div class="divider-sidebar"></div>
+
               <div v-if="placeDesc" class="sidebar-desc">
                 {{ placeDesc }}
               </div>
@@ -633,6 +640,16 @@ function submitReview() {
   display: flex;
   flex-direction: column;
   gap: 0;
+}
+
+.sidebar-rating {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  font-size: 0.9rem;
+  color: var(--text-2);
+  padding-bottom: 4px;
 }
 
 .sidebar-line {
