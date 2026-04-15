@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from "vue-router"
 import HomeView from "../views/HomeView.vue"
 import SearchView from "../views/SearchView.vue"
 import PlaceView from "../views/PlaceView.vue"
+import PlaceView_1 from "../views/PlaceView_1.vue"
 import LoginView from "../views/LoginView.vue"
 import RegisterView from "../views/RegisterView.vue"
 import ProfileView from "../views/ProfileView.vue"
@@ -11,6 +12,7 @@ const routes = [
   { path: "/", name: "home", component: HomeView },
   { path: "/search", name: "search", component: SearchView },
   { path: "/place/:id", name: "place", component: PlaceView },
+  { path: "/place_1/:id", name: "place_1", component: PlaceView_1 },
   { path: "/login", name: "login", component: LoginView },
   { path: "/register", name: "register", component: RegisterView },
   { path: "/profile", name: "profile", component: ProfileView },
