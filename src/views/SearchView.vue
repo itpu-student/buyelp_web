@@ -4,11 +4,12 @@
       <div class="search-page-header">
         <h1 class="section-title">{{ t('search.title') }}</h1>
         <p class="text-muted text-sm mt-2">
-          {{ filteredPlaces.length }} {{ filteredPlaces.length === 1 ? 'place' : 'places' }} found
+          <span v-if="loading">Loading…</span>
+          <span v-else-if="loadError" class="error-text">{{ loadError }}</span>
+          <span v-else>{{ total }} {{ total === 1 ? 'place' : 'places' }} found</span>
         </p>
       </div>
 
-      <!-- Search + filter bar -->
       <div class="search-bar-row">
         <div class="search-input-wrap">
           <span class="s-icon">🔍</span>
@@ -21,7 +22,6 @@
         </div>
       </div>
 
-      <!-- Category chips -->
       <div class="cat-chips">
         <button
           v-for="cat in allCategories"
@@ -30,19 +30,14 @@
           :class="{ active: selectedCategory === cat.key }"
           @click="selectedCategory = cat.key"
         >
-          {{ cat.icon }} {{ t(`categories.${cat.key}`) }}
+          {{ cat.icon }} {{ cat.label }}
         </button>
       </div>
 
-      <!-- Results — row layout: carousel | info | map -->
-      <div v-if="filteredPlaces.length" class="place-row-list">
-        <PlaceRow
-          v-for="place in filteredPlaces"
-          :key="place.id"
-          :place="place"
-        />
+      <div v-if="places.length" class="place-row-list">
+        <PlaceRow v-for="place in places" :key="place.id" :place="place" />
       </div>
-      <div v-else class="empty-state">
+      <div v-else-if="!loading" class="empty-state">
         <span class="empty-icon">🔍</span>
         <h3>{{ t('search.no_results') }}</h3>
       </div>
@@ -51,96 +46,100 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { t } from '../i18n/index.js'
-import { searchPlaces } from '../data/places.js'
+import { listPlaces } from '../api/places.js'
+import { normalizePlace } from '../api/normalize.js'
+import { categoriesState, ensureCategoriesLoaded } from '../store/categories.js'
 import PlaceRow from '../components/PlaceRow.vue'
 
 const route = useRoute()
 const query = ref('')
 const selectedCategory = ref('all')
+const places = ref([])
+const total = ref(0)
+const loading = ref(true)
+const loadError = ref('')
 
-onMounted(() => {
-  if (route.query.q) query.value = route.query.q
-  if (route.query.category) selectedCategory.value = route.query.category
+const categoryIcons = {
+  all: '🗺️', restaurants: '🍽️', auto: '🚗', health: '🏥',
+  activities: '🏔️', sports: '⚽', tabiat: '🌿',
+}
+
+const allCategories = computed(() => {
+  const rows = [{ key: 'all', icon: '🗺️', label: t('categories.all') }]
+  for (const c of categoriesState.list) {
+    rows.push({
+      key: c.slug,
+      icon: categoryIcons[c.slug] || '📍',
+      label: c.name?.en || c.slug,
+    })
+  }
+  return rows
 })
 
-const allCategories = [
-  { key: 'all', icon: '🗺️' },
-  { key: 'restaurants', icon: '🍽️' },
-  { key: 'auto', icon: '🚗' },
-  { key: 'health', icon: '🏥' },
-  { key: 'activities', icon: '🏔️' },
-  { key: 'sports', icon: '⚽' },
-  { key: 'tabiat', icon: '🌿' },
-]
+let fetchToken = 0
+async function runFetch() {
+  const myToken = ++fetchToken
+  loading.value = true
+  loadError.value = ''
+  try {
+    const res = await listPlaces({
+      query: query.value.trim() || undefined,
+      category: selectedCategory.value,
+      sort: 'top',
+      limit: 50,
+    })
+    if (myToken !== fetchToken) return
+    places.value = (res.items || []).map(normalizePlace)
+    total.value = res.total ?? places.value.length
+  } catch (e) {
+    if (myToken !== fetchToken) return
+    loadError.value = e.message || 'Failed to load places'
+    places.value = []
+    total.value = 0
+  } finally {
+    if (myToken === fetchToken) loading.value = false
+  }
+}
 
-const filteredPlaces = computed(() =>
-  searchPlaces(query.value, selectedCategory.value)
-)
+let debounceTimer = null
+function scheduleFetch() {
+  clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(runFetch, 300)
+}
+
+watch(query, scheduleFetch)
+watch(selectedCategory, runFetch)
+
+onMounted(async () => {
+  if (route.query.q) query.value = String(route.query.q)
+  if (route.query.category) selectedCategory.value = String(route.query.category)
+  await ensureCategoriesLoaded()
+  runFetch()
+})
 </script>
 
 <style scoped>
 .search-page-header { margin-bottom: 24px; }
-
-.search-bar-row {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.search-input-wrap {
-  position: relative;
-  flex: 1;
-  display: flex;
-  align-items: center;
-}
-
-.s-icon {
-  position: absolute;
-  left: 14px;
-  font-size: 1rem;
-  pointer-events: none;
-}
-
-.s-input {
-  padding-left: 40px;
-  padding-right: 36px;
-}
-
+.error-text { color: #dc2626; }
+.search-bar-row { display: flex; gap: 12px; margin-bottom: 20px; }
+.search-input-wrap { position: relative; flex: 1; display: flex; align-items: center; }
+.s-icon { position: absolute; left: 14px; font-size: 1rem; pointer-events: none; }
+.s-input { padding-left: 40px; padding-right: 36px; }
 .clear-btn {
-  position: absolute;
-  right: 12px;
-  color: var(--text-3);
-  font-size: 0.85rem;
+  position: absolute; right: 12px;
+  color: var(--text-3); font-size: 0.85rem;
   transition: color var(--transition);
 }
-
 .clear-btn:hover { color: var(--text); }
-
-.cat-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 28px;
-}
-
-.place-row-list {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
+.cat-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
+.place-row-list { display: flex; flex-direction: column; gap: 20px; }
 .empty-state {
-  text-align: center;
-  padding: 80px 24px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
+  text-align: center; padding: 80px 24px;
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
   color: var(--text-2);
 }
-
 .empty-icon { font-size: 3rem; }
 </style>

@@ -12,6 +12,7 @@
         <RouterLink to="/" class="nav-link" @click="mobileOpen = false">{{ t('nav.home') }}</RouterLink>
         <RouterLink to="/search" class="nav-link" @click="mobileOpen = false">{{ t('nav.search') }}</RouterLink>
         <template v-if="store.isLoggedIn">
+          <RouterLink to="/places/new" class="nav-link" @click="mobileOpen = false">+ Add place</RouterLink>
           <RouterLink to="/profile" class="nav-link" @click="mobileOpen = false">{{ t('nav.profile') }}</RouterLink>
           <RouterLink to="/admin" class="nav-link" @click="mobileOpen = false">{{ t('nav.admin') }}</RouterLink>
         </template>
@@ -37,7 +38,7 @@
         </template>
         <template v-else>
           <div class="user-menu" @click="userMenuOpen = !userMenuOpen">
-            <img :src="store.user.avatar" :alt="store.user.name" class="avatar" width="34" height="34" />
+            <img :src="userAvatar" :alt="store.user.name" class="avatar" width="34" height="34" />
             <span class="user-name">{{ store.user.name.split(' ')[0] }}</span>
             <span class="chevron" :class="{ rotated: userMenuOpen }">▾</span>
           </div>
@@ -74,10 +75,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { t, i18nState, setLocale } from '../i18n/index.js'
 import { store } from '../store/index.js'
+
+const userAvatar = computed(() => {
+  const u = store.user
+  if (!u) return ''
+  if (u.avatar_url) return u.avatar_url
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name || 'User')}&background=0D9488&color=fff&size=128`
+})
 
 const router = useRouter()
 const isScrolled = ref(false)

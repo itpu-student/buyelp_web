@@ -1,46 +1,29 @@
 import { reactive } from "vue"
+import { setToken } from "../api/client.js"
 
-const STORAGE_KEY = "buyelp_auth"
+const USER_KEY = "buyelp_user"
 const SAVED_PLACES_KEY = "buyelp_saved_places"
-const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null")
+const savedUser = JSON.parse(localStorage.getItem(USER_KEY) || "null")
 const savedPlaces = JSON.parse(localStorage.getItem(SAVED_PLACES_KEY) || "[]")
 
 export const store = reactive({
-  // Auth state
-  isLoggedIn: saved?.isLoggedIn ?? false,
-  user: saved?.user ?? null,
+  isLoggedIn: !!savedUser,
+  user: savedUser,
 
-  // Saved (bookmarked) place IDs
   savedPlaceIds: Array.isArray(savedPlaces) ? savedPlaces : [],
 
-  // Mock user data
-  mockUser: {
-    id: "u1",
-    name: "Sherzod Abdullayev",
-    email: "sherzod@buyelp.uz",
-    avatar: "https://ui-avatars.com/api/?name=Sherzod+Abdullayev&background=0D9488&color=fff&size=128",
-    joined: "2024-09-01",
-    reviews: [
-      { placeId: "1", placeName: "Choyxona №1", rating: 5, text: "Best plov ever!", date: "2025-03-10" },
-      { placeId: "5", placeName: "Chimgan Adventure Park", rating: 5, text: "Amazing experience!", date: "2025-02-28" },
-    ],
-  },
-
-  _persist() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ isLoggedIn: this.isLoggedIn, user: this.user }))
-  },
-
-  login(email, password) {
-    // Mock login - accept any credentials
+  setSession({ token, user }) {
+    setToken(token)
+    this.user = user
     this.isLoggedIn = true
-    this.user = { ...this.mockUser }
-    this._persist()
+    localStorage.setItem(USER_KEY, JSON.stringify(user))
   },
 
   logout() {
-    this.isLoggedIn = false
+    setToken(null)
     this.user = null
-    this._persist()
+    this.isLoggedIn = false
+    localStorage.removeItem(USER_KEY)
   },
 
   isPlaceSaved(placeId) {
@@ -53,18 +36,5 @@ export const store = reactive({
     if (i === -1) this.savedPlaceIds.push(id)
     else this.savedPlaceIds.splice(i, 1)
     localStorage.setItem(SAVED_PLACES_KEY, JSON.stringify(this.savedPlaceIds))
-  },
-
-  register(name, email, password) {
-    this.isLoggedIn = true
-    this.user = {
-      id: "u2",
-      name,
-      email,
-      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0D9488&color=fff&size=128`,
-      joined: new Date().toISOString().split("T")[0],
-      reviews: [],
-    }
-    this._persist()
   },
 })
