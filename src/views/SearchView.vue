@@ -25,10 +25,10 @@
       <div class="cat-chips">
         <button
           v-for="cat in allCategories"
-          :key="cat.key"
+          :key="cat.id || 'all'"
           class="chip"
-          :class="{ active: selectedCategory === cat.key }"
-          @click="selectedCategory = cat.key"
+          :class="{ active: selectedCategoryId === cat.id }"
+          @click="selectedCategoryId = cat.id"
         >
           {{ cat.icon }} {{ cat.label }}
         </button>
@@ -48,7 +48,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { t } from '../i18n/index.js'
+import { t, i18nState } from '../i18n/index.js'
 import { listPlaces } from '../api/places.js'
 import { normalizePlace } from '../api/normalize.js'
 import { categoriesState, ensureCategoriesLoaded } from '../store/categories.js'
@@ -56,7 +56,7 @@ import PlaceRow from '../components/PlaceRow.vue'
 
 const route = useRoute()
 const query = ref('')
-const selectedCategory = ref('all')
+const selectedCategoryId = ref('')
 const places = ref([])
 const total = ref(0)
 const loading = ref(true)
@@ -64,20 +64,16 @@ const loadError = ref('')
 
 const categoryIcons = {
   all: '🗺️', restaurants: '🍽️', auto: '🚗', health: '🏥',
-  activities: '🏔️', sports: '⚽', tabiat: '🌿',
+  activities: '🎡', sports: '⚽', tabiat: '🏔️',
 }
 
-const allCategories = computed(() => {
-  const rows = [{ key: 'all', icon: '🗺️', label: t('categories.all') }]
-  for (const c of categoriesState.list) {
-    rows.push({
-      key: c.slug,
-      icon: categoryIcons[c.slug] || '📍',
-      label: c.name?.en || c.slug,
-    })
-  }
-  return rows
-})
+const allCategories = computed(() =>
+  categoriesState.list.map((c) => ({
+    id: c.id || '',
+    icon: c.emoji || categoryIcons[c.slug] || '📍',
+    label: c.name?.[i18nState.locale] || c.name?.en || c.slug,
+  }))
+)
 
 let fetchToken = 0
 async function runFetch() {
@@ -87,7 +83,7 @@ async function runFetch() {
   try {
     const res = await listPlaces({
       query: query.value.trim() || undefined,
-      category: selectedCategory.value,
+      category_id: selectedCategoryId.value,
       sort: 'top',
       limit: 50,
     })
@@ -111,12 +107,16 @@ function scheduleFetch() {
 }
 
 watch(query, scheduleFetch)
-watch(selectedCategory, runFetch)
+watch(selectedCategoryId, runFetch)
 
 onMounted(async () => {
   if (route.query.q) query.value = String(route.query.q)
-  if (route.query.category) selectedCategory.value = String(route.query.category)
   await ensureCategoriesLoaded()
+  const rq = route.query.category ? String(route.query.category) : ''
+  if (rq) {
+    const bySlug = categoriesState.bySlug[rq]
+    selectedCategoryId.value = bySlug ? (bySlug.id || '') : rq
+  }
   runFetch()
 })
 </script>

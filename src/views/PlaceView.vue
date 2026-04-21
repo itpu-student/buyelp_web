@@ -146,6 +146,50 @@
 
               <SidebarHours :place="place" />
 
+              <div v-if="canClaim || isOwner" class="ownership-block">
+                <div class="divider-sidebar"></div>
+
+                <button v-if="canClaim && !claimOpen" type="button" class="btn btn-secondary btn-sm" @click="claimOpen = true">
+                  Claim this place
+                </button>
+                <div v-if="canClaim && claimOpen" class="ownership-form">
+                  <input v-model="claimPhone" class="form-input" placeholder="Contact phone +998..." />
+                  <textarea v-model="claimNote" class="form-input" rows="2" placeholder="Optional note"></textarea>
+                  <div class="row-gap">
+                    <button class="btn btn-primary btn-sm" :disabled="claimSubmitting || !claimPhone" @click="submitClaim">
+                      {{ claimSubmitting ? 'Submitting…' : 'Submit claim' }}
+                    </button>
+                    <button class="btn btn-ghost btn-sm" @click="claimOpen = false">Cancel</button>
+                  </div>
+                </div>
+                <p v-if="claimMsg" class="text-xs text-muted">{{ claimMsg }}</p>
+
+                <button v-if="isOwner && !editOpen" type="button" class="btn btn-secondary btn-sm" @click="openEdit">
+                  Edit place
+                </button>
+                <div v-if="isOwner && editOpen" class="ownership-form">
+                  <label class="form-row"><span>Phone</span><input v-model="editForm.phone" class="form-input" /></label>
+                  <label class="form-row"><span>Description (EN)</span><textarea v-model="editForm.descEn" class="form-input" rows="2"></textarea></label>
+                  <label class="form-row"><span>Description (UZ)</span><textarea v-model="editForm.descUz" class="form-input" rows="2"></textarea></label>
+                  <label class="form-row"><span>Logo</span><input type="file" accept="image/*" @change="onEditLogoPick" /></label>
+                  <label class="form-row"><span>Add images</span><input type="file" accept="image/*" multiple @change="onEditImagesPick" /></label>
+                  <ul v-if="editForm.images.length" class="image-keys">
+                    <li v-for="(k, i) in editForm.images" :key="k">
+                      <span>{{ k }}</span>
+                      <button class="btn-link" type="button" @click="removeEditImage(i)">×</button>
+                    </li>
+                  </ul>
+                  <small v-if="editUploading" class="text-muted">Uploading…</small>
+                  <div class="row-gap">
+                    <button class="btn btn-primary btn-sm" :disabled="editSaving" @click="saveEdit">
+                      {{ editSaving ? 'Saving…' : 'Save' }}
+                    </button>
+                    <button class="btn btn-ghost btn-sm" @click="editOpen = false">Cancel</button>
+                  </div>
+                </div>
+                <p v-if="editMsg" class="text-xs text-muted">{{ editMsg }}</p>
+              </div>
+
               <div class="sidebar-map-wrap">
                 <SvgMapItem
                   :lat="place.lat ?? null"
@@ -163,14 +207,16 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from "vue"
-import { useRoute } from "vue-router"
+import { ref, reactive, computed, watch, nextTick, onMounted, onBeforeUnmount } from "vue"
+import { useRoute, useRouter } from "vue-router"
 import { t, i18nState } from "../i18n/index.js"
 import { resolveTodayHours } from "../data/places.js"
 import { store } from "../store/index.js"
-import { getPlace } from "../api/places.js"
+import { getPlace, updatePlace } from "../api/places.js"
 import { listPlaceReviews, createReview } from "../api/reviews.js"
 import { normalizePlace, normalizeReview } from "../api/normalize.js"
+import { createClaim } from "../api/claims.js"
+import { uploadFile } from "../api/files.js"
 import { categoriesState, ensureCategoriesLoaded } from "../store/categories.js"
 import ReviewCard from "../components/ReviewCard.vue"
 import ReviewInput from "../components/ReviewInput.vue"
@@ -179,6 +225,7 @@ import SidebarHours from "../components/SidebarHours.vue"
 import SvgMapItem from "../components/SvgMapItem.vue"
 
 const route = useRoute()
+const router = useRouter()
 
 const place = ref(null)
 const reviews = ref([])
@@ -250,9 +297,93 @@ const categoryLabel = computed(() => {
   return slug
 })
 
-const isSaved = computed(() => !!place.value && store.isPlaceSaved(place.value.id))
+const isOwner = computed(() => !!(store.user && place.value && place.value.claimedBy && place.value.claimedBy === store.user.id))
+const canClaim = computed(() => !!(store.isLoggedIn && place.value && !place.value.claimedBy && place.value.status === 10))
+
+const claimOpen = ref(false)
+const claimPhone = ref("")
+const claimNote = ref("")
+const claimSubmitting = ref(false)
+const claimMsg = ref("")
+
+async function submitClaim() {
+  if (!place.value) return
+  claimSubmitting.value = true
+  claimMsg.value = ""
+  try {
+    await createClaim({ place_id: place.value._uuid, phone: claimPhone.value, note: claimNote.value })
+    claimMsg.value = "Claim submitted — admin will review it."
+    claimOpen.value = false
+  } catch (e) {
+    claimMsg.value = e.message || "Claim failed"
+  } finally { claimSubmitting.value = false }
+}
+
+const editOpen = ref(false)
+const editForm = reactive({ phone: "", descEn: "", descUz: "", logo_key: "", images: [] })
+const editSaving = ref(false)
+const editMsg = ref("")
+const editUploading = ref(false)
+
+function openEdit() {
+  if (!place.value) return
+  editForm.phone = place.value.phone || ""
+  editForm.descEn = place.value.description?.en || ""
+  editForm.descUz = place.value.description?.uz || ""
+  editForm.logo_key = place.value._logoKey || ""
+  editForm.images = [...(place.value._imageKeys || [])]
+  editOpen.value = true
+}
+
+async function onEditLogoPick(e) {
+  const file = e.target.files?.[0]
+  if (!file) return
+  editUploading.value = true
+  try {
+    const r = await uploadFile(file, "place")
+    editForm.logo_key = r.key
+  } catch (err) { editMsg.value = err.message || "Upload failed" }
+  finally { editUploading.value = false }
+}
+
+async function onEditImagesPick(e) {
+  const files = Array.from(e.target.files || [])
+  if (!files.length) return
+  editUploading.value = true
+  try {
+    for (const f of files) {
+      const r = await uploadFile(f, "place")
+      editForm.images.push(r.key)
+    }
+  } catch (err) { editMsg.value = err.message || "Upload failed" }
+  finally { editUploading.value = false }
+}
+
+function removeEditImage(i) { editForm.images.splice(i, 1) }
+
+async function saveEdit() {
+  if (!place.value) return
+  editSaving.value = true
+  editMsg.value = ""
+  try {
+    const payload = {
+      phone: editForm.phone,
+      description: { en: editForm.descEn, uz: editForm.descUz || editForm.descEn },
+      logo_key: editForm.logo_key,
+      images: editForm.images,
+    }
+    const fresh = await updatePlace(place.value._uuid, payload)
+    place.value = normalizePlace(fresh)
+    editOpen.value = false
+  } catch (e) {
+    editMsg.value = e.message || "Save failed"
+  } finally { editSaving.value = false }
+}
+
+const isSaved = computed(() => !!place.value && store.isPlaceSaved(place.value._uuid))
 function toggleSaved() {
-  if (place.value) store.toggleSavedPlace(place.value.id)
+  if (!store.isLoggedIn) { router.push('/login'); return }
+  if (place.value) store.toggleSavedPlace(place.value._uuid).catch(() => {})
 }
 
 const todayHoursDisplay = computed(() => {
@@ -290,7 +421,7 @@ async function loadPlace(idOrSlug) {
     const raw = await getPlace(idOrSlug)
     place.value = normalizePlace(raw)
     nextTick(measureGalleryViewport)
-    loadReviews(idOrSlug)
+    loadReviews(place.value._uuid)
   } catch (e) {
     loadError.value = e.status === 404 ? "Place not found" : e.message || "Failed to load"
   } finally {
@@ -321,12 +452,12 @@ async function handleReviewSubmit(payload) {
     }
     if (payload.priceLevel) body.price_rating = payload.priceLevel
     if (payload.recommendLevel) body.quality_rating = payload.recommendLevel
-    await createReview(place.value.id, body)
+    await createReview(place.value._uuid, body)
     reviewSubmitted.value = true
     setTimeout(() => (reviewSubmitted.value = false), 3000)
-    const fresh = await getPlace(place.value.id)
+    const fresh = await getPlace(place.value._uuid)
     place.value = normalizePlace(fresh)
-    await loadReviews(place.value.id)
+    await loadReviews(place.value._uuid)
   } catch (e) {
     submitError.value = e.status === 403
       ? "This place isn't approved yet — reviews are disabled."
@@ -457,6 +588,14 @@ onBeforeUnmount(() => {
 .info-section { margin-bottom: 32px; }
 .sidebar-desc { color: var(--text-2); line-height: 1.6; font-size: 0.95rem; padding-bottom: 4px; }
 .divider-sidebar { height: 1px; background: var(--border-light); margin: 8px 0 12px; }
+.ownership-block { display: flex; flex-direction: column; gap: 10px; padding: 0 4px; }
+.ownership-form { display: flex; flex-direction: column; gap: 8px; }
+.ownership-form .form-row { display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem; color: var(--text-2); }
+.ownership-form .form-input { padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text); font-size: 0.85rem; }
+.row-gap { display: flex; gap: 8px; }
+.image-keys { list-style: none; padding: 0; margin: 4px 0; display: flex; flex-direction: column; gap: 4px; font-size: 0.75rem; color: var(--text-2); }
+.image-keys li { display: flex; justify-content: space-between; gap: 8px; align-items: center; padding: 4px 8px; background: var(--surface-2); border-radius: 4px; }
+.btn-link { background: none; border: none; cursor: pointer; color: var(--text-2); font-size: 1rem; padding: 0 4px; }
 
 .section-title-row {
   display: flex; align-items: center; justify-content: space-between;

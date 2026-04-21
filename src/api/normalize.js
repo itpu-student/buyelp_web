@@ -1,4 +1,5 @@
 import { slugForCategoryId } from "../store/categories.js"
+import { staticUrl } from "./client.js"
 
 function hoursToDisplay(slots) {
   if (!Array.isArray(slots) || slots.length === 0) return "Closed"
@@ -36,7 +37,10 @@ export function normalizePlace(api) {
     reviewCount: api.review_count || 0,
     lat: api.lat,
     lon: api.lon,
-    images: Array.isArray(api.images) ? api.images.filter(Boolean) : [],
+    images: Array.isArray(api.images) ? api.images.filter(Boolean).map(staticUrl) : [],
+    logo: staticUrl(api.logo_key),
+    _logoKey: api.logo_key || "",
+    _imageKeys: Array.isArray(api.images) ? api.images.filter(Boolean) : [],
     weeklyHours: normalizeWeeklyHours(api.weekly_hours),
     _weeklyHoursRaw: api.weekly_hours || {},
     isOpen: !!api.is_open,
@@ -59,7 +63,8 @@ export function normalizeReview(api) {
     priceRating: api.price_rating || 0,
     qualityRating: api.quality_rating || 0,
     text: api.text || "",
-    images: Array.isArray(api.images) ? api.images.filter(Boolean) : [],
+    images: Array.isArray(api.images) ? api.images.filter(Boolean).map(staticUrl) : [],
+    _imageKeys: Array.isArray(api.images) ? api.images.filter(Boolean) : [],
     date: api.created_at,
     latest: api.latest !== false,
     _raw: api,

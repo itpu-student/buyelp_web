@@ -79,10 +79,12 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { t, i18nState, setLocale } from '../i18n/index.js'
 import { store } from '../store/index.js'
+import { staticUrl } from '../api/client.js'
 
 const userAvatar = computed(() => {
   const u = store.user
   if (!u) return ''
+  if (u.avatar_key) return staticUrl(u.avatar_key)
   if (u.avatar_url) return u.avatar_url
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name || 'User')}&background=0D9488&color=fff&size=128`
 })

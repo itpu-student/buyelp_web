@@ -1,10 +1,15 @@
 import { reactive } from "vue"
 import { setToken } from "../api/client.js"
+import { listBookmarks, addBookmark, removeBookmark } from "../api/bookmarks.js"
 
 const USER_KEY = "buyelp_user"
 const SAVED_PLACES_KEY = "buyelp_saved_places"
 const savedUser = JSON.parse(localStorage.getItem(USER_KEY) || "null")
 const savedPlaces = JSON.parse(localStorage.getItem(SAVED_PLACES_KEY) || "[]")
+
+function persistSaved(ids) {
+  localStorage.setItem(SAVED_PLACES_KEY, JSON.stringify(ids))
+}
 
 export const store = reactive({
   isLoggedIn: !!savedUser,
@@ -17,6 +22,12 @@ export const store = reactive({
     this.user = user
     this.isLoggedIn = true
     localStorage.setItem(USER_KEY, JSON.stringify(user))
+    this.hydrateBookmarks()
+  },
+
+  setUser(user) {
+    this.user = user
+    if (user) localStorage.setItem(USER_KEY, JSON.stringify(user))
   },
 
   logout() {
@@ -24,17 +35,49 @@ export const store = reactive({
     this.user = null
     this.isLoggedIn = false
     localStorage.removeItem(USER_KEY)
+    this.savedPlaceIds = []
+    persistSaved([])
   },
 
   isPlaceSaved(placeId) {
     return this.savedPlaceIds.includes(String(placeId))
   },
 
-  toggleSavedPlace(placeId) {
+  async hydrateBookmarks() {
+    if (!this.isLoggedIn) return
+    try {
+      const res = await listBookmarks({ limit: 100 })
+      const ids = (res?.items || []).map((b) => String(b.place_id))
+      this.savedPlaceIds = ids
+      persistSaved(ids)
+    } catch (_) {
+      // ignore — keep cached list
+    }
+  },
+
+  async toggleSavedPlace(placeId) {
+    if (!this.isLoggedIn) return
     const id = String(placeId)
     const i = this.savedPlaceIds.indexOf(id)
-    if (i === -1) this.savedPlaceIds.push(id)
-    else this.savedPlaceIds.splice(i, 1)
-    localStorage.setItem(SAVED_PLACES_KEY, JSON.stringify(this.savedPlaceIds))
+    if (i === -1) {
+      this.savedPlaceIds.push(id)
+      persistSaved(this.savedPlaceIds)
+      try { await addBookmark(id) } catch (e) {
+        const j = this.savedPlaceIds.indexOf(id)
+        if (j !== -1) this.savedPlaceIds.splice(j, 1)
+        persistSaved(this.savedPlaceIds)
+        throw e
+      }
+    } else {
+      this.savedPlaceIds.splice(i, 1)
+      persistSaved(this.savedPlaceIds)
+      try { await removeBookmark(id) } catch (e) {
+        this.savedPlaceIds.push(id)
+        persistSaved(this.savedPlaceIds)
+        throw e
+      }
+    }
   },
 })
+
+if (store.isLoggedIn) store.hydrateBookmarks()

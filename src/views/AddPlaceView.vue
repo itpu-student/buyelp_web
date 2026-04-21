@@ -24,7 +24,7 @@
           <label class="form-label" for="category">Category *</label>
           <select id="category" v-model="form.category_id" class="form-input" required>
             <option value="" disabled>Select a category…</option>
-            <option v-for="c in categoriesState.list" :key="c.id" :value="c.slug">
+            <option v-for="c in categoriesState.list" :key="c.id" :value="c.id">
               {{ c.name?.en || c.slug }}
             </option>
           </select>
@@ -69,8 +69,21 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="images">Image URLs (comma-separated)</label>
-          <textarea id="images" v-model="form.imagesText" class="form-input" rows="2" placeholder="https://...jpg, https://...jpg" />
+          <label class="form-label" for="logo">Logo</label>
+          <input id="logo" type="file" accept="image/*" @change="onLogoPick" />
+          <small v-if="form.logo_key" class="text-muted">Uploaded ✓ ({{ form.logo_key }})</small>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="images">Photos</label>
+          <input id="images" type="file" accept="image/*" multiple @change="onImagesPick" />
+          <ul v-if="form.images.length" class="image-keys">
+            <li v-for="(k, i) in form.images" :key="k">
+              <span>{{ k }}</span>
+              <button class="btn-link" type="button" @click="form.images.splice(i, 1)">×</button>
+            </li>
+          </ul>
+          <small v-if="uploading" class="text-muted">Uploading…</small>
         </div>
 
         <div v-if="error" class="form-error">{{ error }}</div>
@@ -93,6 +106,7 @@ import { reactive, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { store } from '../store/index.js'
 import { createPlace } from '../api/places.js'
+import { uploadFile } from '../api/files.js'
 import { categoriesState, ensureCategoriesLoaded } from '../store/categories.js'
 
 const router = useRouter()
@@ -107,8 +121,37 @@ const form = reactive({
   phone: '',
   descEn: '',
   descUz: '',
-  imagesText: '',
+  logo_key: '',
+  images: [],
 })
+
+const uploading = ref(false)
+
+async function onLogoPick(e) {
+  const file = e.target.files?.[0]
+  if (!file) return
+  uploading.value = true
+  error.value = ''
+  try {
+    const r = await uploadFile(file, 'place')
+    form.logo_key = r.key
+  } catch (err) { error.value = err.message || 'Upload failed' }
+  finally { uploading.value = false }
+}
+
+async function onImagesPick(e) {
+  const files = Array.from(e.target.files || [])
+  if (!files.length) return
+  uploading.value = true
+  error.value = ''
+  try {
+    for (const f of files) {
+      const r = await uploadFile(f, 'place')
+      form.images.push(r.key)
+    }
+  } catch (err) { error.value = err.message || 'Upload failed' }
+  finally { uploading.value = false }
+}
 
 const submitting = ref(false)
 const error = ref('')
@@ -117,11 +160,6 @@ const success = ref('')
 onMounted(() => {
   ensureCategoriesLoaded()
 })
-
-function parseImages(text) {
-  if (!text) return []
-  return text.split(',').map((s) => s.trim()).filter(Boolean)
-}
 
 async function submit() {
   error.value = ''
@@ -139,8 +177,8 @@ async function submit() {
     if (form.descEn || form.descUz) {
       payload.description = { en: form.descEn, uz: form.descUz || form.descEn }
     }
-    const images = parseImages(form.imagesText)
-    if (images.length) payload.images = images
+    if (form.logo_key) payload.logo_key = form.logo_key
+    if (form.images.length) payload.images = form.images
 
     const created = await createPlace(payload)
     success.value = created.slug || created.id
@@ -171,6 +209,10 @@ async function submit() {
 
 .form-group { display: flex; flex-direction: column; gap: 6px; }
 .form-label { font-size: 0.85rem; font-weight: 600; color: var(--text-2); }
+
+.image-keys { list-style: none; padding: 0; margin: 6px 0 0; display: flex; flex-direction: column; gap: 4px; font-size: 0.75rem; color: var(--text-2); }
+.image-keys li { display: flex; justify-content: space-between; gap: 8px; align-items: center; padding: 4px 8px; background: var(--surface-2); border-radius: 4px; }
+.btn-link { background: none; border: none; cursor: pointer; color: var(--text-2); font-size: 1rem; padding: 0 4px; }
 
 .nudge {
   margin-top: 24px;
