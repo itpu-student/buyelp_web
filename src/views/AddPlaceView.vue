@@ -21,13 +21,27 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="category">Category *</label>
-          <select id="category" v-model="form.category_id" class="form-input" required>
-            <option value="" disabled>Select a category…</option>
-            <option v-for="c in categoriesState.list" :key="c.id" :value="c.id">
-              {{ c.name?.en || c.slug }}
-            </option>
-          </select>
+          <span class="form-label">Category *</span>
+          <div v-if="categoriesState.loading && !categoriesState.list.length" class="text-muted text-sm">
+            Loading categories…
+          </div>
+          <div v-else-if="categoriesState.error" class="form-error">
+            {{ categoriesState.error.message || 'Failed to load categories' }}
+          </div>
+          <div v-else class="cat-grid">
+            <button
+              v-for="c in categoriesState.list"
+              :key="c.id"
+              type="button"
+              class="cat-chip"
+              :class="{ 'is-selected': form.category_id === c.id }"
+              :aria-pressed="form.category_id === c.id"
+              @click="form.category_id = c.id"
+            >
+              <span class="cat-emoji">{{ c.emoji || '🏷️' }}</span>
+              <span class="cat-name">{{ c.name?.en || c.slug }}</span>
+            </button>
+          </div>
         </div>
 
         <div class="form-row">
@@ -69,21 +83,69 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="logo">Logo</label>
-          <input id="logo" type="file" accept="image/*" @change="onLogoPick" />
-          <small v-if="form.logo_key" class="text-muted">Uploaded ✓ ({{ form.logo_key }})</small>
+          <span class="form-label">Logo</span>
+          <div class="logo-row">
+            <button
+              type="button"
+              class="logo-circle"
+              :class="{ 'is-empty': !form.logo_key, 'is-busy': logoUploading }"
+              :aria-label="form.logo_key ? 'Replace logo' : 'Upload logo'"
+              @click="logoInput?.click()"
+            >
+              <img v-if="form.logo_key" :src="staticUrl(form.logo_key)" alt="Logo preview" />
+              <span v-else class="logo-placeholder">
+                <span class="logo-plus">＋</span>
+                <span class="logo-hint">Logo</span>
+              </span>
+              <span v-if="logoUploading" class="logo-busy">…</span>
+            </button>
+            <button
+              v-if="form.logo_key && !logoUploading"
+              type="button"
+              class="logo-clear"
+              aria-label="Remove logo"
+              @click="form.logo_key = ''"
+            >×</button>
+            <input
+              ref="logoInput"
+              type="file"
+              accept="image/*"
+              class="hidden-file"
+              @change="onLogoPick"
+            />
+          </div>
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="images">Photos</label>
-          <input id="images" type="file" accept="image/*" multiple @change="onImagesPick" />
-          <ul v-if="form.images.length" class="image-keys">
-            <li v-for="(k, i) in form.images" :key="k">
-              <span>{{ k }}</span>
-              <button class="btn-link" type="button" @click="form.images.splice(i, 1)">×</button>
-            </li>
-          </ul>
-          <small v-if="uploading" class="text-muted">Uploading…</small>
+          <span class="form-label">Photos</span>
+          <div class="photo-strip">
+            <div v-for="(k, i) in form.images" :key="k" class="photo-tile">
+              <img :src="staticUrl(k)" :alt="`Photo ${i + 1}`" />
+              <button
+                type="button"
+                class="photo-remove"
+                aria-label="Remove photo"
+                @click="form.images.splice(i, 1)"
+              >×</button>
+            </div>
+            <button
+              type="button"
+              class="photo-tile photo-add"
+              :aria-label="form.images.length ? 'Add more photos' : 'Add photos'"
+              @click="imagesInput?.click()"
+            >＋</button>
+            <input
+              ref="imagesInput"
+              type="file"
+              accept="image/*"
+              multiple
+              class="hidden-file"
+              @change="onImagesPick"
+            />
+          </div>
+          <small v-if="imagesUploading" class="text-muted">
+            Uploading {{ imagesProgress.done }} of {{ imagesProgress.total }}…
+          </small>
         </div>
 
         <div v-if="error" class="form-error">{{ error }}</div>
@@ -107,6 +169,7 @@ import { useRouter } from 'vue-router'
 import { store } from '../store/index.js'
 import { createPlace } from '../api/places.js'
 import { uploadFile } from '../api/files.js'
+import { staticUrl } from '../api/client.js'
 import { categoriesState, ensureCategoriesLoaded } from '../store/categories.js'
 
 const router = useRouter()
@@ -125,32 +188,41 @@ const form = reactive({
   images: [],
 })
 
-const uploading = ref(false)
+const logoInput = ref(null)
+const imagesInput = ref(null)
+const logoUploading = ref(false)
+const imagesUploading = ref(false)
+const imagesProgress = reactive({ done: 0, total: 0 })
 
 async function onLogoPick(e) {
   const file = e.target.files?.[0]
+  e.target.value = ''
   if (!file) return
-  uploading.value = true
+  logoUploading.value = true
   error.value = ''
   try {
     const r = await uploadFile(file, 'place')
     form.logo_key = r.key
   } catch (err) { error.value = err.message || 'Upload failed' }
-  finally { uploading.value = false }
+  finally { logoUploading.value = false }
 }
 
 async function onImagesPick(e) {
   const files = Array.from(e.target.files || [])
+  e.target.value = ''
   if (!files.length) return
-  uploading.value = true
+  imagesUploading.value = true
+  imagesProgress.total = files.length
+  imagesProgress.done = 0
   error.value = ''
   try {
     for (const f of files) {
       const r = await uploadFile(f, 'place')
       form.images.push(r.key)
+      imagesProgress.done++
     }
   } catch (err) { error.value = err.message || 'Upload failed' }
-  finally { uploading.value = false }
+  finally { imagesUploading.value = false }
 }
 
 const submitting = ref(false)
@@ -164,6 +236,10 @@ onMounted(() => {
 async function submit() {
   error.value = ''
   success.value = ''
+  if (!form.category_id) {
+    error.value = 'Please pick a category'
+    return
+  }
   submitting.value = true
   try {
     const payload = {
@@ -210,9 +286,159 @@ async function submit() {
 .form-group { display: flex; flex-direction: column; gap: 6px; }
 .form-label { font-size: 0.85rem; font-weight: 600; color: var(--text-2); }
 
-.image-keys { list-style: none; padding: 0; margin: 6px 0 0; display: flex; flex-direction: column; gap: 4px; font-size: 0.75rem; color: var(--text-2); }
-.image-keys li { display: flex; justify-content: space-between; gap: 8px; align-items: center; padding: 4px 8px; background: var(--surface-2); border-radius: 4px; }
-.btn-link { background: none; border: none; cursor: pointer; color: var(--text-2); font-size: 1rem; padding: 0 4px; }
+.hidden-file { display: none; }
+
+.cat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+}
+.cat-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  font: inherit;
+  color: var(--text);
+  text-align: left;
+  transition: var(--transition);
+}
+.cat-chip:hover { border-color: var(--primary); }
+.cat-chip.is-selected {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+.cat-emoji { font-size: 1.15rem; line-height: 1; }
+.cat-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.logo-row {
+  position: relative;
+  display: inline-block;
+  width: 96px;
+  height: 96px;
+}
+.logo-circle {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  border: 2px dashed var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  position: relative;
+}
+.logo-circle:hover { border-color: var(--primary); }
+.logo-circle:not(.is-empty) {
+  border-style: solid;
+}
+.logo-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.logo-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: var(--text-2);
+}
+.logo-plus { font-size: 1.5rem; line-height: 1; }
+.logo-hint { font-size: 0.75rem; }
+.logo-busy {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-size: 1.4rem;
+}
+.logo-clear {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: var(--text);
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.photo-strip {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 4px 2px;
+}
+.photo-tile {
+  position: relative;
+  flex: 0 0 auto;
+  width: 88px;
+  height: 88px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.photo-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.photo-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.85rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.photo-add {
+  border-style: dashed;
+  cursor: pointer;
+  color: var(--text-2);
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+.photo-add:hover { border-color: var(--primary); color: var(--primary); }
 
 .nudge {
   margin-top: 24px;
