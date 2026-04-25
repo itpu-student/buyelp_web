@@ -22,7 +22,7 @@
 
         <div class="form-group">
           <span class="form-label">Category *</span>
-          <div v-if="categoriesState.loading && !categoriesState.list.length" class="text-muted text-sm">
+          <div v-if="categoriesState.loading && !filteredCategories.length" class="text-muted text-sm">
             Loading categories…
           </div>
           <div v-else-if="categoriesState.error" class="form-error">
@@ -30,7 +30,7 @@
           </div>
           <div v-else class="cat-grid">
             <button
-              v-for="c in categoriesState.list"
+              v-for="c in filteredCategories"
               :key="c.id"
               type="button"
               class="cat-chip"
@@ -46,12 +46,12 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label" for="addr-en">Address (EN) *</label>
-            <input id="addr-en" v-model.trim="form.addressEn" type="text" class="form-input" required />
+            <label class="form-label" for="addr-uz">Address (UZ) *</label>
+            <input id="addr-uz" v-model.trim="form.addressUz" type="text" class="form-input" required />
           </div>
           <div class="form-group">
-            <label class="form-label" for="addr-uz">Address (UZ)</label>
-            <input id="addr-uz" v-model.trim="form.addressUz" type="text" class="form-input" />
+            <label class="form-label" for="addr-en">Address (EN)</label>
+            <input id="addr-en" v-model.trim="form.addressEn" type="text" class="form-input" />
           </div>
         </div>
 
@@ -68,17 +68,25 @@
 
         <div class="form-group">
           <label class="form-label" for="phone">Phone</label>
-          <input id="phone" v-model.trim="form.phone" type="tel" class="form-input" placeholder="+998 ..." />
+          <input
+            id="phone"
+            v-model.trim="form.phone"
+            type="tel"
+            class="form-input"
+            placeholder="+998901234567"
+            pattern="^\+\d{12}$"
+            title="Phone must start with + and have 12 digits"
+          />
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label" for="desc-en">Description (EN)</label>
-            <textarea id="desc-en" v-model="form.descEn" class="form-input" rows="3"></textarea>
-          </div>
-          <div class="form-group">
             <label class="form-label" for="desc-uz">Description (UZ)</label>
             <textarea id="desc-uz" v-model="form.descUz" class="form-input" rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="desc-en">Description (EN)</label>
+            <textarea id="desc-en" v-model="form.descEn" class="form-input" rows="3"></textarea>
           </div>
         </div>
 
@@ -164,13 +172,17 @@
 </template>
 
 <script setup>
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { store } from '../store/index.js'
 import { createPlace } from '../api/places.js'
 import { uploadFile } from '../api/files.js'
 import { staticUrl } from '../api/client.js'
 import { categoriesState, ensureCategoriesLoaded } from '../store/categories.js'
+
+const filteredCategories = computed(() => {
+  return categoriesState.list.filter(c => c.id)
+})
 
 const router = useRouter()
 
@@ -240,18 +252,22 @@ async function submit() {
     error.value = 'Please pick a category'
     return
   }
+  if (form.phone && !/^\+\d{12}$/.test(form.phone)) {
+    error.value = 'Phone must be in format +998XXXXXXXXX (12 digits)'
+    return
+  }
   submitting.value = true
   try {
     const payload = {
       name: form.name,
       category_id: form.category_id,
-      address: { en: form.addressEn, uz: form.addressUz || form.addressEn },
+      address: { uz: form.addressUz, en: form.addressEn || form.addressUz },
       lat: Number(form.lat),
       lon: Number(form.lon),
     }
     if (form.phone) payload.phone = form.phone
     if (form.descEn || form.descUz) {
-      payload.description = { en: form.descEn, uz: form.descUz || form.descEn }
+      payload.description = { uz: form.descUz || form.descEn, en: form.descEn || form.descUz }
     }
     if (form.logo_key) payload.logo_key = form.logo_key
     if (form.images.length) payload.images = form.images
