@@ -57,10 +57,7 @@
 
         <div class="form-group">
           <span class="form-label">Location *</span>
-          <MapPicker v-model:lat="form.lat" v-model:lon="form.lon" class="map-picker" />
-          <small v-if="form.lat != null && form.lon != null" class="text-muted text-sm">
-            {{ form.lat.toFixed(5) }}, {{ form.lon.toFixed(5) }}
-          </small>
+          <MapPicker v-model:lat="form.lat" v-model:lon="form.lon" />
         </div>
 
         <div class="form-group">
@@ -303,12 +300,6 @@ async function submit() {
 
 .form-group { display: flex; flex-direction: column; gap: 6px; }
 .form-label { font-size: 0.85rem; font-weight: 600; color: var(--text-2); }
-
-.map-picker {
-  height: 320px;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-}
 
 .hidden-file { display: none; }
 

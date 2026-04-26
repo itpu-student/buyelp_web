@@ -26,18 +26,27 @@
       </div>
     </template>
     <template v-else>
-      <div ref="mapEl" class="map-canvas" />
-      <button
-        v-if="ready"
-        type="button"
-        class="locate-btn"
-        :disabled="locating"
-        @click="snapToGps"
-      >
-        <span class="icon">📍</span>
-        {{ locating ? 'Locating…' : 'Use my current location' }}
-      </button>
-      <div v-if="!ready" class="map-loading">Loading map…</div>
+      <div class="map-shell">
+        <div ref="mapEl" class="map-canvas" />
+        <div v-if="!ready" class="map-loading">Loading map…</div>
+      </div>
+      <div class="map-footer">
+        <span v-if="lat != null && lon != null" class="coords">
+          {{ lat.toFixed(5) }}, {{ lon.toFixed(5) }}
+        </span>
+        <span v-else class="coords-hint">Tap the map to set location</span>
+        <button
+          v-if="ready"
+          type="button"
+          class="locate-btn"
+          :disabled="locating"
+          @click="snapToGps"
+          :title="locating ? 'Locating…' : 'Snap pin to my current location'"
+        >
+          <span class="locate-icon" aria-hidden="true">📍</span>
+          <span>{{ locating ? 'Locating…' : 'My location' }}</span>
+        </button>
+      </div>
     </template>
   </div>
 </template>
@@ -118,17 +127,8 @@ function makePinElement() {
 
 function makeGpsElement() {
   const el = document.createElement('div')
-  el.style.cssText = [
-    'width:14px',
-    'height:14px',
-    'margin-left:-7px',
-    'margin-top:-7px',
-    'border-radius:50%',
-    'background:#1976d2',
-    'border:2px solid #fff',
-    'box-shadow:0 0 0 4px rgba(25,118,210,0.25)',
-    'pointer-events:none',
-  ].join(';')
+  el.className = 'mp-gps'
+  el.innerHTML = '<div class="mp-gps-pulse"></div><div class="mp-gps-core"></div>'
   return el
 }
 
@@ -177,19 +177,25 @@ async function init() {
     let center
     let zoom
     let hasPin = false
+    let gpsCoords = null
 
     if (props.lat != null && props.lon != null) {
       center = [props.lon, props.lat]
       zoom = 16
       hasPin = true
-    } else {
-      try {
-        const pos = await getPosition()
-        center = [pos.lon, pos.lat]
+    }
+
+    try {
+      const pos = await getPosition()
+      gpsCoords = [pos.lon, pos.lat]
+      if (!hasPin) {
+        center = gpsCoords
         zoom = 16
         hasPin = true
         emitCoords(pos.lat, pos.lon)
-      } catch {
+      }
+    } catch {
+      if (!hasPin) {
         center = [TASHKENT.lon, TASHKENT.lat]
         zoom = 12
       }
@@ -199,12 +205,8 @@ async function init() {
     map.addChild(new ymaps3.YMapDefaultSchemeLayer())
     map.addChild(new ymaps3.YMapDefaultFeaturesLayer())
 
-    if (hasPin) {
-      ensurePin(ymaps3, center)
-      if (lastEmitted.lat == null) {
-        ensureGpsDot(ymaps3, center)
-      }
-    }
+    if (gpsCoords) ensureGpsDot(ymaps3, gpsCoords)
+    if (hasPin) ensurePin(ymaps3, center)
 
     const listener = new ymaps3.YMapListener({
       layer: 'any',
@@ -264,9 +266,15 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .map-picker-root {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.map-shell {
   position: relative;
   width: 100%;
-  height: 100%;
+  height: 320px;
   border-radius: var(--radius-md);
   overflow: hidden;
   background: var(--surface-2);
@@ -277,15 +285,31 @@ onBeforeUnmount(() => {
   height: 100%;
 }
 
+.map-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 8px;
+}
+
+.coords {
+  font-size: 0.8rem;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+.coords-hint {
+  font-size: 0.8rem;
+  color: var(--text-3, var(--text-2));
+  font-style: italic;
+}
+
 .locate-btn {
-  position: absolute;
-  top: 12px;
-  right: 12px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
-  background: #fff;
+  padding: 6px 12px;
+  background: var(--surface);
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: var(--radius-full);
@@ -293,7 +317,6 @@ onBeforeUnmount(() => {
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
   transition: var(--transition);
 }
 .locate-btn:hover:not(:disabled) {
@@ -301,6 +324,7 @@ onBeforeUnmount(() => {
   color: var(--primary);
 }
 .locate-btn:disabled { opacity: 0.7; cursor: wait; }
+.locate-icon { font-size: 0.95rem; line-height: 1; }
 
 .map-loading {
   position: absolute;
@@ -329,5 +353,39 @@ onBeforeUnmount(() => {
 }
 @media (max-width: 640px) {
   .fallback-row { grid-template-columns: 1fr; }
+}
+</style>
+
+<style>
+.mp-gps {
+  position: relative;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.mp-gps-core {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  left: -7px;
+  top: -7px;
+  border-radius: 50%;
+  background: #1976d2;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.35);
+}
+.mp-gps-pulse {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  left: -12px;
+  top: -12px;
+  border-radius: 50%;
+  background: rgba(25, 118, 210, 0.45);
+  animation: mp-gps-pulse 2s ease-out infinite;
+}
+@keyframes mp-gps-pulse {
+  0%   { transform: scale(0.6); opacity: 0.8; }
+  100% { transform: scale(3);   opacity: 0;   }
 }
 </style>
