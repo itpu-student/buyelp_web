@@ -55,15 +55,12 @@
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label" for="lat">Latitude *</label>
-            <input id="lat" v-model.number="form.lat" type="number" step="any" class="form-input" required />
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="lon">Longitude *</label>
-            <input id="lon" v-model.number="form.lon" type="number" step="any" class="form-input" required />
-          </div>
+        <div class="form-group">
+          <span class="form-label">Location *</span>
+          <MapPicker v-model:lat="form.lat" v-model:lon="form.lon" class="map-picker" />
+          <small v-if="form.lat != null && form.lon != null" class="text-muted text-sm">
+            {{ form.lat.toFixed(5) }}, {{ form.lon.toFixed(5) }}
+          </small>
         </div>
 
         <div class="form-group">
@@ -179,6 +176,7 @@ import { createPlace } from '../api/places.js'
 import { uploadFile } from '../api/files.js'
 import { staticUrl } from '../api/client.js'
 import { categoriesState, ensureCategoriesLoaded } from '../store/categories.js'
+import MapPicker from '../components/MapPicker.vue'
 
 const filteredCategories = computed(() => {
   return categoriesState.list.filter(c => c.id)
@@ -252,6 +250,10 @@ async function submit() {
     error.value = 'Please pick a category'
     return
   }
+  if (form.lat == null || form.lon == null) {
+    error.value = 'Please pick a location on the map'
+    return
+  }
   if (form.phone && !/^\+\d{12}$/.test(form.phone)) {
     error.value = 'Phone must be in format +998XXXXXXXXX (12 digits)'
     return
@@ -301,6 +303,12 @@ async function submit() {
 
 .form-group { display: flex; flex-direction: column; gap: 6px; }
 .form-label { font-size: 0.85rem; font-weight: 600; color: var(--text-2); }
+
+.map-picker {
+  height: 320px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
 
 .hidden-file { display: none; }
 
