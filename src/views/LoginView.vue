@@ -6,70 +6,47 @@
         <span class="logo-text">Bu<span class="logo-accent">Yelp</span>.uz</span>
       </div>
 
-      <h1 class="auth-title">{{ t('auth.login_title') }}</h1>
-      <p class="auth-subtitle">{{ t('auth.login_subtitle') }}</p>
+      <h1 class="auth-title">Sign in</h1>
+      <p class="auth-subtitle">
+        Open our Telegram bot, request a code, and paste the 6 digits below.
+        First time? An account is created automatically.
+      </p>
 
       <form class="auth-form" @submit.prevent="handleLogin">
         <div class="form-group">
-          <label class="form-label" for="login-email">{{ t('auth.email') }}</label>
+          <label class="form-label" for="login-code">6-digit code</label>
           <input
-            id="login-email"
-            v-model="email"
-            type="email"
-            class="form-input"
-            placeholder="you@example.com"
+            id="login-code"
+            v-model="code"
+            type="text"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            maxlength="6"
+            pattern="\d{6}"
+            class="form-input code-input"
+            placeholder="123456"
             required
           />
         </div>
 
-        <div class="form-group">
-          <label class="form-label" for="login-password">{{ t('auth.password') }}</label>
-          <div class="password-wrap">
-            <input
-              id="login-password"
-              v-model="password"
-              :type="showPassword ? 'text' : 'password'"
-              class="form-input"
-              placeholder="••••••••"
-              required
-            />
-            <button type="button" class="pw-toggle" @click="showPassword = !showPassword">
-              {{ showPassword ? '🙈' : '👁️' }}
-            </button>
-          </div>
-        </div>
-
         <div v-if="error" class="auth-error">{{ error }}</div>
 
-        <button type="submit" class="btn btn-primary btn-block btn-lg" :disabled="loading">
-          <span v-if="loading">⏳ Signing in…</span>
-          <span v-else>{{ t('auth.login_btn') }}</span>
+        <button type="submit" class="btn btn-primary btn-block btn-lg" :disabled="loading || code.length !== 6">
+          <span v-if="loading">⏳ Verifying…</span>
+          <span v-else>Sign in</span>
         </button>
       </form>
 
-      <div class="divider-text">
-        <span>OR</span>
-      </div>
-
-      <button class="btn btn-ghost btn-block" disabled style="opacity:0.5; cursor:not-allowed;">
-        🔑 Continue with Google (soon)
-      </button>
-
       <p class="auth-switch">
-        {{ t('auth.no_account') }}
-        <RouterLink to="/register" class="text-primary font-semibold">{{ t('auth.signup_link') }}</RouterLink>
+        Don't have a code yet?
+        <RouterLink to="/register" class="text-primary font-semibold">How to get one</RouterLink>
       </p>
     </div>
 
-    <!-- Decorative side -->
     <div class="auth-deco" aria-hidden="true">
-      <img
-        src="/login_bg.png"
-        alt="Do'stlar birga vaqt o'tkazmoqda"
-        class="deco-image"
-      />
+      <img src="/login_bg.png" alt="" class="deco-image" />
       <div class="deco-overlay">
-        <p class="deco-quote">“Choyxona, tog', stadion — do'stlar bilan har joy yoqimli.”</p>
+        <p class="deco-quote">"Choyxona, tog', stadion — do'stlar bilan har joy yoqimli."</p>
       </div>
     </div>
   </div>
@@ -78,28 +55,30 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { t } from '../i18n/index.js'
 import { store } from '../store/index.js'
+import { verifyCode } from '../api/auth.js'
 
 const router = useRouter()
-const email = ref('')
-const password = ref('')
-const showPassword = ref(false)
+const code = ref('')
 const loading = ref(false)
 const error = ref('')
 
 async function handleLogin() {
-  if (!email.value || !password.value) {
-    error.value = 'Please fill in all fields.'
+  error.value = ''
+  if (!/^\d{6}$/.test(code.value)) {
+    error.value = 'Enter the 6-digit code.'
     return
   }
   loading.value = true
-  error.value = ''
-  // Simulate async login
-  await new Promise((r) => setTimeout(r, 800))
-  store.login(email.value, password.value)
-  loading.value = false
-  router.push('/')
+  try {
+    const res = await verifyCode(code.value)
+    store.setSession({ token: res.token, user: res.user })
+    router.push('/')
+  } catch (e) {
+    error.value = e.status === 403 ? 'Account is blocked.' : 'Invalid or expired code.'
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
@@ -145,6 +124,7 @@ async function handleLogin() {
   font-size: 0.9rem;
   color: var(--text-2);
   margin-top: -10px;
+  line-height: 1.5;
 }
 
 .auth-form {
@@ -153,18 +133,11 @@ async function handleLogin() {
   gap: 16px;
 }
 
-.password-wrap {
-  position: relative;
-}
-
-.password-wrap .form-input { padding-right: 44px; }
-
-.pw-toggle {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 1rem;
+.code-input {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 1.5rem;
+  letter-spacing: 0.4em;
+  text-align: center;
 }
 
 .auth-error {
@@ -176,29 +149,12 @@ async function handleLogin() {
   font-size: 0.875rem;
 }
 
-.divider-text {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: var(--text-3);
-  font-size: 0.8rem;
-}
-
-.divider-text::before,
-.divider-text::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border);
-}
-
 .auth-switch {
   text-align: center;
   font-size: 0.875rem;
   color: var(--text-2);
 }
 
-/* Deco */
 .auth-deco {
   position: relative;
   overflow: hidden;

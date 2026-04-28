@@ -1,15 +1,9 @@
 <template>
   <div>
-    <!-- ───── Hero ────────────────────────────────────── -->
     <section class="hero">
       <div class="hero-bg">
         <div class="hero-gradient"></div>
-        <img
-          src="/home_bg.jpeg"
-          alt="Do'stlar bilan vaqt o'tkazish"
-          class="hero-image"
-        />
-
+        <img src="/home_bg.jpeg" alt="Do'stlar bilan vaqt o'tkazish" class="hero-image" />
       </div>
       <div class="container hero-content">
         <div class="hero-text">
@@ -20,7 +14,6 @@
           </h1>
           <p class="hero-desc">{{ t('home.hero_desc') }}</p>
 
-          <!-- Search bar -->
           <div class="hero-search">
             <div class="search-box">
               <span class="search-icon">🔍</span>
@@ -35,57 +28,48 @@
               </button>
             </div>
           </div>
-
-          <!-- Quick stats -->
-          <div class="hero-stats">
-            <div class="stat"><span class="stat-num">13+</span><span class="stat-label">Joylar</span></div>
-            <div class="stat-divider"></div>
-            <div class="stat"><span class="stat-num">6</span><span class="stat-label">Kategoriya</span></div>
-            <div class="stat-divider"></div>
-            <div class="stat"><span class="stat-num">2K+</span><span class="stat-label">Sharhlar</span></div>
-          </div>
         </div>
       </div>
     </section>
 
     <div class="container">
-      <!-- ───── Categories ───────────────────────────── -->
       <section class="section">
         <div class="section-header">
           <h2 class="section-title">{{ t('home.categories_title') }}</h2>
         </div>
         <div class="categories-grid">
           <RouterLink
-            v-for="cat in categories"
-            :key="cat.key"
-            :to="`/search?category=${cat.key}`"
+            v-for="cat in categoryCards"
+            :key="cat.slug"
+            :to="`/search?category=${cat.slug}`"
             class="category-card"
           >
             <span class="cat-icon">{{ cat.icon }}</span>
-            <span class="cat-label">{{ t(`categories.${cat.key}`) }}</span>
-            <span class="cat-count">{{ cat.count }} places</span>
+            <span class="cat-label">{{ cat.label }}</span>
           </RouterLink>
         </div>
       </section>
 
-      <!-- ───── Featured Places ──────────────────────── -->
       <section class="section">
         <div class="section-header">
           <h2 class="section-title">{{ t('home.featured_title') }}</h2>
           <RouterLink to="/search" class="see-all-link">{{ t('home.see_all') }} →</RouterLink>
         </div>
-        <div class="grid-3">
+        <div v-if="loading" class="loading-state">Loading…</div>
+        <div v-else-if="loadError" class="error-state">{{ loadError }}</div>
+        <div v-else-if="featured.length" class="grid-3">
           <PlaceCard v-for="place in featured" :key="place.id" :place="place" />
         </div>
+        <p v-else class="text-muted text-sm">No places yet.</p>
       </section>
 
-      <!-- ───── Top Rated ────────────────────────────── -->
       <section class="section">
         <div class="section-header">
           <h2 class="section-title">{{ t('home.toprated_title') }}</h2>
           <RouterLink to="/search" class="see-all-link">{{ t('home.see_all') }} →</RouterLink>
         </div>
-        <div class="top-rated-list">
+        <div v-if="loading" class="loading-state">Loading…</div>
+        <div v-else-if="topRated.length" class="top-rated-list">
           <RouterLink
             v-for="(place, idx) in topRated"
             :key="place.id"
@@ -93,10 +77,11 @@
             class="top-item card"
           >
             <span class="top-rank">#{{ idx + 1 }}</span>
-            <img :src="place.images[0]" :alt="place.name.en" class="top-image" />
+            <img v-if="place.images[0]" :src="place.images[0]" :alt="place.name.en" class="top-image" />
+            <div v-else class="top-image top-image-ph"></div>
             <div class="top-info">
-              <span class="top-name">{{ place.name[locale] || place.name.en }}</span>
-              <span class="top-addr">{{ place.address[locale] || place.address.en }}</span>
+              <span class="top-name">{{ place.name[locale.locale] || place.name.en }}</span>
+              <span class="top-addr">{{ place.address[locale.locale] || place.address.en }}</span>
             </div>
             <div class="top-rating">
               <StarRating :rating="place.rating" :size="16" />
@@ -104,16 +89,19 @@
             </div>
           </RouterLink>
         </div>
+        <p v-else-if="!loadError" class="text-muted text-sm">No rated places yet.</p>
       </section>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { t, i18nState } from '../i18n/index.js'
-import { getFeaturedPlaces, getTopRated, places } from '../data/places.js'
+import { listPlaces } from '../api/places.js'
+import { normalizePlace } from '../api/normalize.js'
+import { categoriesState, ensureCategoriesLoaded } from '../store/categories.js'
 import PlaceCard from '../components/PlaceCard.vue'
 import StarRating from '../components/StarRating.vue'
 
@@ -121,30 +109,48 @@ const router = useRouter()
 const locale = i18nState
 const searchQuery = ref('')
 
-const featured = getFeaturedPlaces().slice(0, 6)
-const topRated = getTopRated(5)
+const featured = ref([])
+const topRated = ref([])
+const loading = ref(true)
+const loadError = ref('')
 
 function goSearch() {
   router.push({ path: '/search', query: searchQuery.value ? { q: searchQuery.value } : {} })
 }
 
-const categoryCounts = places.reduce((acc, p) => {
-  acc[p.category] = (acc[p.category] || 0) + 1
-  return acc
-}, {})
+const categoryIcons = {
+  restaurants: '🍽️', auto: '🚗', health: '🏥',
+  activities: '🏔️', sports: '⚽', tabiat: '🌿',
+}
 
-const categories = [
-  { key: 'restaurants', icon: '🍽️', count: categoryCounts.restaurants || 0 },
-  { key: 'auto', icon: '🚗', count: categoryCounts.auto || 0 },
-  { key: 'health', icon: '🏥', count: categoryCounts.health || 0 },
-  { key: 'activities', icon: '🏔️', count: categoryCounts.activities || 0 },
-  { key: 'sports', icon: '⚽', count: categoryCounts.sports || 0 },
-  { key: 'tabiat', icon: '🌿', count: categoryCounts.tabiat || 0 },
-]
+const categoryCards = computed(() =>
+  categoriesState.list.map((c) => ({
+    slug: c.slug,
+    icon: categoryIcons[c.slug] || '📍',
+    label: c.name?.[locale.locale] || c.name?.en || c.slug,
+  }))
+)
+
+onMounted(async () => {
+  loading.value = true
+  loadError.value = ''
+  try {
+    await ensureCategoriesLoaded()
+    const [top, rec] = await Promise.all([
+      listPlaces({ sort: 'top', limit: 6 }),
+      listPlaces({ sort: 'top', limit: 5 }),
+    ])
+    featured.value = (top.items || []).map(normalizePlace)
+    topRated.value = (rec.items || []).map(normalizePlace)
+  } catch (e) {
+    loadError.value = e.message || 'Failed to load places'
+  } finally {
+    loading.value = false
+  }
+})
 </script>
 
 <style scoped>
-/* Hero */
 .hero {
   position: relative;
   height: 100vh;
@@ -154,147 +160,49 @@ const categories = [
   align-items: center;
   overflow: hidden;
 }
-
-.hero-bg {
-  position: absolute;
-  inset: 0;
-}
-
-.hero-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
+.hero-bg { position: absolute; inset: 0; }
+.hero-image { width: 100%; height: 100%; object-fit: cover; }
 .hero-gradient {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to right,
-    rgba(3, 7, 18, 0.88) 0%,
-    rgba(3, 7, 18, 0.65) 50%,
-    rgba(3, 7, 18, 0.3) 100%
-  );
+  background: linear-gradient(to right, rgba(3,7,18,0.88) 0%, rgba(3,7,18,0.65) 50%, rgba(3,7,18,0.3) 100%);
   z-index: 1;
 }
-
-.hero-content {
-  position: relative;
-  z-index: 2;
-  padding-top: var(--nav-height);
-}
-
-.hero-text {
-  max-width: 620px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
+.hero-content { position: relative; z-index: 2; padding-top: var(--nav-height); }
+.hero-text { max-width: 620px; display: flex; flex-direction: column; gap: 20px; }
 .hero-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--accent);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 0.85rem; font-weight: 600; color: var(--accent);
+  text-transform: uppercase; letter-spacing: 0.08em;
 }
-
-.hero-title {
-  font-size: clamp(2rem, 5vw, 3.2rem);
-  font-weight: 800;
-  line-height: 1.15;
-  color: #fff;
-}
-
-.hero-title-accent {
-  color: var(--primary-light);
-}
-
-.hero-desc {
-  font-size: 1.05rem;
-  color: rgba(255, 255, 255, 0.75);
-  line-height: 1.7;
-  max-width: 480px;
-}
-
-/* Search box */
+.hero-title { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800; line-height: 1.15; color: #fff; }
+.hero-title-accent { color: var(--primary-light); }
+.hero-desc { font-size: 1.05rem; color: rgba(255,255,255,0.75); line-height: 1.7; max-width: 480px; }
 .hero-search { margin-top: 8px; }
-
 .search-box {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: rgba(255, 255, 255, 0.12);
+  display: flex; align-items: center; gap: 12px;
+  background: rgba(255,255,255,0.12);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255,255,255,0.2);
   border-radius: var(--radius-full);
   padding: 6px 6px 6px 18px;
 }
-
 .search-icon { font-size: 1.1rem; flex-shrink: 0; }
-
 .search-input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  outline: none;
-  color: #fff;
-  font-size: 0.95rem;
-  min-width: 0;
+  flex: 1; background: transparent; border: none; outline: none;
+  color: #fff; font-size: 0.95rem; min-width: 0;
 }
-
-.search-input::placeholder { color: rgba(255, 255, 255, 0.5); }
-
+.search-input::placeholder { color: rgba(255,255,255,0.5); }
 .search-btn { flex-shrink: 0; }
 
-/* Stats */
-.hero-stats {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.stat {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.stat-num {
-  font-size: 1.4rem;
-  font-weight: 800;
-  color: #fff;
-}
-
-.stat-label {
-  font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.6);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.stat-divider {
-  width: 1px;
-  height: 36px;
-  background: rgba(255, 255, 255, 0.2);
-}
-
-/* Categories */
 .categories-grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: 16px;
 }
-
 .category-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
   padding: 24px 12px;
   border-radius: var(--radius-lg);
   border: 1.5px solid var(--border);
@@ -303,108 +211,52 @@ const categories = [
   cursor: pointer;
   text-align: center;
 }
-
 .category-card:hover {
   border-color: var(--primary);
-  background: rgba(13, 148, 136, 0.05);
+  background: rgba(13,148,136,0.05);
   transform: translateY(-3px);
   box-shadow: var(--shadow-md);
 }
-
 .cat-icon { font-size: 2rem; }
+.cat-label { font-size: 0.82rem; font-weight: 600; color: var(--text); }
 
-.cat-label {
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--text);
-}
-
-.cat-count {
-  font-size: 0.72rem;
-  color: var(--text-3);
-}
-
-/* Top rated */
-.top-rated-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
+.top-rated-list { display: flex; flex-direction: column; gap: 12px; }
 .top-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+  display: flex; align-items: center; gap: 16px;
   padding: 14px 18px;
   border-radius: var(--radius-md);
-  text-decoration: none;
-  color: inherit;
+  text-decoration: none; color: inherit;
   transition: all var(--transition);
 }
-
-.top-item:hover {
-  transform: translateX(4px);
-  box-shadow: var(--shadow-md);
-}
-
-.top-rank {
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: var(--primary);
-  min-width: 32px;
-}
-
+.top-item:hover { transform: translateX(4px); box-shadow: var(--shadow-md); }
+.top-rank { font-size: 1.1rem; font-weight: 800; color: var(--primary); min-width: 32px; }
 .top-image {
-  width: 52px;
-  height: 52px;
+  width: 52px; height: 52px;
   border-radius: var(--radius-sm);
   object-fit: cover;
   flex-shrink: 0;
 }
-
-.top-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-width: 0;
-}
-
+.top-image-ph { background: var(--surface-2); }
+.top-info { flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .top-name {
-  font-weight: 600;
-  font-size: 0.95rem;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-weight: 600; font-size: 0.95rem; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-
 .top-addr {
-  font-size: 0.8rem;
-  color: var(--text-3);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 0.8rem; color: var(--text-3);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-
-.top-rating {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
-}
-
-.stars { color: var(--accent); font-size: 1rem; }
+.top-rating { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 .rating-val { font-weight: 700; font-size: 0.95rem; }
 
-/* Responsive */
-@media (max-width: 1024px) {
-  .categories-grid { grid-template-columns: repeat(3, 1fr); }
+.loading-state, .error-state {
+  padding: 40px 16px;
+  text-align: center;
+  color: var(--text-2);
+  font-size: 0.9rem;
 }
+.error-state { color: #dc2626; }
 
-@media (max-width: 640px) {
-  .categories-grid { grid-template-columns: repeat(2, 1fr); }
-  .hero-stats { gap: 12px; }
-  .search-btn span { display: none; }
-}
+@media (max-width: 1024px) { .categories-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 640px)  { .categories-grid { grid-template-columns: repeat(2, 1fr); } .search-btn span { display: none; } }
 </style>

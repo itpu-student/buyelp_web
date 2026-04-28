@@ -1,7 +1,9 @@
 <template>
   <div class="page-content">
-    <div v-if="!place" class="place-container not-found">
-      <h2>Place not found</h2>
+    <div v-if="loading" class="place-container loading">Loading…</div>
+
+    <div v-else-if="!place" class="place-container not-found">
+      <h2>{{ loadError || 'Place not found' }}</h2>
       <RouterLink to="/search" class="btn btn-primary mt-4">Back to Search</RouterLink>
     </div>
 
@@ -21,22 +23,8 @@
             </div>
 
             <template v-if="galleryMaxStart > 0">
-              <button
-                type="button"
-                class="carousel__btn carousel__btn--prev"
-                aria-label="Previous photo"
-                @click="galleryPrev"
-              >
-                &#8592;
-              </button>
-              <button
-                type="button"
-                class="carousel__btn carousel__btn--next"
-                aria-label="Next photo"
-                @click="galleryNext"
-              >
-                &#8594;
-              </button>
+              <button type="button" class="carousel__btn carousel__btn--prev" aria-label="Previous photo" @click="galleryPrev">&#8592;</button>
+              <button type="button" class="carousel__btn carousel__btn--next" aria-label="Next photo" @click="galleryNext">&#8594;</button>
               <div class="carousel__dots">
                 <button
                   v-for="i in galleryDotCount"
@@ -51,12 +39,9 @@
             </template>
           </div>
         </div>
-
         <div v-else class="carousel-placeholder">No photos</div>
 
         <div class="place-container place-header-inner">
-          <!-- <RouterLink to="/search" class="back-link">← {{ t("common.back") }}</RouterLink> -->
-
           <div class="place-title-block">
             <div class="place-title-row">
               <h1 class="place-title">{{ placeName }}</h1>
@@ -68,24 +53,14 @@
                 :aria-label="isSaved ? t('place.saved') : t('place.save')"
                 @click="toggleSaved"
               >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  :fill="isSaved ? 'currentColor' : 'none'"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                >
+                <svg width="18" height="18" viewBox="0 0 24 24" :fill="isSaved ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
                 </svg>
                 <span>{{ isSaved ? t("place.saved") : t("place.save") }}</span>
               </button>
             </div>
             <div class="place-title-meta">
-              <span class="cat-pill">{{ categoryIcon }} {{ t(`categories.${place.category}`) }}</span>
+              <span class="cat-pill">{{ categoryIcon }} {{ categoryLabel }}</span>
             </div>
             <div class="place-rating-row">
               <StarRating :rating="place.rating" :size="22" />
@@ -114,9 +89,8 @@
                 <ReviewInput v-if="store.isLoggedIn" @submit="handleReviewSubmit" />
               </div>
 
-              <div v-if="reviewSubmitted" class="submitted-msg">
-                ✅ Review submitted! (Demo mode — not persisted)
-              </div>
+              <div v-if="submitError" class="submit-error">{{ submitError }}</div>
+              <div v-if="reviewSubmitted" class="submitted-msg">✅ Review posted!</div>
               <div v-if="!store.isLoggedIn" class="review-login-nudge">
                 <p>
                   <RouterLink to="/login" class="text-primary font-semibold">{{ t("auth.signin_link") }}</RouterLink>
@@ -124,8 +98,9 @@
                 </p>
               </div>
 
-              <div v-if="place.reviews.length" class="reviews-list">
-                <ReviewCard v-for="r in allReviews" :key="r.id" :review="r" />
+              <div v-if="reviewsLoading" class="text-muted text-sm">Loading reviews…</div>
+              <div v-else-if="reviews.length" class="reviews-list">
+                <ReviewCard v-for="r in reviews" :key="r.id" :review="r" />
               </div>
               <p v-else class="text-muted text-sm">{{ t("place.no_reviews") }}</p>
             </section>
@@ -141,17 +116,13 @@
               </div>
               <div class="divider-sidebar"></div>
 
-              <div v-if="placeDesc" class="sidebar-desc">
-                {{ placeDesc }}
-              </div>
+              <div v-if="placeDesc" class="sidebar-desc">{{ placeDesc }}</div>
               <div v-if="placeDesc" class="divider-sidebar"></div>
 
-              <a :href="telHref" class="sidebar-line is-link">
+              <a v-if="place.phone" :href="telHref" class="sidebar-line is-link">
                 <span class="side-icon" aria-hidden="true">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path
-                      d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"
-                    />
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                   </svg>
                 </span>
                 <span class="side-text">{{ place.phone }}</span>
@@ -174,7 +145,51 @@
               </a>
 
               <SidebarHours :place="place" />
-              
+
+              <div v-if="canClaim || isOwner" class="ownership-block">
+                <div class="divider-sidebar"></div>
+
+                <button v-if="canClaim && !claimOpen" type="button" class="btn btn-secondary btn-sm" @click="claimOpen = true">
+                  Claim this place
+                </button>
+                <div v-if="canClaim && claimOpen" class="ownership-form">
+                  <input v-model="claimPhone" class="form-input" placeholder="Contact phone +998..." />
+                  <textarea v-model="claimNote" class="form-input" rows="2" placeholder="Optional note"></textarea>
+                  <div class="row-gap">
+                    <button class="btn btn-primary btn-sm" :disabled="claimSubmitting || !claimPhone" @click="submitClaim">
+                      {{ claimSubmitting ? 'Submitting…' : 'Submit claim' }}
+                    </button>
+                    <button class="btn btn-ghost btn-sm" @click="claimOpen = false">Cancel</button>
+                  </div>
+                </div>
+                <p v-if="claimMsg" class="text-xs text-muted">{{ claimMsg }}</p>
+
+                <button v-if="isOwner && !editOpen" type="button" class="btn btn-secondary btn-sm" @click="openEdit">
+                  Edit place
+                </button>
+                <div v-if="isOwner && editOpen" class="ownership-form">
+                  <label class="form-row"><span>Phone</span><input v-model="editForm.phone" class="form-input" /></label>
+                  <label class="form-row"><span>Description (EN)</span><textarea v-model="editForm.descEn" class="form-input" rows="2"></textarea></label>
+                  <label class="form-row"><span>Description (UZ)</span><textarea v-model="editForm.descUz" class="form-input" rows="2"></textarea></label>
+                  <label class="form-row"><span>Logo</span><input type="file" accept="image/*" @change="onEditLogoPick" /></label>
+                  <label class="form-row"><span>Add images</span><input type="file" accept="image/*" multiple @change="onEditImagesPick" /></label>
+                  <ul v-if="editForm.images.length" class="image-keys">
+                    <li v-for="(k, i) in editForm.images" :key="k">
+                      <span>{{ k }}</span>
+                      <button class="btn-link" type="button" @click="removeEditImage(i)">×</button>
+                    </li>
+                  </ul>
+                  <small v-if="editUploading" class="text-muted">Uploading…</small>
+                  <div class="row-gap">
+                    <button class="btn btn-primary btn-sm" :disabled="editSaving" @click="saveEdit">
+                      {{ editSaving ? 'Saving…' : 'Save' }}
+                    </button>
+                    <button class="btn btn-ghost btn-sm" @click="editOpen = false">Cancel</button>
+                  </div>
+                </div>
+                <p v-if="editMsg" class="text-xs text-muted">{{ editMsg }}</p>
+              </div>
+
               <div class="sidebar-map-wrap">
                 <SvgMapItem
                   :lat="place.lat ?? null"
@@ -192,11 +207,17 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from "vue"
-import { useRoute } from "vue-router"
+import { ref, reactive, computed, watch, nextTick, onMounted, onBeforeUnmount } from "vue"
+import { useRoute, useRouter } from "vue-router"
 import { t, i18nState } from "../i18n/index.js"
-import { getPlaceById, resolveTodayHours } from "../data/places.js"
+import { resolveTodayHours } from "../data/places.js"
 import { store } from "../store/index.js"
+import { getPlace, updatePlace } from "../api/places.js"
+import { listPlaceReviews, createReview } from "../api/reviews.js"
+import { normalizePlace, normalizeReview } from "../api/normalize.js"
+import { createClaim } from "../api/claims.js"
+import { uploadFile } from "../api/files.js"
+import { categoriesState, ensureCategoriesLoaded } from "../store/categories.js"
 import ReviewCard from "../components/ReviewCard.vue"
 import ReviewInput from "../components/ReviewInput.vue"
 import StarRating from "../components/StarRating.vue"
@@ -204,46 +225,38 @@ import SidebarHours from "../components/SidebarHours.vue"
 import SvgMapItem from "../components/SvgMapItem.vue"
 
 const route = useRoute()
-const place = computed(() => getPlaceById(route.params.id))
+const router = useRouter()
 
+const place = ref(null)
+const reviews = ref([])
+const loading = ref(true)
+const loadError = ref("")
+const reviewsLoading = ref(false)
+const submitError = ref("")
 const reviewSubmitted = ref(false)
-const extraReviews = ref([])
 
 const carouselViewportRef = ref(null)
 const viewportWidth = ref(0)
-/** Leftmost visible image index (Yelp-style strip). */
 const galleryStartIndex = ref(0)
 
-/** Min width per visible tile; viewport splits evenly with no gaps (flush strip, like PlaceRow / Instagram). */
 const GALLERY_MIN_SLIDE = 196
 const GALLERY_MAX_VISIBLE = 4
 
 let galleryResizeObserver = null
 
 const locale = i18nState
-const placeName = computed(() => {
-  const p = place.value
-  return p?.name[locale.locale] || p?.name.en
-})
-const placeAddress = computed(() => {
-  const p = place.value
-  return p?.address[locale.locale] || p?.address.en
-})
-const placeDesc = computed(() => {
-  const p = place.value
-  return p?.description[locale.locale] || p?.description.en
-})
+const placeName = computed(() => place.value?.name[locale.locale] || place.value?.name.en || "")
+const placeAddress = computed(() => place.value?.address[locale.locale] || place.value?.address.en || "")
+const placeDesc = computed(() => place.value?.description[locale.locale] || place.value?.description.en || "")
 
-const galleryImages = computed(() => place.value?.images?.filter(Boolean) || [])
+const galleryImages = computed(() => place.value?.images || [])
 
 const galleryVisibleCount = computed(() => {
   const n = galleryImages.value.length
   const w = viewportWidth.value
-  if (!n) return 1
-  if (!w) return 1
+  if (!n || !w) return 1
   const raw = Math.floor(w / GALLERY_MIN_SLIDE)
-  const v = Math.max(1, Math.min(GALLERY_MAX_VISIBLE, raw || 1, n))
-  return v
+  return Math.max(1, Math.min(GALLERY_MAX_VISIBLE, raw || 1, n))
 })
 
 const gallerySlideWidthPx = computed(() => {
@@ -253,48 +266,124 @@ const gallerySlideWidthPx = computed(() => {
   return w / v
 })
 
-const galleryMaxStart = computed(() =>
-  Math.max(0, galleryImages.value.length - galleryVisibleCount.value)
-)
-
+const galleryMaxStart = computed(() => Math.max(0, galleryImages.value.length - galleryVisibleCount.value))
 const galleryDotCount = computed(() => galleryMaxStart.value + 1)
-
 const galleryTrackStyle = computed(() => ({
   transform: `translateX(-${galleryStartIndex.value * gallerySlideWidthPx.value}px)`,
   transition: "transform 0.38s cubic-bezier(0.4, 0, 0.2, 1)",
 }))
 
-const telHref = computed(() => {
-  const raw = place.value?.phone || ""
-  return `tel:${raw.replace(/\s/g, "")}`
-})
+const telHref = computed(() => `tel:${(place.value?.phone || "").replace(/\s/g, "")}`)
 
 const mapsUrl = computed(() => {
   const p = place.value
   if (!p) return "#"
-  const q = encodeURIComponent(placeAddress.value || "")
   if (p.lat != null && p.lon != null) {
     return `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lon}`
   }
-  return `https://www.google.com/maps/search/?api=1&query=${q}`
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(placeAddress.value || "")}`
 })
 
 const categoryIcons = {
-  restaurants: "🍽️",
-  auto: "🚗",
-  health: "🏥",
-  activities: "🏔️",
-  sports: "⚽",
-  tabiat: "🌿",
+  restaurants: "🍽️", auto: "🚗", health: "🏥",
+  activities: "🏔️", sports: "⚽", tabiat: "🌿",
 }
 const categoryIcon = computed(() => categoryIcons[place.value?.category] || "📍")
+const categoryLabel = computed(() => {
+  const slug = place.value?.category
+  if (!slug) return ""
+  const cat = categoriesState.bySlug[slug]
+  if (cat?.name) return cat.name[locale.locale] || cat.name.en || slug
+  return slug
+})
 
-const allReviews = computed(() => [...(place.value?.reviews || []), ...extraReviews.value])
+const isOwner = computed(() => !!(store.user && place.value && place.value.claimedBy && place.value.claimedBy === store.user.id))
+const canClaim = computed(() => !!(store.isLoggedIn && place.value && !place.value.claimedBy && place.value.status === 10))
 
-const isSaved = computed(() => !!place.value && store.isPlaceSaved(place.value.id))
+const claimOpen = ref(false)
+const claimPhone = ref("")
+const claimNote = ref("")
+const claimSubmitting = ref(false)
+const claimMsg = ref("")
 
+async function submitClaim() {
+  if (!place.value) return
+  claimSubmitting.value = true
+  claimMsg.value = ""
+  try {
+    await createClaim({ place_id: place.value._uuid, phone: claimPhone.value, note: claimNote.value })
+    claimMsg.value = "Claim submitted — admin will review it."
+    claimOpen.value = false
+  } catch (e) {
+    claimMsg.value = e.message || "Claim failed"
+  } finally { claimSubmitting.value = false }
+}
+
+const editOpen = ref(false)
+const editForm = reactive({ phone: "", descEn: "", descUz: "", logo_key: "", images: [] })
+const editSaving = ref(false)
+const editMsg = ref("")
+const editUploading = ref(false)
+
+function openEdit() {
+  if (!place.value) return
+  editForm.phone = place.value.phone || ""
+  editForm.descEn = place.value.description?.en || ""
+  editForm.descUz = place.value.description?.uz || ""
+  editForm.logo_key = place.value._logoKey || ""
+  editForm.images = [...(place.value._imageKeys || [])]
+  editOpen.value = true
+}
+
+async function onEditLogoPick(e) {
+  const file = e.target.files?.[0]
+  if (!file) return
+  editUploading.value = true
+  try {
+    const r = await uploadFile(file, "place")
+    editForm.logo_key = r.key
+  } catch (err) { editMsg.value = err.message || "Upload failed" }
+  finally { editUploading.value = false }
+}
+
+async function onEditImagesPick(e) {
+  const files = Array.from(e.target.files || [])
+  if (!files.length) return
+  editUploading.value = true
+  try {
+    for (const f of files) {
+      const r = await uploadFile(f, "place")
+      editForm.images.push(r.key)
+    }
+  } catch (err) { editMsg.value = err.message || "Upload failed" }
+  finally { editUploading.value = false }
+}
+
+function removeEditImage(i) { editForm.images.splice(i, 1) }
+
+async function saveEdit() {
+  if (!place.value) return
+  editSaving.value = true
+  editMsg.value = ""
+  try {
+    const payload = {
+      phone: editForm.phone,
+      description: { en: editForm.descEn, uz: editForm.descUz || editForm.descEn },
+      logo_key: editForm.logo_key,
+      images: editForm.images,
+    }
+    const fresh = await updatePlace(place.value._uuid, payload)
+    place.value = normalizePlace(fresh)
+    editOpen.value = false
+  } catch (e) {
+    editMsg.value = e.message || "Save failed"
+  } finally { editSaving.value = false }
+}
+
+const isSaved = computed(() => !!place.value && store.isPlaceSaved(place.value._uuid))
 function toggleSaved() {
-  if (place.value) store.toggleSavedPlace(place.value.id)
+  if (!store.isLoggedIn) { router.push('/login'); return }
+  if (place.value) store.toggleSavedPlace(place.value._uuid).catch(() => {})
 }
 
 const todayHoursDisplay = computed(() => {
@@ -307,19 +396,13 @@ function measureGalleryViewport() {
   viewportWidth.value = el ? el.clientWidth : 0
 }
 
-/** Number of scroll positions (wraps: last ↔ first). */
-function galleryPositionCount() {
-  return galleryMaxStart.value + 1
-}
-
 function galleryPrev() {
-  const n = galleryPositionCount()
+  const n = galleryMaxStart.value + 1
   if (n <= 1) return
   galleryStartIndex.value = (galleryStartIndex.value - 1 + n) % n
 }
-
 function galleryNext() {
-  const n = galleryPositionCount()
+  const n = galleryMaxStart.value + 1
   if (n <= 1) return
   galleryStartIndex.value = (galleryStartIndex.value + 1) % n
 }
@@ -328,22 +411,73 @@ watch(galleryMaxStart, (max) => {
   if (galleryStartIndex.value > max) galleryStartIndex.value = max
 })
 
-watch(
-  () => route.params.id,
-  () => {
-    galleryStartIndex.value = 0
+async function loadPlace(idOrSlug) {
+  loading.value = true
+  loadError.value = ""
+  place.value = null
+  galleryStartIndex.value = 0
+  try {
+    await ensureCategoriesLoaded()
+    const raw = await getPlace(idOrSlug)
+    place.value = normalizePlace(raw)
     nextTick(measureGalleryViewport)
+    loadReviews(place.value._uuid)
+  } catch (e) {
+    loadError.value = e.status === 404 ? "Place not found" : e.message || "Failed to load"
+  } finally {
+    loading.value = false
   }
-)
+}
+
+async function loadReviews(idOrSlug) {
+  reviewsLoading.value = true
+  try {
+    const res = await listPlaceReviews(idOrSlug)
+    reviews.value = (res.items || []).map(normalizeReview)
+  } catch (e) {
+    reviews.value = []
+  } finally {
+    reviewsLoading.value = false
+  }
+}
+
+async function handleReviewSubmit(payload) {
+  if (!place.value) return
+  submitError.value = ""
+  reviewSubmitted.value = false
+  try {
+    const body = {
+      star_rating: payload.rating,
+      text: payload.text,
+    }
+    if (payload.priceLevel) body.price_rating = payload.priceLevel
+    if (payload.recommendLevel) body.quality_rating = payload.recommendLevel
+    await createReview(place.value._uuid, body)
+    reviewSubmitted.value = true
+    setTimeout(() => (reviewSubmitted.value = false), 3000)
+    const fresh = await getPlace(place.value._uuid)
+    place.value = normalizePlace(fresh)
+    await loadReviews(place.value._uuid)
+  } catch (e) {
+    submitError.value = e.status === 403
+      ? "This place isn't approved yet — reviews are disabled."
+      : e.message || "Failed to post review"
+  }
+}
+
+watch(() => route.params.id, (id) => {
+  if (id) loadPlace(id)
+})
 
 onMounted(() => {
+  loadPlace(route.params.id)
   nextTick(() => {
-    measureGalleryViewport()
     const el = carouselViewportRef.value
     if (el && typeof ResizeObserver !== "undefined") {
-      galleryResizeObserver = new ResizeObserver(() => measureGalleryViewport())
+      galleryResizeObserver = new ResizeObserver(measureGalleryViewport)
       galleryResizeObserver.observe(el)
     }
+    measureGalleryViewport()
   })
 })
 
@@ -351,22 +485,9 @@ onBeforeUnmount(() => {
   galleryResizeObserver?.disconnect()
   galleryResizeObserver = null
 })
-
-function handleReviewSubmit(payload) {
-  extraReviews.value.unshift({
-    id: `new-${Date.now()}`,
-    author: store.user?.name || "You",
-    rating: payload.rating,
-    text: payload.text,
-    date: new Date().toISOString().split("T")[0],
-  })
-  reviewSubmitted.value = true
-  setTimeout(() => (reviewSubmitted.value = false), 3000)
-}
 </script>
 
 <style scoped>
-
 .place-container {
   width: 100%;
   max-width: 90%;
@@ -374,433 +495,158 @@ function handleReviewSubmit(payload) {
   padding: 0 24px;
 }
 
+.place-container.loading,
+.place-container.not-found {
+  text-align: center;
+  padding: 80px 0;
+}
 
 .place-header-wrap {
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   padding-bottom: 0;
 }
-
-.place-header-inner {
-  padding-top: 20px;
-  padding-bottom: 20px;
-}
-
-.back-link {
-  display: inline-block;
-  color: var(--text-2);
-  font-size: 0.85rem;
-  font-weight: 500;
-  margin-bottom: 16px;
-  transition: color var(--transition);
-}
-
-.back-link:hover {
-  color: var(--primary);
-}
+.place-header-inner { padding-top: 20px; padding-bottom: 20px; }
 
 .place-title-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 8px;
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px; margin-bottom: 8px;
 }
-
 .place-title {
   font-size: clamp(1.75rem, 4vw, 2.25rem);
-  font-weight: 800;
-  color: var(--text);
-  line-height: 1.2;
-  margin-bottom: 0;
-  flex: 1 1 auto;
-  min-width: 0;
+  font-weight: 800; color: var(--text); line-height: 1.2;
+  margin-bottom: 0; flex: 1 1 auto; min-width: 0;
 }
-
 .save-btn {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--surface);
-  color: var(--text);
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
+  flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border: 1px solid var(--border); border-radius: 999px;
+  background: var(--surface); color: var(--text);
+  font-size: 0.875rem; font-weight: 600; cursor: pointer;
   transition: background var(--transition), color var(--transition), border-color var(--transition);
   margin-top: 4px;
 }
+.save-btn:hover { background: var(--surface-2); border-color: var(--primary); color: var(--primary); }
+.save-btn--active { background: var(--primary); border-color: var(--primary); color: #fff; }
+.save-btn--active:hover { background: var(--primary); color: #fff; }
 
-.save-btn:hover {
-  background: var(--surface-2);
-  border-color: var(--primary);
-  color: var(--primary);
-}
-
-.save-btn--active {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: #fff;
-}
-
-.save-btn--active:hover {
-  background: var(--primary);
-  color: #fff;
-}
-
-.cat-pill {
-  display: inline-block;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-2);
-  margin-bottom: 12px;
-}
+.cat-pill { display: inline-block; font-size: 0.8rem; font-weight: 600; color: var(--text-2); margin-bottom: 12px; }
 
 .place-rating-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 10px;
-  font-size: 0.9rem;
-  color: var(--text-2);
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: 6px 10px; font-size: 0.9rem; color: var(--text-2);
 }
+.rating-num { font-weight: 800; color: var(--text); }
+.review-count { color: var(--text-3); }
+.meta-dot { color: var(--text-3); user-select: none; }
+.status-pill.open { color: #16a34a; font-weight: 700; }
+.status-pill.closed { color: #dc2626; font-weight: 700; }
+.today-line { color: var(--text-2); }
+.today-label { font-weight: 600; color: var(--text); }
 
-.rating-num {
-  font-weight: 800;
-  color: var(--text);
-}
-
-.review-count {
-  color: var(--text-3);
-}
-
-.meta-dot {
-  color: var(--text-3);
-  user-select: none;
-}
-
-.status-pill.open {
-  color: #16a34a;
-  font-weight: 700;
-}
-
-.status-pill.closed {
-  color: #dc2626;
-  font-weight: 700;
-}
-
-.today-line {
-  color: var(--text-2);
-}
-
-.today-label {
-  font-weight: 600;
-  color: var(--text);
-}
-
-/* Carousel — full-bleed left/right (like PlaceView_new.vue photo-carousel-wrapper) */
 .carousel-outer {
-  width: 100%;
-  max-width: none;
-  margin-inline: 0;
-  padding-inline: 0;
-  padding-top: 12px;
-  padding-bottom: 16px;
+  width: 100%; max-width: none; margin-inline: 0; padding-inline: 0;
+  padding-top: 12px; padding-bottom: 16px;
 }
-
 .carousel-viewport {
-  position: relative;
-  overflow: hidden;
-  width: 100%;
-  border-radius: 0;
-  background: var(--surface-2);
+  position: relative; overflow: hidden; width: 100%;
+  border-radius: 0; background: var(--surface-2);
 }
-
-.carousel__track {
-  display: flex;
-  width: max-content;
-  height: 100%;
-  will-change: transform;
-}
-
-.carousel__slide {
-  flex: 0 0 auto;
-  flex-shrink: 0;
-  aspect-ratio: 4 / 3;
-  overflow: hidden;
-  background: var(--border);
-}
-
-.carousel__img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
+.carousel__track { display: flex; width: max-content; height: 100%; will-change: transform; }
+.carousel__slide { flex: 0 0 auto; flex-shrink: 0; aspect-ratio: 4 / 3; overflow: hidden; background: var(--border); }
+.carousel__img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 .carousel__btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 3;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.45);
-  color: #fff;
-  font-size: 0.95rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background var(--transition);
-  border: none;
-  cursor: pointer;
-  line-height: 1;
+  position: absolute; top: 50%; transform: translateY(-50%);
+  z-index: 3; width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(0,0,0,0.45); color: #fff; font-size: 0.95rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: background var(--transition); border: none; cursor: pointer; line-height: 1;
 }
+.carousel__btn:hover { background: rgba(0,0,0,0.7); }
+.carousel__btn--prev { left: 10px; }
+.carousel__btn--next { right: 10px; }
 
-.carousel__btn:hover {
-  background: rgba(0, 0, 0, 0.7);
-}
-
-.carousel__btn--prev {
-  left: 10px;
-}
-
-.carousel__btn--next {
-  right: 10px;
-}
-
-.carousel__dots {
-  position: absolute;
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 5px;
-  z-index: 3;
-}
-
+.carousel__dots { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; z-index: 3; }
 .carousel__dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(255, 255, 255, 0.5);
-  cursor: pointer;
-  padding: 0;
+  width: 6px; height: 6px; border-radius: 50%; border: none;
+  background: rgba(255,255,255,0.5); cursor: pointer; padding: 0;
   transition: background var(--transition), transform var(--transition);
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.2);
 }
-
-.carousel__dot--active {
-  background: #fff;
-  transform: scale(1.3);
-}
+.carousel__dot--active { background: #fff; transform: scale(1.3); }
 
 .carousel-placeholder {
-  width: 100%;
-  padding: 48px 24px;
-  text-align: center;
-  color: var(--text-3);
+  width: 100%; padding: 48px 24px; text-align: center; color: var(--text-3);
 }
 
-/* Body */
-.place-body {
-  padding-top: 32px;
-  padding-bottom: 80px;
-}
-
+.place-body { padding-top: 32px; padding-bottom: 80px; }
 .place-grid {
   display: grid;
   grid-template-columns: minmax(0, 65%) minmax(0, 35%);
-  gap: 40px;
-  align-items: start;
+  gap: 40px; align-items: start;
 }
-
-.info-section {
-  margin-bottom: 32px;
-}
-
-.sidebar-desc {
-  color: var(--text-2);
-  line-height: 1.6;
-  font-size: 0.95rem;
-  padding-bottom: 4px;
-}
-
-.divider-sidebar {
-  height: 1px;
-  background: var(--border-light);
-  margin: 8px 0 12px;
-}
+.info-section { margin-bottom: 32px; }
+.sidebar-desc { color: var(--text-2); line-height: 1.6; font-size: 0.95rem; padding-bottom: 4px; }
+.divider-sidebar { height: 1px; background: var(--border-light); margin: 8px 0 12px; }
+.ownership-block { display: flex; flex-direction: column; gap: 10px; padding: 0 4px; }
+.ownership-form { display: flex; flex-direction: column; gap: 8px; }
+.ownership-form .form-row { display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem; color: var(--text-2); }
+.ownership-form .form-input { padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text); font-size: 0.85rem; }
+.row-gap { display: flex; gap: 8px; }
+.image-keys { list-style: none; padding: 0; margin: 4px 0; display: flex; flex-direction: column; gap: 4px; font-size: 0.75rem; color: var(--text-2); }
+.image-keys li { display: flex; justify-content: space-between; gap: 8px; align-items: center; padding: 4px 8px; background: var(--surface-2); border-radius: 4px; }
+.btn-link { background: none; border: none; cursor: pointer; color: var(--text-2); font-size: 1rem; padding: 0 4px; }
 
 .section-title-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding-right: 8px;
-  margin-bottom: 12px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; padding-right: 8px; margin-bottom: 12px;
 }
+.sidebar-review-input { margin-left: auto; padding-right: 4px; }
 
-.sidebar-review-input {
-  margin-left: auto;
-  padding-right: 4px;
-}
+.submitted-msg { font-size: 0.875rem; color: #16a34a; font-weight: 500; }
+.submit-error { font-size: 0.875rem; color: #dc2626; font-weight: 500; margin: 8px 0; }
+.review-login-nudge { margin: 16px 0; font-size: 0.9rem; color: var(--text-2); }
+.reviews-list { display: flex; flex-direction: column; gap: 14px; margin-top: 20px; }
 
-.submitted-msg {
-  font-size: 0.875rem;
-  color: #16a34a;
-  font-weight: 500;
-}
-
-.review-login-nudge {
-  margin: 16px 0;
-  font-size: 0.9rem;
-  color: var(--text-2);
-}
-
-.reviews-list {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin-top: 20px;
-}
-
-/* Sidebar */
-.place-sidebar {
-  position: sticky;
-  top: calc(var(--nav-height) + 20px);
-}
-
-.sidebar-card {
-  padding: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
+.place-sidebar { position: sticky; top: calc(var(--nav-height) + 20px); }
+.sidebar-card { padding: 18px; display: flex; flex-direction: column; gap: 0; }
 .sidebar-rating {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 8px;
-  font-size: 0.9rem;
-  color: var(--text-2);
-  padding-bottom: 4px;
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: 6px 8px; font-size: 0.9rem; color: var(--text-2); padding-bottom: 4px;
 }
 
 .sidebar-line {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 14px 0;
-  border-bottom: 1px solid var(--border-light);
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px 0; border-bottom: 1px solid var(--border-light);
 }
-
-.sidebar-line:last-of-type {
-  border-bottom: none;
-}
-
+.sidebar-line:last-of-type { border-bottom: none; }
 .sidebar-line.is-link {
-  text-decoration: none;
-  color: inherit;
+  text-decoration: none; color: inherit;
   transition: background var(--transition);
-  margin: 0 -12px;
-  padding-left: 12px;
-  padding-right: 12px;
+  margin: 0 -12px; padding-left: 12px; padding-right: 12px;
   border-radius: var(--radius-sm);
 }
+.sidebar-line.is-link:hover { background: var(--surface-2); }
 
-.sidebar-line.is-link:hover {
-  background: var(--surface-2);
-}
-
-.side-icon {
-  flex-shrink: 0;
-  color: var(--primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 2px;
-}
-
-.side-icon.sm {
-  margin-top: 0;
-}
-
-.side-text {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--text);
-  line-height: 1.45;
-}
-
-.sidebar-line.is-link .side-text {
-  color: var(--primary);
-  font-weight: 600;
-}
-
-.address-multiline {
-  color: var(--text);
-  font-weight: 500;
-}
+.side-icon { flex-shrink: 0; color: var(--primary); display: flex; align-items: center; justify-content: center; margin-top: 2px; }
+.side-text { font-size: 0.9rem; font-weight: 500; color: var(--text); line-height: 1.45; }
+.sidebar-line.is-link .side-text { color: var(--primary); font-weight: 600; }
+.address-multiline { color: var(--text); font-weight: 500; }
 
 .sidebar-map-wrap {
-  margin-top: 16px;
-  padding: 12px;
+  margin-top: 16px; padding: 12px;
   background: var(--surface-2);
   border-radius: var(--radius-md);
   border: 1px solid var(--border-light);
   min-height: 180px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.expand-enter-active,
-.expand-leave-active {
-  transition: all 0.3s ease;
-  max-height: 300px;
-  overflow: hidden;
-  opacity: 1;
-}
-
-.expand-enter-from,
-.expand-leave-to {
-  max-height: 0;
-  opacity: 0;
-}
-
-.not-found {
-  text-align: center;
-  padding: 80px 0;
+  display: flex; align-items: center; justify-content: center;
 }
 
 @media (max-width: 900px) {
-  .place-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .place-sidebar {
-    position: static;
-  }
-
-  .carousel__btn {
-    width: 30px;
-    height: 30px;
-    font-size: 0.85rem;
-  }
-
-  .carousel__btn--prev {
-    left: 6px;
-  }
-
-  .carousel__btn--next {
-    right: 6px;
-  }
+  .place-grid { grid-template-columns: 1fr; }
+  .place-sidebar { position: static; }
+  .carousel__btn { width: 30px; height: 30px; font-size: 0.85rem; }
+  .carousel__btn--prev { left: 6px; }
+  .carousel__btn--next { right: 6px; }
 }
 </style>

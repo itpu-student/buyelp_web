@@ -6,11 +6,13 @@ import LoginView from "../views/LoginView.vue"
 import RegisterView from "../views/RegisterView.vue"
 import ProfileView from "../views/ProfileView.vue"
 import AdminView from "../views/AdminView.vue"
+import AddPlaceView from "../views/AddPlaceView.vue"
 
 const routes = [
   { path: "/", name: "home", component: HomeView },
   { path: "/search", name: "search", component: SearchView },
   { path: "/place/:id", name: "place", component: PlaceView },
+  { path: "/places/new", name: "place-new", component: AddPlaceView },
   { path: "/login", name: "login", component: LoginView },
   { path: "/register", name: "register", component: RegisterView },
   { path: "/profile", name: "profile", component: ProfileView },
