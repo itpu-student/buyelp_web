@@ -14,7 +14,7 @@
         <template v-if="store.isLoggedIn">
           <RouterLink to="/places/new" class="nav-link" @click="mobileOpen = false">+ Add place</RouterLink>
           <RouterLink to="/profile" class="nav-link" @click="mobileOpen = false">{{ t('nav.profile') }}</RouterLink>
-          <RouterLink to="/admin" class="nav-link" @click="mobileOpen = false">{{ t('nav.admin') }}</RouterLink>
+          <RouterLink v-if="store.user?.owns_place" to="/business" class="nav-link" @click="mobileOpen = false">{{ t('nav.business') }}</RouterLink>
         </template>
       </div>
 
@@ -46,8 +46,8 @@
             <RouterLink to="/profile" class="dropdown-item" @click="userMenuOpen = false">
               👤 {{ t('nav.profile') }}
             </RouterLink>
-            <RouterLink to="/admin" class="dropdown-item" @click="userMenuOpen = false">
-              ⚙️ {{ t('nav.admin') }}
+            <RouterLink v-if="store.user?.owns_place" to="/business" class="dropdown-item" @click="userMenuOpen = false">
+              🏢 {{ t('nav.business') }}
             </RouterLink>
             <div class="dropdown-divider"></div>
             <button class="dropdown-item danger" @click="logout">

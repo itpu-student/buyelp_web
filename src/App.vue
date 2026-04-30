@@ -1,16 +1,25 @@
 <template>
-  <Navbar />
+  <template v-if="!isAdminRoute">
+    <Navbar />
+  </template>
   <RouterView v-slot="{ Component }">
     <Transition name="page" mode="out-in">
       <component :is="Component" />
     </Transition>
   </RouterView>
-  <AppFooter />
+  <template v-if="!isAdminRoute">
+    <AppFooter />
+  </template>
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import Navbar from './components/Navbar.vue'
 import AppFooter from './components/AppFooter.vue'
+
+const route = useRoute()
+const isAdminRoute = computed(() => route.path.startsWith('/admin'))
 </script>
 
 <style>

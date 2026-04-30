@@ -1,6 +1,7 @@
 export const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"
 
 export const TOKEN_KEY = "s101_token"
+export const ADMIN_TOKEN_KEY = "s101_admin_token"
 
 export function staticUrl(key) {
   if (!key) return ""
@@ -18,6 +19,15 @@ export function setToken(token) {
   else localStorage.removeItem(TOKEN_KEY)
 }
 
+export function getAdminToken() {
+  return localStorage.getItem(ADMIN_TOKEN_KEY) || ""
+}
+
+export function setAdminToken(token) {
+  if (token) localStorage.setItem(ADMIN_TOKEN_KEY, token)
+  else localStorage.removeItem(ADMIN_TOKEN_KEY)
+}
+
 export class ApiError extends Error {
   constructor(status, code, message) {
     super(message || code || `HTTP ${status}`)
@@ -26,10 +36,13 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiFetch(path, { method = "GET", body, auth = false } = {}) {
+export async function apiFetch(path, { method = "GET", body, auth = false, adminAuth = false } = {}) {
   const headers = { "Accept": "application/json" }
   if (body !== undefined) headers["Content-Type"] = "application/json"
-  if (auth) {
+  if (adminAuth) {
+    const token = getAdminToken()
+    if (token) headers["Authorization"] = `Bearer ${token}`
+  } else if (auth) {
     const token = getToken()
     if (token) headers["Authorization"] = `Bearer ${token}`
   }
