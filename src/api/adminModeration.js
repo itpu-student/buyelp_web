@@ -18,6 +18,10 @@ export function adminSetPlaceStatus(id, status) {
   return apiFetch(`/api/admin/places/${id}/status`, { method: "PUT", body: { status }, adminAuth: true })
 }
 
+export function adminUpdatePlace(id, payload) {
+  return apiFetch(`/api/admin/places/${id}`, { method: "PUT", body: payload, adminAuth: true })
+}
+
 export function adminDeletePlace(id) {
   return apiFetch(`/api/admin/places/${id}`, { method: "DELETE", adminAuth: true })
 }

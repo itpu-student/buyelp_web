@@ -18,6 +18,9 @@
           <span class="admin-name">{{ adminStore.admin.name }}</span>
           <span class="admin-power">power {{ adminStore.admin.power }}</span>
         </div>
+        <button class="lang-toggle" @click="toggleLang">
+          {{ i18nState.locale === 'en' ? '🇬🇧 EN' : '🇺🇿 UZ' }}
+        </button>
         <button class="sidebar-logout" @click="logout">Logout</button>
       </div>
     </aside>
@@ -57,6 +60,9 @@
           <span class="admin-name">{{ adminStore.admin.name }}</span>
           <span class="admin-power">power {{ adminStore.admin.power }}</span>
         </div>
+        <button class="lang-toggle" @click="toggleLang">
+          {{ i18nState.locale === 'en' ? '🇬🇧 EN' : '🇺🇿 UZ' }}
+        </button>
         <button class="sidebar-logout" @click="logout">Logout</button>
       </div>
     </aside>
@@ -67,6 +73,11 @@
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { adminStore } from '../../store/adminStore.js'
+import { i18nState, setLocale } from '../../i18n/index.js'
+
+function toggleLang() {
+  setLocale(i18nState.locale === 'en' ? 'uz' : 'en')
+}
 
 const router = useRouter()
 const route = useRoute()
@@ -192,6 +203,19 @@ function logout() {
   font-size: 0.72rem;
   color: var(--text-3);
 }
+
+.lang-toggle {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: var(--text-2);
+  text-align: left;
+  transition: background var(--transition);
+}
+
+.lang-toggle:hover { background: var(--surface-2); color: var(--text); }
 
 .sidebar-logout {
   width: 100%;

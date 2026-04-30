@@ -66,9 +66,12 @@ export async function apiFetch(path, { method = "GET", body, auth = false, admin
   return data
 }
 
-export async function apiUpload(path, formData, { auth = true } = {}) {
+export async function apiUpload(path, formData, { auth = true, adminAuth = false } = {}) {
   const headers = { "Accept": "application/json" }
-  if (auth) {
+  if (adminAuth) {
+    const token = getAdminToken()
+    if (token) headers["Authorization"] = `Bearer ${token}`
+  } else if (auth) {
     const token = getToken()
     if (token) headers["Authorization"] = `Bearer ${token}`
   }
