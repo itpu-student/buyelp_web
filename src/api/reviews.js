@@ -16,3 +16,8 @@ export function createReview(idOrSlug, payload) {
 export function deleteReview(reviewId) {
   return apiFetch(`/api/reviews/${encodeURIComponent(reviewId)}`, { method: "DELETE", auth: true })
 }
+
+export function getReviewPrevs(reviewId, { page = 1, limit = 20 } = {}) {
+  const q = new URLSearchParams({ page, limit }).toString()
+  return apiFetch(`/api/reviews/prevs/${encodeURIComponent(reviewId)}?${q}`)
+}

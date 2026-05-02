@@ -21,6 +21,16 @@ function bilingual(value) {
   return { en: s, uz: s }
 }
 
+function normalizeUserMini(u) {
+  if (!u) return null
+  return {
+    id: u.id,
+    name: u.name || "",
+    username: u.username || "",
+    avatarUrl: staticUrl(u.avatar_key),
+  }
+}
+
 export function normalizePlace(api) {
   if (!api) return null
   return {
@@ -46,7 +56,9 @@ export function normalizePlace(api) {
     isOpen: !!api.is_open,
     status: api.status ?? 0,
     claimedBy: api.claimed_by || null,
+    claimedByUser: normalizeUserMini(api.claimed_by_user),
     createdBy: api.created_by || null,
+    createdByUser: normalizeUserMini(api.created_by_user),
     featured: false,
     _raw: api,
   }
@@ -58,7 +70,9 @@ export function normalizeReview(api) {
     id: api.id,
     _placeId: api.place_id,
     _userId: api.user_id,
-    author: api._authorName || "User",
+    author: api.user?.name || api._authorName || "User",
+    authorUsername: api.user?.username || "",
+    authorAvatar: api.user?.avatar_key ? staticUrl(api.user.avatar_key) : null,
     rating: api.star_rating || 0,
     priceRating: api.price_rating || 0,
     qualityRating: api.quality_rating || 0,
@@ -67,6 +81,7 @@ export function normalizeReview(api) {
     _imageKeys: Array.isArray(api.images) ? api.images.filter(Boolean) : [],
     date: api.created_at,
     latest: api.latest !== false,
+    prevCount: api.prev_count || 0,
     _raw: api,
   }
 }

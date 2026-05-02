@@ -1,18 +1,32 @@
 <template>
   <div class="review-card">
-    <div class="review-header">
+    <div class="review-header" role="button" tabindex="0" @click="$emit('open', review)" @keydown.enter="$emit('open', review)">
       <img
-        :src="`https://ui-avatars.com/api/?name=${encodeURIComponent(review.author)}&background=0D9488&color=fff&size=64`"
+        :src="review.authorAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(review.author)}&background=0D9488&color=fff&size=64`"
         :alt="review.author"
         class="avatar"
         width="40"
         height="40"
       />
       <div class="review-meta">
-        <span class="author-name">{{ review.author }}</span>
-        <span class="review-date">{{ formatDate(review.date) }}</span>
+        <span class="author-name">{{ review.author }}<span v-if="review.authorUsername" class="author-username"> @{{ review.authorUsername }}</span></span>
+        <div class="review-date-row">
+          <span class="review-date">{{ formatDate(review.date) }}</span>
+          <span v-if="review.prevCount > 0" class="edited-badge">Edited</span>
+        </div>
       </div>
       <StarRating :rating="review.rating" :size="15" mode="simple" />
+      <button
+        v-if="store.isLoggedIn && review._userId !== store.user?.id"
+        type="button"
+        class="report-btn"
+        title="Report this review"
+        @click.stop="$emit('report', review)"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>
+        </svg>
+      </button>
     </div>
     <p class="review-text">{{ review.text }}</p>
 
@@ -137,10 +151,13 @@
 <script setup>
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import StarRating from './StarRating.vue'
+import { store } from '../store/index.js'
 
 const props = defineProps({
   review: { type: Object, required: true },
 })
+
+defineEmits(['open', 'report'])
 
 // ─── Strip carousel ────────────────────────────────────────────────
 const MIN_SLIDE = 110
@@ -294,24 +311,57 @@ function formatDate(dateStr) {
   gap: 12px;
 }
 
-.avatar { border-radius: 50%; flex-shrink: 0; }
+.avatar { border-radius: 50%; flex-shrink: 0; object-fit: cover; }
+
+.review-header { cursor: pointer; }
+.review-header:hover .author-name { color: var(--primary); }
 
 .review-meta {
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-width: 0;
 }
 
 .author-name {
   font-weight: 600;
   font-size: 0.9rem;
   color: var(--text);
+  transition: color var(--transition);
 }
+.author-username { font-weight: 400; color: var(--text-3); font-size: 0.82rem; }
+
+.review-date-row { display: flex; align-items: center; gap: 6px; }
 
 .review-date {
   font-size: 0.78rem;
   color: var(--text-3);
 }
+
+.edited-badge {
+  font-size: 0.72rem;
+  color: var(--text-3);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 5px;
+  line-height: 1.6;
+}
+
+.report-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 4px;
+  transition: color var(--transition), background var(--transition);
+}
+.report-btn:hover { color: #dc2626; background: #fee2e2; }
 
 .review-text {
   font-size: 0.9rem;

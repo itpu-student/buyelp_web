@@ -1,6 +1,7 @@
 import { reactive } from "vue"
 import { setToken } from "../api/client.js"
 import { listBookmarks, addBookmark, removeBookmark } from "../api/bookmarks.js"
+import { normalizePlace } from "../api/normalize.js"
 
 const USER_KEY = "buyelp_user"
 const SAVED_PLACES_KEY = "buyelp_saved_places"
@@ -16,6 +17,7 @@ export const store = reactive({
   user: savedUser,
 
   savedPlaceIds: Array.isArray(savedPlaces) ? savedPlaces : [],
+  savedPlaces: [],
 
   setSession({ token, user }) {
     setToken(token)
@@ -36,6 +38,7 @@ export const store = reactive({
     this.isLoggedIn = false
     localStorage.removeItem(USER_KEY)
     this.savedPlaceIds = []
+    this.savedPlaces = []
     persistSaved([])
   },
 
@@ -47,9 +50,11 @@ export const store = reactive({
     if (!this.isLoggedIn) return
     try {
       const res = await listBookmarks({ limit: 100 })
-      const ids = (res?.items || []).map((b) => String(b.place_id))
+      const items = res?.items || []
+      const ids = items.map((b) => String(b.place_id))
       this.savedPlaceIds = ids
       persistSaved(ids)
+      this.savedPlaces = items.map((b) => b.place ? normalizePlace(b.place) : null).filter(Boolean)
     } catch (_) {
       // ignore — keep cached list
     }
@@ -71,6 +76,8 @@ export const store = reactive({
     } else {
       this.savedPlaceIds.splice(i, 1)
       persistSaved(this.savedPlaceIds)
+      const pi = this.savedPlaces.findIndex((p) => String(p._uuid) === id)
+      if (pi !== -1) this.savedPlaces.splice(pi, 1)
       try { await removeBookmark(id) } catch (e) {
         this.savedPlaceIds.push(id)
         persistSaved(this.savedPlaceIds)

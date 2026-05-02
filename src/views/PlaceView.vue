@@ -100,7 +100,13 @@
 
               <div v-if="reviewsLoading" class="text-muted text-sm">Loading reviews…</div>
               <div v-else-if="reviews.length" class="reviews-list">
-                <ReviewCard v-for="r in reviews" :key="r.id" :review="r" />
+                <ReviewCard
+                  v-for="r in reviews"
+                  :key="r.id"
+                  :review="r"
+                  @open="openReviewDetail"
+                  @report="openReviewReport"
+                />
               </div>
               <p v-else class="text-muted text-sm">{{ t("place.no_reviews") }}</p>
             </section>
@@ -145,6 +151,25 @@
               </a>
 
               <SidebarHours :place="place" />
+
+              <div v-if="place.createdByUser || place.claimedByUser" class="attribution-block">
+                <div v-if="place.createdByUser" class="attribution-line">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                  Added by <span class="attr-name">{{ place.createdByUser.name || ('@' + place.createdByUser.username) }}</span>
+                </div>
+                <div v-if="place.claimedByUser" class="attribution-line">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                  Claimed by <span class="attr-name">{{ place.claimedByUser.name || ('@' + place.claimedByUser.username) }}</span>
+                </div>
+              </div>
+
+              <div v-if="store.isLoggedIn" class="report-place-wrap">
+                <div class="divider-sidebar"></div>
+                <button type="button" class="report-place-btn" @click="placeReportOpen = true">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+                  Report this place
+                </button>
+              </div>
 
               <div v-if="canClaim || isOwner" class="ownership-block">
                 <div class="divider-sidebar"></div>
@@ -204,6 +229,28 @@
       </div>
     </template>
   </div>
+
+  <ReviewDetailModal
+    v-if="detailReview"
+    :review="detailReview"
+    @close="closeReviewDetail"
+  />
+
+  <ReportModal
+    v-if="reportTarget"
+    :target-id="reportTarget.id"
+    :target-type="reportTarget.type"
+    @close="reportTarget = null"
+    @submitted="reportTarget = null"
+  />
+
+  <ReportModal
+    v-if="placeReportOpen && place"
+    :target-id="place._uuid"
+    target-type="place"
+    @close="placeReportOpen = false"
+    @submitted="placeReportOpen = false"
+  />
 </template>
 
 <script setup>
@@ -220,6 +267,8 @@ import { uploadFile } from "../api/files.js"
 import { categoriesState, ensureCategoriesLoaded } from "../store/categories.js"
 import ReviewCard from "../components/ReviewCard.vue"
 import ReviewInput from "../components/ReviewInput.vue"
+import ReviewDetailModal from "../components/ReviewDetailModal.vue"
+import ReportModal from "../components/ReportModal.vue"
 import StarRating from "../components/StarRating.vue"
 import SidebarHours from "../components/SidebarHours.vue"
 import SvgMapItem from "../components/SvgMapItem.vue"
@@ -299,6 +348,28 @@ const categoryLabel = computed(() => {
 
 const isOwner = computed(() => !!(store.user && place.value && place.value.claimedBy && place.value.claimedBy === store.user.id))
 const canClaim = computed(() => !!(store.isLoggedIn && place.value && !place.value.claimedBy && place.value.status === 10))
+
+// Review detail modal
+const detailReview = ref(null)
+
+function openReviewDetail(review) {
+  detailReview.value = review
+  router.replace({ query: { ...route.query, review: review.id } })
+}
+function closeReviewDetail() {
+  detailReview.value = null
+  const q = { ...route.query }
+  delete q.review
+  router.replace({ query: q })
+}
+
+// Report modal
+const reportTarget = ref(null)
+const placeReportOpen = ref(false)
+
+function openReviewReport(review) {
+  reportTarget.value = { id: review.id, type: 'review' }
+}
 
 const claimOpen = ref(false)
 const claimPhone = ref("")
@@ -434,6 +505,10 @@ async function loadReviews(idOrSlug) {
   try {
     const res = await listPlaceReviews(idOrSlug)
     reviews.value = (res.items || []).map(normalizeReview)
+    if (route.query.review) {
+      const found = reviews.value.find((r) => r.id === route.query.review)
+      if (found) detailReview.value = found
+    }
   } catch (e) {
     reviews.value = []
   } finally {
@@ -632,6 +707,20 @@ onBeforeUnmount(() => {
 .side-text { font-size: 0.9rem; font-weight: 500; color: var(--text); line-height: 1.45; }
 .sidebar-line.is-link .side-text { color: var(--primary); font-weight: 600; }
 .address-multiline { color: var(--text); font-weight: 500; }
+
+.attribution-block { display: flex; flex-direction: column; gap: 4px; padding: 10px 0 4px; border-top: 1px solid var(--border-light); }
+.attribution-line { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text-3); }
+.attribution-line svg { flex-shrink: 0; }
+.attr-name { color: var(--text-2); font-weight: 600; }
+
+.report-place-wrap { padding: 0 0 4px; }
+.report-place-btn {
+  background: none; border: none; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.8rem; color: var(--text-3); padding: 4px 0;
+  transition: color var(--transition);
+}
+.report-place-btn:hover { color: #dc2626; }
 
 .sidebar-map-wrap {
   margin-top: 16px; padding: 12px;
