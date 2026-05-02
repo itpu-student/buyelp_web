@@ -2,7 +2,7 @@ import { slugForCategoryId } from "../store/categories.js"
 import { staticUrl } from "./client.js"
 
 function hoursToDisplay(slots) {
-  if (!Array.isArray(slots) || slots.length === 0) return "Closed"
+  if (!Array.isArray(slots) || slots.length === 0) return null
   return slots.map((s) => `${s.open} – ${s.close}`).join(", ")
 }
 
@@ -53,7 +53,7 @@ export function normalizePlace(api) {
     _imageKeys: Array.isArray(api.images) ? api.images.filter(Boolean) : [],
     weeklyHours: normalizeWeeklyHours(api.weekly_hours),
     _weeklyHoursRaw: api.weekly_hours || {},
-    isOpen: !!api.is_open,
+    isOpen: api.is_open == null ? null : !!api.is_open,
     status: api.status ?? 0,
     claimedBy: api.claimed_by || null,
     claimedByUser: normalizeUserMini(api.claimed_by_user),

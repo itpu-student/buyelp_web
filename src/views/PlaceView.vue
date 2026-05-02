@@ -42,6 +42,8 @@
         <div v-else class="carousel-placeholder">No photos</div>
 
         <div class="place-container place-header-inner">
+          <div class="place-header-row">
+          <img v-if="place.logo" :src="place.logo" class="place-logo" :alt="placeName" />
           <div class="place-title-block">
             <div class="place-title-row">
               <h1 class="place-title">{{ placeName }}</h1>
@@ -66,16 +68,19 @@
               <StarRating :rating="place.rating" :size="22" />
               <span class="rating-num">{{ place.rating.toFixed(1) }}</span>
               <span class="review-count">({{ place.reviewCount }} {{ t("common.reviews_count") }})</span>
-              <span class="meta-dot" aria-hidden="true">·</span>
-              <span class="status-pill" :class="place.isOpen ? 'open' : 'closed'">
-                {{ place.isOpen ? t("place.open_now") : t("place.closed") }}
-              </span>
+              <template v-if="place.isOpen !== null">
+                <span class="meta-dot" aria-hidden="true">·</span>
+                <span class="status-pill" :class="place.isOpen ? 'open' : 'closed'">
+                  {{ place.isOpen ? t("place.open_now") : t("place.closed") }}
+                </span>
+              </template>
               <span class="meta-dot" aria-hidden="true">·</span>
               <span class="today-line">
                 <span class="today-label">{{ t("place.today_hours") }}:</span>
                 {{ todayHoursDisplay }}
               </span>
             </div>
+          </div>
           </div>
         </div>
       </div>
@@ -527,6 +532,14 @@ async function handleReviewSubmit(payload) {
     }
     if (payload.priceLevel) body.price_rating = payload.priceLevel
     if (payload.recommendLevel) body.quality_rating = payload.recommendLevel
+    if (payload.files?.length) {
+      const keys = []
+      for (const f of payload.files) {
+        const r = await uploadFile(f, "review")
+        keys.push(r.key)
+      }
+      body.images = keys
+    }
     await createReview(place.value._uuid, body)
     reviewSubmitted.value = true
     setTimeout(() => (reviewSubmitted.value = false), 3000)
@@ -583,6 +596,16 @@ onBeforeUnmount(() => {
 }
 .place-header-inner { padding-top: 20px; padding-bottom: 20px; }
 
+.place-header-row { display: flex; align-items: flex-start; gap: 16px; }
+.place-header-row .place-title-block { flex: 1 1 auto; min-width: 0; }
+.place-logo {
+  width: 72px; height: 72px; flex-shrink: 0;
+  object-fit: cover; border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  margin-top: 4px;
+}
+
 .place-title-row {
   display: flex; align-items: flex-start; justify-content: space-between;
   gap: 16px; margin-bottom: 8px;
@@ -625,6 +648,7 @@ onBeforeUnmount(() => {
 .carousel-viewport {
   position: relative; overflow: hidden; width: 100%;
   border-radius: 0; background: var(--surface-2);
+  max-height: 480px;
 }
 .carousel__track { display: flex; width: max-content; height: 100%; will-change: transform; }
 .carousel__slide { flex: 0 0 auto; flex-shrink: 0; aspect-ratio: 4 / 3; overflow: hidden; background: var(--border); }

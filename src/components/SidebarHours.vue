@@ -10,8 +10,8 @@
         </svg>
       </span>
       <div class="hours-summary-new">
-        <strong :class="place.isOpen ? 'text-success' : 'text-danger'">
-          {{ place.isOpen ? t("place.open_now") : t("place.closed") }}
+        <strong :class="place.isOpen === null ? '' : (place.isOpen ? 'text-success' : 'text-danger')">
+          {{ place.isOpen === null ? t("place.hours_unknown") : (place.isOpen ? t("place.open_now") : t("place.closed")) }}
         </strong>
         <span class="today-text">{{ todayHoursDisplay }}</span>
       </div>

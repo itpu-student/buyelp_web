@@ -182,7 +182,7 @@ function reset() {
 function onMedia(e) {
   const files = Array.from(e.target.files || [])
   for (const f of files) {
-    media.value.push({ name: f.name, type: f.type, url: URL.createObjectURL(f) })
+    media.value.push({ name: f.name, type: f.type, url: URL.createObjectURL(f), file: f })
   }
   e.target.value = ''
 }
@@ -199,7 +199,7 @@ function submit() {
     text: text.value.trim(),
     priceLevel: priceLevel.value,
     recommendLevel: recommendLevel.value,
-    media: media.value.map((m) => ({ name: m.name, type: m.type, url: m.url })),
+    files: media.value.map((m) => m.file),
   })
   reset()
   isOpen.value = false

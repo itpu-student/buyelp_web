@@ -14,3 +14,7 @@ Always be highly concise and Sacrifice grammar for the sake of concision.
 - This project not relised yet, so we can do as much as changes as we want
 
 
+# Backend Api docs
+- read file ~/github.com/itpu-student/s101_api/docs/swagger.yaml
+- for file storage: 
+- - POST /files/upload file:file, usage:oneOf["avatar","review","place"]
