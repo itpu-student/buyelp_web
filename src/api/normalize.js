@@ -82,6 +82,15 @@ export function normalizeReview(api) {
     date: api.created_at,
     latest: api.latest !== false,
     prevCount: api.prev_count || 0,
+    place: api.place ? {
+      id: api.place.slug || api.place.id,
+      name: bilingual(api.place.name),
+      slug: api.place.slug,
+      avgRating: Number(api.place.avg_rating) || 0,
+      reviewCount: api.place.review_count || 0,
+      logo: staticUrl(api.place.logo_key),
+      _categoryId: api.place.category_id,
+    } : null,
     _raw: api,
   }
 }

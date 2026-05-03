@@ -3,6 +3,10 @@
     <div class="modal-backdrop" @click.self="$emit('close')" @keydown.esc.window="$emit('close')">
       <div class="modal-box" role="dialog" aria-modal="true">
         <button class="modal-close" aria-label="Close" @click="$emit('close')">✕</button>
+        <button class="modal-share" :title="copied ? 'Copied!' : 'Copy share link'" @click="copyShareLink">
+          <svg v-if="!copied" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          <span v-else style="font-size:0.75rem;font-weight:700;">✓</span>
+        </button>
 
         <div class="modal-header">
           <img
@@ -114,6 +118,15 @@ const coinIcons = ['🪙', '💵', '💶', '💰', '💎']
 const recommendIcons = ['❌', '⚠️', '☑️', '✅', '👑']
 defineEmits(['close'])
 
+const copied = ref(false)
+function copyShareLink() {
+  const url = `${window.location.origin}${window.location.pathname}?review=${props.review.id}`
+  navigator.clipboard.writeText(url).then(() => {
+    copied.value = true
+    setTimeout(() => { copied.value = false }, 2000)
+  })
+}
+
 const reviewImages = computed(() => props.review.images || [])
 
 function formatDate(d) {
@@ -198,6 +211,16 @@ onBeforeUnmount(() => { document.body.style.overflow = '' })
   transition: background var(--transition), color var(--transition);
 }
 .modal-close:hover { background: var(--surface-2); color: var(--text); }
+
+.modal-share {
+  position: absolute; top: 14px; right: 52px;
+  background: none; border: none; cursor: pointer;
+  color: var(--text-3);
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  transition: background var(--transition), color var(--transition);
+}
+.modal-share:hover { background: var(--surface-2); color: var(--primary); }
 
 .modal-header {
   display: flex; align-items: center; gap: 12px;

@@ -8,7 +8,7 @@ export function getReportMeta() {
   return apiFetch("/api/reports/meta")
 }
 
-export function listMyReports({ status, page = 1, limit = 20 } = {}) {
+export function listMyReports({ status, page = 1, limit = 10 } = {}) {
   const params = { page, limit }
   if (status) params.status = status
   return apiFetch(`/api/reports/mine?${new URLSearchParams(params)}`, { auth: true })

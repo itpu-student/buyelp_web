@@ -59,27 +59,33 @@
         <!-- Tab bar -->
         <div class="tab-bar">
           <button :class="['tab-btn', { active: activeTab === 'reviews' }]" @click="activeTab = 'reviews'">
-            My Reviews<span v-if="reviews.length" class="tab-count">{{ reviews.length }}</span>
+            My Reviews<span v-if="reviewsTotal" class="tab-count">{{ reviewsTotal }}</span>
           </button>
           <button :class="['tab-btn', { active: activeTab === 'saved' }]" @click="activeTab = 'saved'">
             Saved Places<span v-if="savedPlaces.length" class="tab-count">{{ savedPlaces.length }}</span>
           </button>
           <button :class="['tab-btn', { active: activeTab === 'reports' }]" @click="activeTab = 'reports'">
-            My Reports<span v-if="reports.length" class="tab-count">{{ reports.length }}</span>
+            My Reports<span v-if="reportsTotal" class="tab-count">{{ reportsTotal }}</span>
           </button>
         </div>
 
         <!-- Reviews -->
         <section v-show="activeTab === 'reviews'" class="section tab-panel">
-          <div v-if="reviewsLoading" class="text-muted">Loading…</div>
+          <div v-if="reviewsLoading && !reviews.length" class="text-muted">Loading…</div>
           <div v-else-if="reviews.length" class="reviews-list">
-            <div v-for="r in reviews" :key="r.id" class="review-wrapper">
-              <div class="review-wrapper-top">
-                <RouterLink :to="`/place/${r._placeId}`" class="review-place-link">View place →</RouterLink>
-                <span v-if="r.latest" class="latest-badge">Latest</span>
-              </div>
-              <ReviewCard :review="r" />
-            </div>
+            <ReviewCard
+              v-for="r in reviews"
+              :key="r.id"
+              :review="r"
+              show-place
+              @open="selectedReview = $event"
+            />
+            <button
+              v-if="reviews.length < reviewsTotal"
+              class="btn btn-outline btn-sm load-more"
+              :disabled="reviewsLoading"
+              @click="loadMoreReviews"
+            >{{ reviewsLoading ? 'Loading…' : 'Load more' }}</button>
           </div>
           <div v-else class="empty-state">
             <span class="empty-icon">📝</span>
@@ -87,6 +93,8 @@
             <RouterLink to="/search" class="btn btn-primary btn-sm">Find Places</RouterLink>
           </div>
         </section>
+
+        <ReviewDetailModal v-if="selectedReview" :review="selectedReview" @close="selectedReview = null" />
 
         <!-- Saved Places -->
         <section v-show="activeTab === 'saved'" class="section tab-panel">
@@ -116,7 +124,7 @@
                     · {{ categoriesState.byId[p._categoryId].emoji }} {{ t(`categories.${p.category}`) }}
                   </span>
                 </div>
-                <span v-if="p._savedAt" class="saved-place-date text-xs text-muted">Saved {{ formatDate(p._savedAt) }}</span>
+                <span v-if="p._savedAt" class="saved-place-date text-xs text-muted">Saved {{ formatDateTime(p._savedAt) }}</span>
               </div>
             </RouterLink>
           </div>
@@ -124,19 +132,35 @@
 
         <!-- Reports -->
         <section v-show="activeTab === 'reports'" class="section tab-panel">
-          <div v-if="reportsLoading" class="text-muted">Loading…</div>
+          <div v-if="reportsLoading && !reports.length" class="text-muted">Loading…</div>
           <div v-else-if="reports.length" class="reports-list">
             <div v-for="r in reports" :key="r.id" class="report-item card">
-              <div class="report-item-top">
-                <span class="report-type-badge">{{ reportTypeLabel[r.type] || r.type }}</span>
-                <span class="report-target-badge">{{ r.target_type }}</span>
-                <span class="report-status" :data-s="r.status">{{ reportStatusLabel[r.status] || r.status }}</span>
-                <div class="report-actions" v-if="r.status === 'pending'">
-                  <button class="btn-link" @click="startEditReport(r)">Edit</button>
-                  <button class="btn-link btn-link--danger" @click="removeReport(r)">Delete</button>
+              <!-- Target preview -->
+              <div v-if="r.target" class="report-target">
+                <img
+                  v-if="r.target.avatar_key"
+                  :src="staticUrl(r.target.avatar_key)"
+                  :alt="r.target.name"
+                  class="report-target-avatar"
+                />
+                <div v-else class="report-target-avatar report-target-avatar--empty">
+                  {{ r.target_type === 'place' ? '📍' : '💬' }}
+                </div>
+                <div class="report-target-info">
+                  <span class="report-target-name">{{ r.target.name }}</span>
+                  <p v-if="r.target.content" class="report-target-content">{{ r.target.content }}</p>
                 </div>
               </div>
+              <!-- Meta row -->
+              <div class="report-meta-row">
+                <span class="report-type-badge">{{ reportTypeLabel[r.type] || r.type }}</span>
+                <span class="report-target-badge">{{ r.target_type }}</span>
+                <span class="report-date text-xs text-muted">{{ formatDate(r.created_at) }}</span>
+                <span class="report-status" :data-s="r.status">{{ reportStatusLabel[r.status] || r.status }}</span>
+              </div>
+              <!-- User's report text -->
               <p class="report-text text-sm">{{ r.text || '—' }}</p>
+              <!-- Edit form -->
               <div v-if="editingReport === r.id" class="report-edit-form">
                 <textarea v-model="editReportForm.text" class="form-input" rows="2"></textarea>
                 <div class="row-gap">
@@ -147,10 +171,22 @@
                 </div>
                 <span v-if="editReportError" class="error-msg">{{ editReportError }}</span>
               </div>
+              <!-- Actions -->
+              <div class="report-actions" v-if="r.status === 'pending'">
+                <button class="btn-link" @click="startEditReport(r)">Edit</button>
+                <button class="btn-link btn-link--danger" @click="removeReport(r)">Delete</button>
+              </div>
+              <!-- Admin response -->
               <div v-if="r.admin_response" class="admin-response">
                 <span class="admin-response-label">Admin response:</span> {{ r.admin_response }}
               </div>
             </div>
+            <button
+              v-if="reports.length < reportsTotal"
+              class="btn btn-outline btn-sm load-more"
+              :disabled="reportsLoading"
+              @click="loadMoreReports"
+            >{{ reportsLoading ? 'Loading…' : 'Load more' }}</button>
           </div>
           <div v-else class="empty-state">
             <span class="empty-icon">🚩</span>
@@ -169,6 +205,7 @@ import { t, i18nState } from '../i18n/index.js'
 import { store } from '../store/index.js'
 import { categoriesState, ensureCategoriesLoaded } from '../store/categories.js'
 import ReviewCard from '../components/ReviewCard.vue'
+import ReviewDetailModal from '../components/ReviewDetailModal.vue'
 import { staticUrl } from '../api/client.js'
 import { getMe } from '../api/auth.js'
 import { listUserReviews, updateMe, deleteMe } from '../api/users.js'
@@ -179,7 +216,12 @@ import { normalizeReview } from '../api/normalize.js'
 const router = useRouter()
 const me = ref(null)
 const reviews = ref([])
+const reviewsTotal = ref(0)
+const reviewsPage = ref(1)
+const selectedReview = ref(null)
 const reports = ref([])
+const reportsTotal = ref(0)
+const reportsPage = ref(1)
 const reportsLoading = ref(false)
 const reviewsLoading = ref(false)
 const editing = ref(false)
@@ -240,6 +282,12 @@ function formatDate(d) {
   if (!d) return ''
   return new Date(d).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
 }
+function formatDateTime(d) {
+  if (!d) return ''
+  let time = new Date(d).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
+
+  return `${formatDate(d)} at ${time}`
+}
 
 async function loadAll() {
   try {
@@ -253,14 +301,47 @@ async function loadAll() {
 
   reviewsLoading.value = true
   try {
-    const r = await listUserReviews(me.value.id, { limit: 20 })
+    const r = await listUserReviews(me.value.id, { page: 1, limit: 10 })
     reviews.value = (r?.items || []).map(normalizeReview)
+    reviewsTotal.value = r?.total || 0
+    reviewsPage.value = 1
   } catch (_) { reviews.value = [] }
   finally { reviewsLoading.value = false }
 
   reportsLoading.value = true
-  try { reports.value = (await listMyReports())?.items || [] } catch (_) { reports.value = [] }
+  try {
+    const rep = await listMyReports({ page: 1, limit: 10 })
+    reports.value = rep?.items || []
+    reportsTotal.value = rep?.total || 0
+    reportsPage.value = 1
+  } catch (_) { reports.value = [] }
   finally { reportsLoading.value = false }
+}
+
+async function loadMoreReports() {
+  if (reportsLoading.value) return
+  reportsLoading.value = true
+  try {
+    const next = reportsPage.value + 1
+    const rep = await listMyReports({ page: next, limit: 10 })
+    reports.value.push(...(rep?.items || []))
+    reportsTotal.value = rep?.total || reportsTotal.value
+    reportsPage.value = next
+  } catch (_) {}
+  finally { reportsLoading.value = false }
+}
+
+async function loadMoreReviews() {
+  if (!me.value?.id || reviewsLoading.value) return
+  reviewsLoading.value = true
+  try {
+    const next = reviewsPage.value + 1
+    const r = await listUserReviews(me.value.id, { page: next, limit: 10 })
+    reviews.value.push(...(r?.items || []).map(normalizeReview))
+    reviewsTotal.value = r?.total || reviewsTotal.value
+    reviewsPage.value = next
+  } catch (_) {}
+  finally { reviewsLoading.value = false }
 }
 
 async function onAvatarPick(e) {
@@ -371,34 +452,7 @@ onMounted(() => {
 
 /* ── Reviews ── */
 .reviews-list { display: flex; flex-direction: column; gap: 16px; }
-
-.review-wrapper { display: flex; flex-direction: column; gap: 6px; }
-
-.review-wrapper-top {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.review-place-link {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--primary);
-  text-decoration: none;
-}
-.review-place-link:hover { text-decoration: underline; }
-
-.latest-badge {
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: rgba(13, 148, 136, 0.12);
-  color: var(--primary);
-  border: 1px solid rgba(13, 148, 136, 0.3);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
+.load-more { align-self: center; margin-top: 4px; }
 
 /* ── Saved Places ── */
 .saved-places-list { display: flex; flex-direction: column; gap: 10px; }
@@ -438,19 +492,38 @@ onMounted(() => {
 
 /* ── Reports ── */
 .reports-list { display: flex; flex-direction: column; gap: 12px; }
-.report-item { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
-.report-item-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.report-item { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+
+.report-target { display: flex; align-items: flex-start; gap: 12px; }
+.report-target-avatar {
+  width: 44px; height: 44px; border-radius: 8px; object-fit: cover;
+  flex-shrink: 0; border: 1px solid var(--border);
+}
+.report-target-avatar--empty {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface-2); font-size: 1.2rem;
+}
+.report-target-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+.report-target-name { font-weight: 700; font-size: 0.9rem; color: var(--text); }
+.report-target-content {
+  font-size: 0.82rem; color: var(--text-3); margin: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.report-meta-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .report-type-badge { font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-2); text-transform: capitalize; }
-.report-target-badge { font-size: 0.72rem; color: var(--text-3); padding: 2px 6px; border-radius: 4px; background: var(--bg-2, var(--surface-2)); }
-.report-status { font-size: 0.75rem; padding: 2px 8px; border-radius: 999px; margin-left: auto; }
+.report-target-badge { font-size: 0.72rem; color: var(--text-3); padding: 2px 6px; border-radius: 4px; background: var(--surface-2); }
+.report-date { margin-left: auto; }
+.report-status { font-size: 0.75rem; padding: 2px 8px; border-radius: 999px; }
 .report-status[data-s="pending"] { background: #fef9c3; color: #713f12; }
 .report-status[data-s="in_progress"] { background: #dbeafe; color: #1e40af; }
 .report-status[data-s="dismissed"] { background: var(--surface-2); color: var(--text-3); }
 .report-status[data-s="actioned"] { background: #d1fae5; color: #065f46; }
+
 .report-actions { display: flex; gap: 8px; }
 .btn-link { background: none; border: none; cursor: pointer; color: var(--primary); font-size: 0.8rem; padding: 0; }
 .btn-link--danger { color: #dc2626; }
-.report-text { color: var(--text-2); margin: 0; }
+.report-text { color: var(--text-2); margin: 0; font-size: 0.88rem; }
 .report-edit-form { display: flex; flex-direction: column; gap: 6px; }
 .admin-response { font-size: 0.82rem; color: var(--text-2); background: var(--surface-2); border-left: 3px solid var(--primary); padding: 6px 10px; border-radius: 0 4px 4px 0; }
 .admin-response-label { font-weight: 600; color: var(--text); }

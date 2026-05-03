@@ -1,6 +1,39 @@
 <template>
-  <div class="review-card">
-    <div class="review-header" role="button" tabindex="0" @click="$emit('open', review)" @keydown.enter="$emit('open', review)">
+  <div class="review-card" role="button" tabindex="0" :style="review.latest === false ? { background: '#101726' } : {}" @click="$emit('open', review)" @keydown.enter="$emit('open', review)">
+    <span v-if="review.latest != null" class="latest-badge" :class="review.latest ? 'latest-badge--yes' : 'latest-badge--no'">
+      {{ review.latest ? 'Latest' : 'Not latest' }}
+    </span>
+    <!-- Place info row (profile/user context) -->
+    <RouterLink
+      v-if="showPlace && review.place"
+      :to="`/place/${review.place.id}`"
+      class="place-info"
+      @click.stop
+    >
+      <img
+        v-if="review.place.logo"
+        :src="review.place.logo"
+        :alt="review.place.name.en"
+        class="place-logo"
+      />
+      <div v-else class="place-logo place-logo--empty">
+        {{ categoriesState.byId[review.place._categoryId]?.emoji || '📍' }}
+      </div>
+      <div class="place-meta">
+        <span class="place-name">{{ review.place.name.en }}</span>
+        <span v-if="review.place.slug" class="place-slug">@{{ review.place.slug }}</span>
+        <div class="place-stats">
+          <span>⭐ {{ review.place.avgRating.toFixed(1) }}</span>
+          <span>· {{ review.place.reviewCount }} reviews</span>
+          <span v-if="categoriesState.byId[review.place._categoryId]">
+            · {{ categoriesState.byId[review.place._categoryId].emoji }}
+          </span>
+        </div>
+      </div>
+    </RouterLink>
+
+    <!-- Author row (place context) -->
+    <div v-else class="review-header">
       <img
         :src="review.authorAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(review.author)}&background=0D9488&color=fff&size=64`"
         :alt="review.author"
@@ -13,6 +46,8 @@
         <div class="review-date-row">
           <span class="review-date">{{ formatDate(review.date) }}</span>
           <span v-if="review.prevCount > 0" class="edited-badge">{{ review.prevCount }}</span>
+          <span v-if="review.priceRating" class="sub-rating">Price: {{ review.priceRating }}</span>
+          <span v-if="review.qualityRating" class="sub-rating">Quality: {{ review.qualityRating }}</span>
         </div>
       </div>
       <StarRating :rating="review.rating" :size="15" mode="simple" />
@@ -28,9 +63,12 @@
         </svg>
       </button>
     </div>
-    <div v-if="review.priceRating || review.qualityRating" class="sub-ratings-row">
-      <span v-if="review.priceRating">Price: {{ review.priceRating }}</span>
-      <span v-if="review.qualityRating">Quality: {{ review.qualityRating }}</span>
+    <div v-if="showPlace" class="place-rating-row">
+      <StarRating :rating="review.rating" :size="15" mode="simple" />
+      <span class="review-date">{{ formatDate(review.date) }}</span>
+      <span v-if="review.prevCount > 0" class="edited-badge">{{ review.prevCount }}</span>
+      <span v-if="review.priceRating" class="sub-rating">Price: {{ review.priceRating }}</span>
+      <span v-if="review.qualityRating" class="sub-rating">Quality: {{ review.qualityRating }}</span>
     </div>
     <p class="review-text">{{ review.text }}</p>
 
@@ -43,7 +81,7 @@
             :key="i"
             class="carousel__slide"
             :style="{ width: `${slideWidthPx}px` }"
-            @click="openLightbox(i)"
+            @click.stop="openLightbox(i)"
           >
             <img :src="src" alt="Review photo" class="carousel__img" loading="lazy" />
             <div class="carousel__slide-overlay">
@@ -90,7 +128,7 @@
       alt=""
       class="review-photo"
       loading="lazy"
-      @click="openSingleLightbox"
+      @click.stop="openSingleLightbox"
     />
   </div>
 
@@ -154,11 +192,14 @@
 
 <script setup>
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import { RouterLink } from 'vue-router'
 import StarRating from './StarRating.vue'
 import { store } from '../store/index.js'
+import { categoriesState } from '../store/categories.js'
 
 const props = defineProps({
   review: { type: Object, required: true },
+  showPlace: { type: Boolean, default: false },
 })
 
 defineEmits(['open', 'report'])
@@ -300,6 +341,7 @@ function formatDate(dateStr) {
 
 <style scoped>
 .review-card {
+  position: relative;
   padding: 18px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
@@ -307,7 +349,81 @@ function formatDate(dateStr) {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  cursor: pointer;
+  transition: border-color var(--transition), box-shadow var(--transition);
 }
+
+.latest-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+}
+.latest-badge--yes {
+  background: rgba(13, 148, 136, 0.12);
+  color: var(--primary);
+  border: 1px solid rgba(13, 148, 136, 0.3);
+}
+.latest-badge--no {
+  background: rgba(255,255,255,0.05);
+  color: var(--text-3);
+  border: 1px solid var(--border);
+}
+/* card hover — signals "click opens modal" */
+.review-card:not(:has(.place-info:hover)):hover {
+  border-color: var(--primary);
+  box-shadow: 0 4px 14px rgba(13, 148, 136, 0.1);
+}
+
+/* ── Place info row ── */
+.place-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+  padding: 6px 8px;
+  margin: -6px -8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  transition: background var(--transition), border-color var(--transition);
+}
+/* place-info hover — signals "click navigates to place" */
+.place-info:hover {
+  background: rgba(13, 148, 136, 0.06);
+  border-color: rgba(13, 148, 136, 0.25);
+}
+.place-info:hover .place-name { color: var(--primary); text-decoration: underline; }
+
+.place-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+.place-logo--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-2);
+  font-size: 1.2rem;
+}
+
+.place-meta { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.place-name { font-weight: 700; font-size: 0.9rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.place-slug { font-size: 0.75rem; color: var(--text-3); }
+.place-stats { font-size: 0.75rem; color: var(--text-3); display: flex; gap: 4px; flex-wrap: wrap; }
+
+.place-rating-row { display: flex; align-items: center; gap: 8px; }
+
 
 .review-header {
   display: flex;
@@ -367,7 +483,7 @@ function formatDate(dateStr) {
 }
 .report-btn:hover { color: #dc2626; background: #fee2e2; }
 
-.sub-ratings-row { display: flex; gap: 10px; font-size: 0.78rem; color: var(--text-3); }
+.sub-rating { font-size: 0.78rem; color: var(--text-3); }
 
 .review-text {
   font-size: 0.9rem;

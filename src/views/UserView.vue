@@ -37,27 +37,35 @@
         <!-- Tab bar (scaffold for future tabs) -->
         <div class="tab-bar">
           <button class="tab-btn active">
-            Reviews<span v-if="reviews.length" class="tab-count">{{ reviews.length }}</span>
+            Reviews<span v-if="reviewsTotal" class="tab-count">{{ reviewsTotal }}</span>
           </button>
         </div>
 
         <!-- Reviews tab -->
         <section class="section tab-panel">
-          <div v-if="reviewsLoading" class="text-muted">Loading…</div>
+          <div v-if="reviewsLoading && !reviews.length" class="text-muted">Loading…</div>
           <div v-else-if="reviews.length" class="reviews-list">
-            <div v-for="r in reviews" :key="r.id" class="review-wrapper">
-              <div class="review-wrapper-top">
-                <RouterLink :to="`/place/${r._placeId}`" class="review-place-link">View place →</RouterLink>
-                <span v-if="r.latest" class="latest-badge">Latest</span>
-              </div>
-              <ReviewCard :review="r" />
-            </div>
+            <ReviewCard
+              v-for="r in reviews"
+              :key="r.id"
+              :review="r"
+              show-place
+              @open="selectedReview = $event"
+            />
+            <button
+              v-if="reviews.length < reviewsTotal"
+              class="btn btn-outline btn-sm load-more"
+              :disabled="reviewsLoading"
+              @click="loadMoreReviews"
+            >{{ reviewsLoading ? 'Loading…' : 'Load more' }}</button>
           </div>
           <div v-else class="empty-state">
             <span class="empty-icon">📝</span>
             <p>No reviews yet.</p>
           </div>
         </section>
+
+        <ReviewDetailModal v-if="selectedReview" :review="selectedReview" @close="selectedReview = null" />
       </template>
 
     </div>
@@ -68,6 +76,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import ReviewCard from '../components/ReviewCard.vue'
+import ReviewDetailModal from '../components/ReviewDetailModal.vue'
 import { getUser, listUserReviews } from '../api/users.js'
 import { staticUrl } from '../api/client.js'
 import { normalizeReview } from '../api/normalize.js'
@@ -80,6 +89,9 @@ const reviewsLoading = ref(false)
 const publicData = ref({ review_count: 0 })
 const user = ref(null)
 const reviews = ref([])
+const reviewsTotal = ref(0)
+const reviewsPage = ref(1)
+const selectedReview = ref(null)
 
 const avatarSrc = computed(() => {
   if (!user.value) return ''
@@ -107,11 +119,26 @@ onMounted(async () => {
   if (!user.value?.id) return
   reviewsLoading.value = true
   try {
-    const r = await listUserReviews(user.value.id, { limit: 20 })
+    const r = await listUserReviews(user.value.id, { page: 1, limit: 10 })
     reviews.value = (r?.items || []).map(normalizeReview)
+    reviewsTotal.value = r?.total || 0
+    reviewsPage.value = 1
   } catch (_) { reviews.value = [] }
   finally { reviewsLoading.value = false }
 })
+
+async function loadMoreReviews() {
+  if (!user.value?.id || reviewsLoading.value) return
+  reviewsLoading.value = true
+  try {
+    const next = reviewsPage.value + 1
+    const r = await listUserReviews(user.value.id, { page: next, limit: 10 })
+    reviews.value.push(...(r?.items || []).map(normalizeReview))
+    reviewsTotal.value = r?.total || reviewsTotal.value
+    reviewsPage.value = next
+  } catch (_) {}
+  finally { reviewsLoading.value = false }
+}
 </script>
 
 <style scoped>
@@ -182,34 +209,7 @@ onMounted(async () => {
 .tab-panel { padding-top: 4px; }
 
 .reviews-list { display: flex; flex-direction: column; gap: 16px; }
-
-.review-wrapper { display: flex; flex-direction: column; gap: 6px; }
-
-.review-wrapper-top {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.review-place-link {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--primary);
-  text-decoration: none;
-}
-.review-place-link:hover { text-decoration: underline; }
-
-.latest-badge {
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: rgba(13, 148, 136, 0.12);
-  color: var(--primary);
-  border: 1px solid rgba(13, 148, 136, 0.3);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
+.load-more { align-self: center; margin-top: 4px; }
 
 .empty-state {
   text-align: center;

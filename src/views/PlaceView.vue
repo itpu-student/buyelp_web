@@ -359,13 +359,14 @@ const detailReview = ref(null)
 
 function openReviewDetail(review) {
   detailReview.value = review
-  router.replace({ query: { ...route.query, review: review.id } })
 }
 function closeReviewDetail() {
   detailReview.value = null
-  const q = { ...route.query }
-  delete q.review
-  router.replace({ query: q })
+  if (route.query.review) {
+    const q = { ...route.query }
+    delete q.review
+    router.replace({ query: q })
+  }
 }
 
 // Report modal
