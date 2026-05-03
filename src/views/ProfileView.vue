@@ -23,7 +23,7 @@
               <p class="profile-phone text-muted text-xs" v-if="me?.phone">📞 {{ me.phone }}</p>
             </div>
             <div class="profile-actions">
-              <button class="btn btn-secondary btn-sm" @click="editing = !editing">
+              <button class="btn btn-outline btn-sm" @click="editing = !editing">
                 {{ editing ? 'Cancel' : 'Edit profile' }}
               </button>
               <button class="btn btn-ghost btn-sm" @click="confirmDelete">Delete account</button>
@@ -56,19 +56,29 @@
           </div>
         </section>
 
-        <section class="section">
-          <h2 class="section-title">{{ t('profile.my_reviews') }}</h2>
+        <!-- Tab bar -->
+        <div class="tab-bar">
+          <button :class="['tab-btn', { active: activeTab === 'reviews' }]" @click="activeTab = 'reviews'">
+            My Reviews<span v-if="reviews.length" class="tab-count">{{ reviews.length }}</span>
+          </button>
+          <button :class="['tab-btn', { active: activeTab === 'saved' }]" @click="activeTab = 'saved'">
+            Saved Places<span v-if="savedPlaces.length" class="tab-count">{{ savedPlaces.length }}</span>
+          </button>
+          <button :class="['tab-btn', { active: activeTab === 'reports' }]" @click="activeTab = 'reports'">
+            My Reports<span v-if="reports.length" class="tab-count">{{ reports.length }}</span>
+          </button>
+        </div>
+
+        <!-- Reviews -->
+        <section v-show="activeTab === 'reviews'" class="section tab-panel">
           <div v-if="reviewsLoading" class="text-muted">Loading…</div>
-          <div class="my-reviews-list" v-else-if="reviews.length">
-            <div v-for="r in reviews" :key="r.id" class="my-review-item card">
-              <div class="my-review-top">
-                <RouterLink :to="`/place/${r._placeId}`" class="my-review-place">
-                  Place
-                </RouterLink>
-                <StarRating :rating="r.rating" :size="15" mode="simple" />
+          <div v-else-if="reviews.length" class="reviews-list">
+            <div v-for="r in reviews" :key="r.id" class="review-wrapper">
+              <div class="review-wrapper-top">
+                <RouterLink :to="`/place/${r._placeId}`" class="review-place-link">View place →</RouterLink>
+                <span v-if="r.latest" class="latest-badge">Latest</span>
               </div>
-              <p class="my-review-text">{{ r.text }}</p>
-              <span class="my-review-date text-xs text-muted">{{ formatDate(r.date) }}</span>
+              <ReviewCard :review="r" />
             </div>
           </div>
           <div v-else class="empty-state">
@@ -78,19 +88,14 @@
           </div>
         </section>
 
-        <section class="section" v-if="claims.length">
-          <h2 class="section-title">My place claims</h2>
-          <ul class="claims-list">
-            <li v-for="c in claims" :key="c.id" class="claim-row card">
-              <RouterLink :to="`/place/${c.place_id}`" class="claim-place">{{ c.place_id }}</RouterLink>
-              <span class="claim-status" :data-s="c.status">{{ claimStatusLabel(c.status) }}</span>
-            </li>
-          </ul>
-        </section>
-
-        <section class="section" v-if="savedPlaces.length">
-          <h2 class="section-title">Saved places</h2>
-          <div class="saved-places-list">
+        <!-- Saved Places -->
+        <section v-show="activeTab === 'saved'" class="section tab-panel">
+          <div v-if="!savedPlaces.length" class="empty-state">
+            <span class="empty-icon">🔖</span>
+            <p>No saved places yet.</p>
+            <RouterLink to="/search" class="btn btn-primary btn-sm">Explore</RouterLink>
+          </div>
+          <div v-else class="saved-places-list">
             <RouterLink
               v-for="p in savedPlaces"
               :key="p._uuid"
@@ -98,17 +103,27 @@
               class="saved-place-card card"
             >
               <img v-if="p.logo" :src="p.logo" :alt="p.name.en" class="saved-place-logo" />
-              <div v-else class="saved-place-logo saved-place-logo--empty">📍</div>
+              <div v-else class="saved-place-logo saved-place-logo--empty">
+                {{ categoriesState.byId[p._categoryId]?.emoji || '📍' }}
+              </div>
               <div class="saved-place-info">
-                <span class="saved-place-name">{{ p.name.en || p.name.uz }}</span>
-                <span class="saved-place-meta text-xs text-muted">{{ p.rating.toFixed(1) }} · {{ p.reviewCount }} reviews</span>
+                <span class="saved-place-name">{{ p.name[locale] || p.name.en }}</span>
+                <span v-if="p.slug" class="saved-place-slug text-xs text-muted">@{{ p.slug }}</span>
+                <div class="saved-place-stats text-xs text-muted">
+                  <span>⭐ {{ p.rating.toFixed(1) }}</span>
+                  <span>· {{ p.reviewCount }} reviews</span>
+                  <span v-if="categoriesState.byId[p._categoryId]">
+                    · {{ categoriesState.byId[p._categoryId].emoji }} {{ t(`categories.${p.category}`) }}
+                  </span>
+                </div>
+                <span v-if="p._savedAt" class="saved-place-date text-xs text-muted">Saved {{ formatDate(p._savedAt) }}</span>
               </div>
             </RouterLink>
           </div>
         </section>
 
-        <section class="section">
-          <h2 class="section-title">My reports</h2>
+        <!-- Reports -->
+        <section v-show="activeTab === 'reports'" class="section tab-panel">
           <div v-if="reportsLoading" class="text-muted">Loading…</div>
           <div v-else-if="reports.length" class="reports-list">
             <div v-for="r in reports" :key="r.id" class="report-item card">
@@ -150,13 +165,13 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { t } from '../i18n/index.js'
+import { t, i18nState } from '../i18n/index.js'
 import { store } from '../store/index.js'
-import StarRating from '../components/StarRating.vue'
+import { categoriesState, ensureCategoriesLoaded } from '../store/categories.js'
+import ReviewCard from '../components/ReviewCard.vue'
 import { staticUrl } from '../api/client.js'
 import { getMe } from '../api/auth.js'
 import { listUserReviews, updateMe, deleteMe } from '../api/users.js'
-import { listMyClaims } from '../api/claims.js'
 import { listMyReports, deleteReport, updateReport } from '../api/reports.js'
 import { uploadFile } from '../api/files.js'
 import { normalizeReview } from '../api/normalize.js'
@@ -164,7 +179,6 @@ import { normalizeReview } from '../api/normalize.js'
 const router = useRouter()
 const me = ref(null)
 const reviews = ref([])
-const claims = ref([])
 const reports = ref([])
 const reportsLoading = ref(false)
 const reviewsLoading = ref(false)
@@ -172,8 +186,10 @@ const editing = ref(false)
 const saving = ref(false)
 const uploading = ref(false)
 const saveError = ref('')
+const activeTab = ref('reviews')
 
-// Reports
+const locale = computed(() => i18nState.locale)
+
 const editingReport = ref(null)
 const editReportForm = reactive({ type: '', text: '' })
 const editReportSaving = ref(false)
@@ -210,7 +226,6 @@ async function removeReport(r) {
 const reportStatusLabel = { pending: 'Pending', in_progress: 'In review', dismissed: 'Dismissed', actioned: 'Actioned' }
 const reportTypeLabel = { spam: 'Spam', misleading: 'Misleading', inappropriate: 'Inappropriate', profanity: 'Profanity' }
 
-// Saved places
 const savedPlaces = computed(() => store.savedPlaces)
 
 const form = reactive({ name: '', username: '', avatar_key: '' })
@@ -226,19 +241,13 @@ function formatDate(d) {
   return new Date(d).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
 }
 
-function claimStatusLabel(s) {
-  if (s === 10) return 'Approved'
-  if (s === -10) return 'Rejected'
-  return 'Pending'
-}
-
 async function loadAll() {
   try {
     me.value = await getMe()
     store.setUser(me.value)
     form.name = me.value.name || ''
     form.username = me.value.username || ''
-  } catch (_) { /* token may be stale; ignore */ }
+  } catch (_) {}
 
   if (!me.value?.id) return
 
@@ -248,8 +257,6 @@ async function loadAll() {
     reviews.value = (r?.items || []).map(normalizeReview)
   } catch (_) { reviews.value = [] }
   finally { reviewsLoading.value = false }
-
-  try { claims.value = (await listMyClaims())?.items || [] } catch (_) { claims.value = [] }
 
   reportsLoading.value = true
   try { reports.value = (await listMyReports())?.items || [] } catch (_) { reports.value = [] }
@@ -298,7 +305,10 @@ async function confirmDelete() {
   }
 }
 
-onMounted(() => { if (store.isLoggedIn) loadAll() })
+onMounted(() => {
+  ensureCategoriesLoaded()
+  if (store.isLoggedIn) loadAll()
+})
 </script>
 
 <style scoped>
@@ -320,36 +330,113 @@ onMounted(() => { if (store.isLoggedIn) loadAll() })
 .edit-actions { margin-top: 16px; display: flex; gap: 12px; align-items: center; }
 .error-msg { color: #c0392b; font-size: 0.85rem; }
 
-.my-reviews-list { display: flex; flex-direction: column; gap: 14px; }
-.my-review-item { padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; }
-.my-review-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.my-review-place { font-weight: 600; color: var(--primary); font-size: 0.95rem; }
-.my-review-text { font-size: 0.9rem; color: var(--text-2); line-height: 1.6; }
-.my-review-date { margin-top: -4px; }
-
-.claims-list { display: flex; flex-direction: column; gap: 10px; list-style: none; padding: 0; }
-.claim-row { padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
-.claim-place { color: var(--primary); font-family: monospace; font-size: 0.85rem; }
-.claim-status { font-size: 0.8rem; padding: 2px 10px; border-radius: 999px; background: var(--bg-2); }
-.claim-status[data-s="10"] { background: #d1fae5; color: #065f46; }
-.claim-status[data-s="-10"] { background: #fee2e2; color: #991b1b; }
-
-.empty-state { text-align: center; padding: 60px 24px; display: flex; flex-direction: column; align-items: center; gap: 16px; color: var(--text-2); }
-.empty-icon { font-size: 2.5rem; }
-
-.section-title{
-  padding-bottom: 13px; /*hand written*/
+/* ── Tabs ── */
+.tab-bar {
+  display: flex;
+  gap: 4px;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 24px;
 }
 
-.saved-places-list { display: flex; flex-direction: column; gap: 10px; }
-.saved-place-card { display: flex; align-items: center; gap: 14px; padding: 12px 16px; text-decoration: none; color: inherit; transition: background var(--transition); }
-.saved-place-card:hover { background: var(--surface-2); }
-.saved-place-logo { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1px solid var(--border); }
-.saved-place-logo--empty { display: flex; align-items: center; justify-content: center; background: var(--surface-2); font-size: 1.2rem; }
-.saved-place-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.saved-place-name { font-weight: 600; font-size: 0.9rem; color: var(--text); }
-.saved-place-meta { color: var(--text-3); }
+.tab-btn {
+  padding: 10px 18px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-2);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  transition: color var(--transition), border-color var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
 
+.tab-btn:hover { color: var(--primary); }
+.tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+.tab-count {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text-3);
+}
+
+.tab-panel { padding-top: 4px; }
+
+/* ── Reviews ── */
+.reviews-list { display: flex; flex-direction: column; gap: 16px; }
+
+.review-wrapper { display: flex; flex-direction: column; gap: 6px; }
+
+.review-wrapper-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.review-place-link {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--primary);
+  text-decoration: none;
+}
+.review-place-link:hover { text-decoration: underline; }
+
+.latest-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(13, 148, 136, 0.12);
+  color: var(--primary);
+  border: 1px solid rgba(13, 148, 136, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ── Saved Places ── */
+.saved-places-list { display: flex; flex-direction: column; gap: 10px; }
+
+.saved-place-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  text-decoration: none;
+  color: inherit;
+  transition: background var(--transition);
+}
+.saved-place-card:hover { background: var(--surface-2); }
+
+.saved-place-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+.saved-place-logo--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-2);
+  font-size: 1.3rem;
+}
+
+.saved-place-info { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+.saved-place-name { font-weight: 600; font-size: 0.9rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.saved-place-slug { color: var(--text-3); }
+.saved-place-stats { display: flex; flex-wrap: wrap; gap: 4px; color: var(--text-3); }
+.saved-place-date { color: var(--text-3); margin-top: 1px; }
+
+/* ── Reports ── */
 .reports-list { display: flex; flex-direction: column; gap: 12px; }
 .report-item { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
 .report-item-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -367,6 +454,9 @@ onMounted(() => { if (store.isLoggedIn) loadAll() })
 .report-edit-form { display: flex; flex-direction: column; gap: 6px; }
 .admin-response { font-size: 0.82rem; color: var(--text-2); background: var(--surface-2); border-left: 3px solid var(--primary); padding: 6px 10px; border-radius: 0 4px 4px 0; }
 .admin-response-label { font-weight: 600; color: var(--text); }
-.error-msg { color: #dc2626; font-size: 0.82rem; }
 
+.empty-state { text-align: center; padding: 60px 24px; display: flex; flex-direction: column; align-items: center; gap: 16px; color: var(--text-2); }
+.empty-icon { font-size: 2.5rem; }
+
+.section-title { padding-bottom: 13px; }
 </style>

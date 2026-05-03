@@ -1,5 +1,5 @@
 <template>
-  <article class="place-row" :class="{ 'place-row--closed': !place.isOpen }">
+  <article class="place-row" :class="{ 'place-row--closed': place.isOpen === false }">
     <!-- ① Carousel of images -->
     <RouterLink :to="`/place/${place.id}`" class="place-row__carousel">
       <!-- Sliding track: all images in a row, translated to show the active one -->
@@ -47,11 +47,14 @@
     <RouterLink :to="`/place/${place.id}`" class="place-row__info">
       <div class="place-row__info-inner">
         <div class="place-row__header">
-          <h3 class="place-row__name">{{ placeName }}</h3>
-          <div class="place-row__rating">
-            <StarRating :rating="place.rating" :size="15" />
-            <span class="place-row__rating-val">{{ place.rating.toFixed(1) }}</span>
-            <span class="place-row__review-count">({{ place.reviewCount }} {{ t('common.reviews_count') }})</span>
+          <img v-if="place.logo" :src="place.logo" :alt="placeName" class="place-row__logo" />
+          <div class="place-row__header-text">
+            <h3 class="place-row__name">{{ placeName }}</h3>
+            <div class="place-row__rating">
+              <StarRating :rating="place.rating" :size="15" />
+              <span class="place-row__rating-val">{{ place.rating.toFixed(1) }}</span>
+              <span class="place-row__review-count">({{ place.reviewCount }} {{ t('common.reviews_count') }})</span>
+            </div>
           </div>
         </div>
 
@@ -59,9 +62,9 @@
         <div class="place-row__tags">
           <span
             class="place-row__tag place-row__tag--status"
-            :class="place.isOpen ? 'open' : 'closed'"
+            :class="place.isOpen === true ? 'open' : place.isOpen === false ? 'closed' : 'unknown'"
           >
-            {{ place.isOpen ? t('place.open_now') : t('place.closed') }}
+            {{ place.isOpen === true ? t('place.open_now') : place.isOpen === false ? t('place.closed') : t('place.hours_unknown') }}
           </span>
           <span class="place-row__tag place-row__tag--category">
             {{ categoryIcon }} {{ t(`categories.${place.category}`) }}
@@ -302,8 +305,26 @@ function prev() {
 
 .place-row__header {
   display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.place-row__logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.place-row__header-text {
+  display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
+  flex: 1;
 }
 
 .place-row__name {
@@ -387,8 +408,9 @@ function prev() {
   font-weight: 600;
 }
 
-.place-row__tag--status.open   { background: rgba(34, 197, 94, 0.15); color: #16a34a; }
-.place-row__tag--status.closed { background: rgba(239, 68, 68,  0.15); color: #dc2626; }
+.place-row__tag--status.open    { background: rgba(34, 197, 94, 0.15); color: #16a34a; }
+.place-row__tag--status.closed  { background: rgba(239, 68, 68,  0.15); color: #dc2626; }
+.place-row__tag--status.unknown { background: rgba(107, 114, 128, 0.12); color: #6b7280; }
 
 .place-row__tag--category {
   background: var(--surface-2);

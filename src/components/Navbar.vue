@@ -75,8 +75,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { t, i18nState, setLocale } from '../i18n/index.js'
 import { store } from '../store/index.js'
 import { staticUrl } from '../api/client.js'
@@ -90,6 +90,7 @@ const userAvatar = computed(() => {
 })
 
 const router = useRouter()
+const route = useRoute()
 const isScrolled = ref(false)
 const mobileOpen = ref(false)
 const userMenuOpen = ref(false)
@@ -109,6 +110,11 @@ function toggleTheme() {
   document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : 'light')
   localStorage.setItem('buyelp_theme', isDark.value ? 'dark' : 'light')
 }
+
+watch(route, () => {
+  mobileOpen.value = false
+  userMenuOpen.value = false
+})
 
 function logout() {
   store.logout()

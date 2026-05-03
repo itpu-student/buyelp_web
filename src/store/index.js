@@ -54,7 +54,12 @@ export const store = reactive({
       const ids = items.map((b) => String(b.place_id))
       this.savedPlaceIds = ids
       persistSaved(ids)
-      this.savedPlaces = items.map((b) => b.place ? normalizePlace(b.place) : null).filter(Boolean)
+      this.savedPlaces = items.map((b) => {
+        if (!b.place) return null
+        const p = normalizePlace(b.place)
+        p._savedAt = b.created_at || null
+        return p
+      }).filter(Boolean)
     } catch (_) {
       // ignore — keep cached list
     }

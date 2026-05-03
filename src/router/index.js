@@ -7,6 +7,7 @@ import RegisterView from "../views/RegisterView.vue"
 import ProfileView from "../views/ProfileView.vue"
 import AddPlaceView from "../views/AddPlaceView.vue"
 import BusinessView from "../views/BusinessView.vue"
+import UserView from "../views/UserView.vue"
 
 import AdminLayout from "../views/admin/AdminLayout.vue"
 import AdminLoginView from "../views/admin/AdminLoginView.vue"
@@ -29,6 +30,7 @@ const routes = [
   { path: "/register", name: "register", component: RegisterView },
   { path: "/profile", name: "profile", component: ProfileView },
   { path: "/business", name: "business", component: BusinessView },
+  { path: "/u/:alias", name: "user", component: UserView },
   {
     path: "/admin",
     component: AdminLayout,

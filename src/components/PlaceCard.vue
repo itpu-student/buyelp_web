@@ -6,12 +6,18 @@
         <span>{{ categoryIcon }}</span>
         {{ t(`categories.${place.category}`) }}
       </div>
-      <div class="card-open-badge" :class="place.isOpen ? 'open' : 'closed'">
-        {{ place.isOpen ? t('place.open_now') : t('place.closed') }}
+      <div
+        class="card-open-badge"
+        :class="place.isOpen === true ? 'open' : place.isOpen === false ? 'closed' : 'unknown'"
+      >
+        {{ place.isOpen === true ? t('place.open_now') : place.isOpen === false ? t('place.closed') : '?' }}
       </div>
     </div>
     <div class="card-body">
-      <h3 class="card-name">{{ placeName }}</h3>
+      <div class="card-name-row">
+        <img v-if="place.logo" :src="place.logo" :alt="placeName" class="card-logo" />
+        <h3 class="card-name">{{ placeName }}</h3>
+      </div>
       <div class="card-rating">
         <StarRating :rating="place.rating" :size="16" />
         <span class="rating-value">{{ place.rating.toFixed(1) }}</span>
@@ -102,8 +108,9 @@ const categoryIcon = computed(() => categoryIcons[props.place.category] || '📍
   letter-spacing: 0.03em;
 }
 
-.card-open-badge.open { background: rgba(34, 197, 94, 0.9); color: #fff; }
-.card-open-badge.closed { background: rgba(239, 68, 68, 0.9); color: #fff; }
+.card-open-badge.open    { background: rgba(34, 197, 94, 0.9);  color: #fff; }
+.card-open-badge.closed  { background: rgba(239, 68, 68, 0.9);  color: #fff; }
+.card-open-badge.unknown { background: rgba(107, 114, 128, 0.7); color: #fff; }
 
 .card-body {
   padding: 16px;
@@ -111,6 +118,21 @@ const categoryIcon = computed(() => categoryIcons[props.place.category] || '📍
   flex-direction: column;
   gap: 8px;
   flex: 1;
+}
+
+.card-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
 }
 
 .card-name {
