@@ -23,8 +23,14 @@
         </div>
 
         <div v-if="review.priceRating || review.qualityRating" class="sub-ratings">
-          <span v-if="review.priceRating" class="sub-rating">Price: <strong>{{ review.priceRating.toFixed(1) }}</strong></span>
-          <span v-if="review.qualityRating" class="sub-rating">Quality: <strong>{{ review.qualityRating.toFixed(1) }}</strong></span>
+          <div v-if="review.priceRating" class="sub-rating-row">
+            <span class="sub-label">Price</span>
+            <span v-for="(c, i) in coinIcons" :key="i" class="sub-coin" :class="{ active: i + 1 <= review.priceRating }">{{ c }}</span>
+          </div>
+          <div v-if="review.qualityRating" class="sub-rating-row">
+            <span class="sub-label">Quality</span>
+            <span v-for="(c, i) in recommendIcons" :key="i" class="sub-coin" :class="{ active: i + 1 <= review.qualityRating }">{{ c }}</span>
+          </div>
         </div>
 
         <p v-if="review.text" class="review-text">{{ review.text }}</p>
@@ -47,9 +53,21 @@
           </button>
           <div v-if="historyOpen">
             <div v-if="historyLoading" class="text-muted text-sm">Loading history…</div>
-            <div v-for="prev in history" :key="prev.id" class="prev-version">
-              <span class="prev-date">{{ formatDate(prev.date) }}</span>
-              <p class="prev-text">{{ prev.text }}</p>
+            <div class="prev-list">
+              <div v-for="prev in history" :key="prev.id" class="prev-version">
+                <div class="prev-header">
+                  <span class="prev-date">{{ formatDate(prev.date) }}</span>
+                  <StarRating :rating="prev.rating" :size="13" mode="simple" />
+                </div>
+                <div v-if="prev.priceRating || prev.qualityRating" class="prev-sub">
+                  <span v-if="prev.priceRating">Price: {{ prev.priceRating }}</span>
+                  <span v-if="prev.qualityRating">Quality: {{ prev.qualityRating }}</span>
+                </div>
+                <p class="prev-text">{{ prev.text }}</p>
+                <div v-if="prev.images?.length" class="prev-images">
+                  <img v-for="(src, i) in prev.images" :key="i" :src="src" alt="Review photo" class="prev-img" loading="lazy" />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -91,6 +109,9 @@ import { normalizeReview } from '../api/normalize.js'
 const props = defineProps({
   review: { type: Object, required: true },
 })
+
+const coinIcons = ['🪙', '💵', '💶', '💰', '💎']
+const recommendIcons = ['❌', '⚠️', '☑️', '✅', '👑']
 defineEmits(['close'])
 
 const reviewImages = computed(() => props.review.images || [])
@@ -193,8 +214,11 @@ onBeforeUnmount(() => { document.body.style.overflow = '' })
   border-radius: 4px; padding: 0 5px; line-height: 1.6;
 }
 
-.sub-ratings { display: flex; gap: 16px; font-size: 0.85rem; color: var(--text-2); }
-.sub-rating strong { color: var(--text); }
+.sub-ratings { display: flex; flex-direction: column; gap: 6px; }
+.sub-rating-row { display: flex; align-items: center; gap: 6px; }
+.sub-label { font-size: 0.78rem; color: var(--text-3); width: 48px; }
+.sub-coin { font-size: 1.1rem; filter: grayscale(1); opacity: 0.3; }
+.sub-coin.active { filter: none; opacity: 1; }
 
 .review-text { font-size: 0.9rem; color: var(--text-2); line-height: 1.65; margin: 0; }
 
@@ -216,9 +240,14 @@ onBeforeUnmount(() => { document.body.style.overflow = '' })
 }
 .history-toggle:hover { color: var(--text); }
 
+.prev-list { display: flex; flex-direction: column; gap: 8px; }
 .prev-version { padding: 10px 12px; background: var(--surface-2); border-radius: var(--radius-sm); display: flex; flex-direction: column; gap: 4px; }
+.prev-header { display: flex; align-items: center; gap: 8px; }
 .prev-date { font-size: 0.75rem; color: var(--text-3); }
+.prev-sub { display: flex; gap: 8px; font-size: 0.75rem; color: var(--text-3); }
 .prev-text { font-size: 0.85rem; color: var(--text-2); margin: 0; }
+.prev-images { display: flex; gap: 6px; flex-wrap: wrap; }
+.prev-img { width: 70px; height: 62px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--border); }
 
 /* Lightbox */
 .lb-backdrop {

@@ -28,6 +28,10 @@
         </svg>
       </button>
     </div>
+    <div v-if="review.priceRating || review.qualityRating" class="sub-ratings-row">
+      <span v-if="review.priceRating">Price: {{ review.priceRating }}</span>
+      <span v-if="review.qualityRating">Quality: {{ review.qualityRating }}</span>
+    </div>
     <p class="review-text">{{ review.text }}</p>
 
     <!-- Review Images — small strip carousel -->
@@ -362,6 +366,8 @@ function formatDate(dateStr) {
   transition: color var(--transition), background var(--transition);
 }
 .report-btn:hover { color: #dc2626; background: #fee2e2; }
+
+.sub-ratings-row { display: flex; gap: 10px; font-size: 0.78rem; color: var(--text-3); }
 
 .review-text {
   font-size: 0.9rem;
