@@ -40,8 +40,16 @@ export function adminListUsers(params = {}) {
   return apiFetch(`/api/admin/users${buildQuery(params)}`, { adminAuth: true })
 }
 
+export function adminGetUser(id) {
+  return apiFetch(`/api/admin/users/${id}`, { adminAuth: true })
+}
+
 export function adminBlockUser(id) {
-  return apiFetch(`/api/admin/users/${id}/block`, { method: "PUT", adminAuth: true })
+  return apiFetch(`/api/admin/users/${id}/block`, { method: "PUT", body: { blocked: true }, adminAuth: true })
+}
+
+export function adminUnblockUser(id) {
+  return apiFetch(`/api/admin/users/${id}/block`, { method: "PUT", body: { blocked: false }, adminAuth: true })
 }
 
 // Claims

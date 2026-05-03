@@ -41,7 +41,14 @@
                 >
                   Block
                 </button>
-                <span v-else class="text-muted text-sm">—</span>
+                <button
+                  v-else
+                  class="btn btn-sm btn-ghost"
+                  :disabled="submitting"
+                  @click="unblockUser(u)"
+                >
+                  Unblock
+                </button>
               </td>
             </tr>
           </tbody>
@@ -73,7 +80,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { adminListUsers, adminBlockUser } from '../../api/adminModeration.js'
+import { adminListUsers, adminBlockUser, adminUnblockUser } from '../../api/adminModeration.js'
 
 const loading = ref(false)
 const error = ref('')
@@ -115,6 +122,18 @@ async function confirmBlock() {
     await adminBlockUser(blockTarget.value.id)
     blockTarget.value.blocked = true
     blockTarget.value = null
+  } catch (e) {
+    error.value = e.message
+  } finally {
+    submitting.value = false
+  }
+}
+
+async function unblockUser(u) {
+  submitting.value = true
+  try {
+    await adminUnblockUser(u.id)
+    u.blocked = false
   } catch (e) {
     error.value = e.message
   } finally {

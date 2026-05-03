@@ -76,7 +76,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { adminStore } from '../../store/adminStore.js'
 import { i18nState, setLocale } from '../../i18n/index.js'
@@ -91,6 +91,13 @@ function toggleTheme() {
   document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : 'light')
   localStorage.setItem('buyelp_theme', isDark.value ? 'dark' : 'light')
 }
+onMounted(() => {
+  const saved = localStorage.getItem('buyelp_theme')
+  if (saved) {
+    isDark.value = saved === 'dark'
+    document.documentElement.setAttribute('data-theme', saved)
+  }
+})
 
 const router = useRouter()
 const route = useRoute()

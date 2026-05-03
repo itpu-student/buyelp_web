@@ -13,7 +13,7 @@
         :class="{ active: filters.status === s.value }"
         @click="setStatus(s.value)"
       >
-        {{ s.label }}
+        {{ s.label }}{{ counts[s.value] != null ? ` (${counts[s.value]})` : '' }}
       </button>
     </div>
 
@@ -41,26 +41,64 @@
           <thead>
             <tr>
               <th>Reporter</th>
+              <th>Text</th>
+              <th>Reported User</th>
               <th>Target</th>
               <th>Type</th>
-              <th>Status</th>
-              <th>Created</th>
+              <th v-if="filters.status === ''">Status</th>
+              <th>Date</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="items.length === 0">
-              <td colspan="6" class="empty-cell">No reports found.</td>
+              <td :colspan="filters.status === '' ? 8 : 7" class="empty-cell">No reports found.</td>
             </tr>
             <tr v-for="r in items" :key="r.id" class="clickable-row" @click="open(r.id)">
-              <td>{{ r.reporter?.name || r.user_id }}</td>
               <td>
-                <span class="badge badge-neutral">{{ r.target_type }}</span>
-                <span class="text-sm text-muted ml-1">{{ r.target?.name || r.target_id }}</span>
+                <div class="user-chip" v-if="r.reporter_user">
+                  <img v-if="r.reporter_user.avatar_key" :src="avatarUrl(r.reporter_user.avatar_key)" class="avatar" />
+                  <div v-else class="avatar avatar-placeholder">{{ initials(r.reporter_user.name) }}</div>
+                  <div class="user-info">
+                    <span class="user-name">{{ r.reporter_user.name }}</span>
+                    <span class="user-username">@{{ r.reporter_user.username }}</span>
+                  </div>
+                </div>
+                <span v-else class="text-muted text-sm">{{ r.user_id }}</span>
               </td>
-              <td><span v-if="r.type" class="badge badge-neutral">{{ r.type }}</span></td>
-              <td><span class="badge" :class="statusClass(r.status)">{{ r.status }}</span></td>
-              <td class="text-sm text-muted">{{ fmtDate(r.created_at) }}</td>
+              <td class="text-cell">
+                <span v-if="r.text" class="report-text-preview">{{ r.text }}</span>
+                <span v-else class="text-muted text-sm">—</span>
+              </td>
+              <td>
+                <div class="user-chip" v-if="r.reported_user">
+                  <img v-if="r.reported_user.avatar_key" :src="avatarUrl(r.reported_user.avatar_key)" class="avatar" />
+                  <div v-else class="avatar avatar-placeholder">{{ initials(r.reported_user.name) }}</div>
+                  <div class="user-info">
+                    <span class="user-name">{{ r.reported_user.name }}</span>
+                    <span class="user-username">@{{ r.reported_user.username }}</span>
+                  </div>
+                </div>
+                <span v-else class="text-muted text-sm">—</span>
+              </td>
+              <td>
+                <div class="target-cell">
+                  <span class="badge target-badge" :class="r.target_type === 'review' ? 'target-badge-review' : 'target-badge-place'">{{ r.target_type === 'review' ? '📋 Review' : '🏢 Place' }}</span>
+                  <div class="target-name-row" v-if="r.target">
+                    <img v-if="r.target.avatar_key" :src="avatarUrl(r.target.avatar_key)" class="target-logo" />
+                    <span class="text-sm">{{ r.target.name }}</span>
+                  </div>
+                  <span v-else class="text-sm text-muted">{{ r.target_id }}</span>
+                </div>
+              </td>
+              <td><span v-if="r.type" class="badge" :class="typeClass(r.type)">{{ r.type }}</span></td>
+              <td v-if="filters.status === ''"><span class="badge" :class="statusClass(r.status)">{{ r.status }}</span></td>
+              <td class="nowrap">
+                <div class="date-cell">
+                  <span class="text-sm">{{ fmtDateOnly(r.created_at) }}</span>
+                  <span class="text-xs text-muted">{{ fmtTimeOnly(r.created_at) }}</span>
+                </div>
+              </td>
               <td><button class="btn btn-sm btn-ghost" @click.stop="open(r.id)">View →</button></td>
             </tr>
           </tbody>
@@ -80,6 +118,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { listAdminReports } from '../../api/adminReports.js'
+import { staticUrl } from '../../api/client.js'
 
 const router = useRouter()
 const loading = ref(false)
@@ -90,6 +129,7 @@ const limit = 20
 const total = ref(0)
 
 const statuses = [
+  { value: '', label: 'All' },
   { value: 'pending', label: 'Pending' },
   { value: 'in_progress', label: 'In Progress' },
   { value: 'dismissed', label: 'Dismissed' },
@@ -97,7 +137,11 @@ const statuses = [
 ]
 
 const filters = reactive({ status: 'pending', target_type: '', type: '' })
+const counts = reactive({ pending: null, in_progress: null, dismissed: null, actioned: null })
 const totalPages = computed(() => Math.ceil(total.value / limit))
+
+function avatarUrl(key) { return staticUrl(key) }
+function initials(name) { return (name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() }
 
 function statusClass(s) {
   if (s === 'pending') return 'badge-warning'
@@ -106,10 +150,16 @@ function statusClass(s) {
   return 'badge-neutral'
 }
 
-function fmtDate(d) {
-  if (!d) return ''
-  return new Date(d).toLocaleDateString()
+function typeClass(t) {
+  if (t === 'spam') return 'badge-spam'
+  if (t === 'misleading') return 'badge-misleading'
+  if (t === 'inappropriate') return 'badge-inappropriate'
+  if (t === 'profanity') return 'badge-profanity'
+  return 'badge-type'
 }
+
+function fmtDateOnly(d) { return d ? new Date(d).toLocaleDateString() : '' }
+function fmtTimeOnly(d) { return d ? new Date(d).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '' }
 
 async function load(p = 1) {
   loading.value = true
@@ -135,7 +185,17 @@ function open(id) {
   router.push(`/admin/reports/${id}`)
 }
 
-onMounted(() => load(1))
+async function loadCounts() {
+  const keys = ['pending', 'in_progress', 'dismissed', 'actioned']
+  const results = await Promise.allSettled(
+    keys.map(s => listAdminReports({ status: s, limit: 1 }))
+  )
+  results.forEach((r, i) => {
+    if (r.status === 'fulfilled') counts[keys[i]] = r.value.total ?? 0
+  })
+}
+
+onMounted(() => { load(1); loadCounts() })
 </script>
 
 <style scoped>
@@ -205,7 +265,7 @@ onMounted(() => load(1))
 }
 
 .admin-table td {
-  padding: 11px 14px;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--border-light, var(--border));
   color: var(--text);
   vertical-align: middle;
@@ -215,16 +275,111 @@ onMounted(() => load(1))
 .clickable-row { cursor: pointer; }
 .clickable-row:hover { background: var(--surface-2); }
 
+/* User chip */
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.user-name {
+  font-weight: 600;
+  color: var(--text);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.user-username {
+  font-size: 0.75rem;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+/* Target cell */
+.target-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.target-badge { font-size: 0.75rem; }
+.target-badge-review { background: rgba(99, 102, 241, 0.12); color: #6366f1; }
+.target-badge-place  { background: rgba(13, 148, 136, 0.12); color: var(--primary); }
+
+.target-name-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.target-logo {
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+/* Report text preview */
+.text-cell { max-width: 160px; }
+.report-text-preview {
+  font-size: 0.8rem;
+  color: var(--text-2);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Date cell */
+.date-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.text-xs { font-size: 0.72rem; }
+
+.nowrap { white-space: nowrap; }
 .empty-cell { text-align: center; color: var(--text-2); padding: 32px !important; }
 
-.badge-warning { background: rgba(245, 158, 11, 0.12); color: #d97706; }
-.badge-primary { background: rgba(13, 148, 136, 0.12); color: var(--primary); }
-.badge-success { background: rgba(34, 197, 94, 0.12); color: #16a34a; }
-.badge-neutral { background: var(--surface-2); color: var(--text-2); }
+.badge-warning      { background: rgba(245, 158, 11, 0.12); color: #d97706; }
+.badge-primary      { background: rgba(13, 148, 136, 0.12); color: var(--primary); }
+.badge-success      { background: rgba(34, 197, 94, 0.12);  color: #16a34a; }
+.badge-neutral      { background: var(--surface-2);          color: var(--text-2); }
+.badge-type         { background: rgba(99, 102, 241, 0.1);   color: #6366f1; }
+.badge-spam         { background: rgba(239, 68, 68, 0.12);   color: #ef4444; }
+.badge-misleading   { background: rgba(245, 158, 11, 0.12);  color: #d97706; }
+.badge-inappropriate{ background: rgba(139, 92, 246, 0.12);  color: #7c3aed; }
+.badge-profanity    { background: rgba(236, 72, 153, 0.12);  color: #db2777; }
 
 .text-sm { font-size: 0.8rem; }
 .text-muted { color: var(--text-2); }
-.ml-1 { margin-left: 4px; }
 
 .state-msg { padding: 32px; text-align: center; color: var(--text-2); }
 .state-msg.error { color: #ef4444; }
