@@ -328,9 +328,9 @@ onMounted(() => { load(1); loadCounts() })
   gap: 4px;
 }
 
-.target-badge { font-size: 0.75rem; }
-.target-badge-review { background: rgba(99, 102, 241, 0.12); color: #6366f1; }
-.target-badge-place  { background: rgba(13, 148, 136, 0.12); color: var(--primary); }
+.target-badge { font-size: 0.75rem; color: var(--text); }
+.target-badge-review { background: rgba(99, 102, 241, 0.22); border: 1px solid rgba(99, 102, 241, 0.5); }
+.target-badge-place  { background: rgba(13, 148, 136, 0.22); border: 1px solid rgba(13, 148, 136, 0.5); }
 
 .target-name-row {
   display: flex;

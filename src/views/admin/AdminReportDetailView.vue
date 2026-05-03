@@ -44,7 +44,7 @@
           <div class="card-section">
             <div class="section-label">Target</div>
             <div>
-              <span class="target-type-tag">{{ report.target_type === 'review' ? '📋 Review' : '🏢 Place' }}</span>
+              <span class="target-type-tag" :class="report.target_type === 'review' ? 'target-badge-review' : 'target-badge-place'">{{ report.target_type === 'review' ? '📋 Review' : '🏢 Place' }}</span>
               <template v-if="report.target">
                 <div class="target-name-row ml-1">
                   <img v-if="report.target.avatar_key" :src="avatarUrl(report.target.avatar_key)" class="target-logo" />
@@ -540,7 +540,15 @@ onMounted(loadReport)
 .badge-neutral { background: var(--surface-2); color: var(--text-2); }
 .badge-danger { background: rgba(239, 68, 68, 0.12); color: #ef4444; }
 
-.target-type-tag { font-size: 0.82rem; font-weight: 600; color: var(--text-2); }
+.target-type-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.target-badge-review { background: rgba(99, 102, 241, 0.09); border: 1px solid rgba(99, 102, 241, 0.25); color: var(--text); }
+.target-badge-place  { background: rgba(13, 148, 136, 0.09); border: 1px solid rgba(13, 148, 136, 0.25); color: var(--text); }
 .target-name-row { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
 .target-logo { width: 20px; height: 20px; border-radius: 4px; object-fit: cover; flex-shrink: 0; }
 
