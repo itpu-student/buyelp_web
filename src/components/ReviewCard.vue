@@ -12,7 +12,7 @@
         <span class="author-name">{{ review.author }}<span v-if="review.authorUsername" class="author-username"> @{{ review.authorUsername }}</span></span>
         <div class="review-date-row">
           <span class="review-date">{{ formatDate(review.date) }}</span>
-          <span v-if="review.prevCount > 0" class="edited-badge">Edited</span>
+          <span v-if="review.prevCount > 0" class="edited-badge">{{ review.prevCount }}</span>
         </div>
       </div>
       <StarRating :rating="review.rating" :size="15" mode="simple" />
