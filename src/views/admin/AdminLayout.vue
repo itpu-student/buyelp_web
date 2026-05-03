@@ -21,6 +21,9 @@
         <button class="lang-toggle" @click="toggleLang">
           {{ i18nState.locale === 'en' ? '🇬🇧 EN' : '🇺🇿 UZ' }}
         </button>
+        <button class="theme-toggle" @click="toggleTheme">
+          {{ isDark ? '☀️ Light' : '🌙 Dark' }}
+        </button>
         <button class="sidebar-logout" @click="logout">Logout</button>
       </div>
     </aside>
@@ -63,6 +66,9 @@
         <button class="lang-toggle" @click="toggleLang">
           {{ i18nState.locale === 'en' ? '🇬🇧 EN' : '🇺🇿 UZ' }}
         </button>
+        <button class="theme-toggle" @click="toggleTheme">
+          {{ isDark ? '☀️ Light' : '🌙 Dark' }}
+        </button>
         <button class="sidebar-logout" @click="logout">Logout</button>
       </div>
     </aside>
@@ -77,6 +83,13 @@ import { i18nState, setLocale } from '../../i18n/index.js'
 
 function toggleLang() {
   setLocale(i18nState.locale === 'en' ? 'uz' : 'en')
+}
+
+const isDark = ref(document.documentElement.getAttribute('data-theme') === 'dark')
+function toggleTheme() {
+  isDark.value = !isDark.value
+  document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : 'light')
+  localStorage.setItem('buyelp_theme', isDark.value ? 'dark' : 'light')
 }
 
 const router = useRouter()
@@ -216,6 +229,19 @@ function logout() {
 }
 
 .lang-toggle:hover { background: var(--surface-2); color: var(--text); }
+
+.theme-toggle {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: var(--text-2);
+  text-align: left;
+  transition: background var(--transition);
+}
+
+.theme-toggle:hover { background: var(--surface-2); color: var(--text); }
 
 .sidebar-logout {
   width: 100%;
