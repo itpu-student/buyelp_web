@@ -9,22 +9,29 @@
         </button>
 
         <div class="modal-header">
-          <img
-            :src="review.authorAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(review.author)}&background=0D9488&color=fff&size=64`"
-            :alt="review.author"
-            class="avatar"
-            width="48"
-            height="48"
-          />
-          <div class="meta">
-            <span class="author-name">{{ review.author }}<span v-if="review.authorUsername" class="author-username"> @{{ review.authorUsername }}</span></span>
-            <div class="meta-row">
-              <span class="review-date">{{ formatDate(review.date) }}</span>
-              <span v-if="review.prevCount > 0" class="edited-badge">{{ review.prevCount }}</span>
+          <RouterLink
+            :to="`/u/${review.authorUsername || review._userId}`"
+            class="user-link"
+            @click.stop="$emit('close')"
+          >
+            <img
+              :src="review.authorAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(review.author)}&background=0D9488&color=fff&size=64`"
+              :alt="review.author"
+              class="avatar"
+              width="48"
+              height="48"
+            />
+            <div class="meta">
+              <span class="author-name">{{ review.author }}<span v-if="review.authorUsername" class="author-username"> @{{ review.authorUsername }}</span></span>
+              <div class="meta-row">
+                <span class="review-date">{{ formatDate(review.date) }}</span>
+                <span v-if="review.prevCount > 0" class="edited-badge">{{ review.prevCount }}</span>
+              </div>
             </div>
-          </div>
-          <StarRating :rating="review.rating" :size="18" mode="simple" />
+          </RouterLink>
         </div>
+
+        <StarRating :rating="review.rating" :size="18" mode="simple" />
 
         <div v-if="review.priceRating || review.qualityRating" class="sub-ratings">
           <div v-if="review.priceRating" class="sub-rating-row">
@@ -106,6 +113,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { RouterLink } from 'vue-router'
 import StarRating from './StarRating.vue'
 import { getReviewPrevs } from '../api/reviews.js'
 import { normalizeReview } from '../api/normalize.js'
@@ -225,6 +233,15 @@ onBeforeUnmount(() => { document.body.style.overflow = '' })
 .modal-header {
   display: flex; align-items: center; gap: 12px;
 }
+.user-link {
+  display: flex; align-items: center; gap: 12px;
+  text-decoration: none; color: inherit; flex: 1; min-width: 0;
+  border-radius: var(--radius-sm);
+  padding: 4px 6px; margin: -4px -6px;
+  transition: background var(--transition);
+}
+.user-link:hover { background: rgba(13,148,136,0.07); }
+.user-link:hover .author-name { color: var(--primary); }
 .avatar { border-radius: 50%; flex-shrink: 0; object-fit: cover; }
 .meta { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .author-name { font-weight: 700; font-size: 0.95rem; color: var(--text); }
