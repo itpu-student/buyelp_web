@@ -9,7 +9,7 @@
     <template v-else-if="report">
       <div class="detail-grid">
         <!-- Report card -->
-        <div class="report-card card">
+        <div class="report-card card" :class="{'span-full': report.status === 'pending' || report.status === 'in_progress'}">
           <div class="card-section">
             <div class="section-label">Status</div>
             <span class="badge" :class="statusClass(report.status)">{{ report.status }}</span>
@@ -42,26 +42,20 @@
           </div>
 
           <div class="card-section">
-            <div class="section-label">Target</div>
-            <div>
+            <div class="section-label-row">
+              <div class="section-label">Target</div>
               <span class="target-type-tag" :class="report.target_type === 'review' ? 'target-badge-review' : 'target-badge-place'">{{ report.target_type === 'review' ? '📋 Review' : '🏢 Place' }}</span>
-              <template v-if="report.target">
-                <div class="target-clickable" @click="openTargetModal()">
-                  <div class="target-name-row ml-1">
-                    <img v-if="report.target.avatar_key" :src="avatarUrl(report.target.avatar_key)" class="target-logo" />
-                    <span class="font-medium">{{ report.target.name }}</span>
-                  </div>
-                  <p v-if="report.target.content" class="report-text mt-1 content-preview">{{ report.target.content }}</p>
-                </div>
-                <RouterLink
-                  :to="report.target_type === 'review' ? '/admin/reviews' : '/admin/places'"
-                  class="view-link"
-                >
-                  View in admin →
-                </RouterLink>
-              </template>
-              <span v-else class="ml-1 text-muted">[removed]</span>
             </div>
+            <div v-if="report.target">
+              <div class="target-clickable" @click="openTargetModal()">
+                <div class="target-name-row">
+                  <img v-if="report.target.avatar_key" :src="avatarUrl(report.target.avatar_key)" class="target-logo" />
+                  <span class="font-medium">{{ report.target.name }}</span>
+                </div>
+                <p v-if="report.target.content" class="report-text mt-1 content-preview">{{ report.target.content }}</p>
+              </div>
+            </div>
+            <span v-else class="text-muted">[removed]</span>
           </div>
 
           <div class="card-section" v-if="report.reported_user">
@@ -96,92 +90,8 @@
           </div>
         </div>
 
-        <!-- Action panel -->
-        <div class="action-card card" v-if="report.status === 'pending' || report.status === 'in_progress'">
-          <h3 class="action-title">Actions</h3>
-
-          <!-- Take into work (pending only) -->
-          <div v-if="report.status === 'pending'" class="action-section">
-            <p class="text-muted text-sm">Mark as in-progress to begin investigation.</p>
-            <div class="action-group">
-              <textarea
-                v-model="action.admin_response"
-                class="form-textarea"
-                :maxlength="textLimit"
-                placeholder="Optional note…"
-                rows="3"
-              ></textarea>
-              <button class="btn btn-primary" :disabled="submitting" @click="takeIntoWork">
-                {{ submitting ? 'Saving…' : 'Take Into Work' }}
-              </button>
-            </div>
-            <div class="action-btns">
-              <button class="btn btn-sm btn-ghost" @click="openFinishModal">finish ✍️</button>
-            </div>
-          </div>
-
-          <!-- Finalize (in_progress) -->
-          <div v-if="report.status === 'in_progress'" class="action-section">
-            <textarea
-              v-model="action.admin_response"
-              class="form-textarea"
-              :maxlength="textLimit"
-              placeholder="Admin response / notes…"
-              rows="4"
-            ></textarea>
-
-            <!-- Review target actions -->
-            <div class="checkbox-group" v-if="report.target_type === 'review'">
-              <label class="checkbox-label">
-                <input type="checkbox" v-model="action.delete_target_review" />
-                Delete the reported review
-              </label>
-            </div>
-
-            <!-- Place target actions -->
-            <div v-if="report.target_type === 'place' && report.target" class="radio-group">
-              <div class="section-label mb-1">Place Action</div>
-              <label class="radio-label">
-                <input type="radio" v-model="action.place_action" value="none" />
-                No action on place
-              </label>
-              <label class="radio-label">
-                <input type="radio" v-model="action.place_action" value="reject" />
-                Reject place (hide from listings)
-              </label>
-              <label class="radio-label">
-                <input type="radio" v-model="action.place_action" value="delete" />
-                Delete place permanently
-              </label>
-            </div>
-
-            <!-- User block/unblock toggle -->
-            <div class="user-action-group" v-if="report.reported_user_id">
-              <div class="user-block-status" v-if="reportedUserDetail">
-                <span class="text-sm text-muted">User is currently:</span>
-                <span class="badge" :class="reportedUserDetail.blocked ? 'badge-danger' : 'badge-success'">
-                  {{ reportedUserDetail.blocked ? 'Blocked' : 'Active' }}
-                </span>
-              </div>
-              <label class="checkbox-label">
-                <input type="checkbox" v-model="action.toggle_user_block" />
-                {{ reportedUserDetail?.blocked ? 'Unblock this user' : 'Block this user' }}
-              </label>
-            </div>
-
-            <div class="action-btns">
-              <button class="btn btn-sm btn-ghost" @click="openFinishModal">finish ✍️</button>
-              <button class="btn btn-ghost" :disabled="submitting" @click="dismiss">Dismiss</button>
-              <button class="btn btn-danger" :disabled="submitting" @click="openConfirm">Enforce Action</button>
-            </div>
-          </div>
-
-          <div v-if="actionError" class="error-msg mt-2">{{ actionError }}</div>
-          <div v-if="actionSuccess" class="success-msg mt-2">{{ actionSuccess }}</div>
-        </div>
-
         <!-- Dismissed: can re-open -->
-        <div class="action-card card" v-else-if="report.status === 'dismissed'">
+        <div class="action-card card" v-if="report.status === 'dismissed'">
           <h3 class="action-title">Dismissed</h3>
           <p class="text-muted text-sm">This report was dismissed. You can re-open it for further investigation.</p>
           <button class="btn btn-ghost" :disabled="submitting" @click="reopen">
@@ -196,24 +106,26 @@
           <p class="text-muted text-sm">This report has been actioned.</p>
         </div>
       </div>
+
+      <!-- Action buttons (pending / in_progress) -->
+      <div class="btns-row" v-if="report.status === 'pending' || report.status === 'in_progress'">
+        <div v-if="actionError" class="error-msg">{{ actionError }}</div>
+        <div v-if="actionSuccess" class="success-msg">{{ actionSuccess }}</div>
+        <div class="btns-group">
+          <button v-if="report.status === 'pending'" class="btn btn-ghost" :disabled="submitting" @click="keepInProgressModal = true">Keep In Progress 🔄</button>
+          <button class="btn btn-primary" :disabled="submitting" @click="openFinishModal">Finish ✍️</button>
+        </div>
+      </div>
     </template>
 
-    <!-- Confirmation modal for enforce -->
-    <div class="modal-overlay" v-if="confirmOpen" @click="confirmOpen = false">
+    <!-- Keep In Progress confirmation modal -->
+    <div class="modal-overlay" v-if="keepInProgressModal" @click="keepInProgressModal = false">
       <div class="modal card" @click.stop>
-        <h3>Confirm Enforcement</h3>
-        <p>This will set the report to <strong>actioned</strong>.</p>
-        <ul class="confirm-list">
-          <li v-if="action.delete_target_review">Review will be <strong>deleted</strong></li>
-          <li v-if="report?.target_type === 'place' && action.place_action === 'reject'">Place will be <strong>rejected</strong></li>
-          <li v-if="report?.target_type === 'place' && action.place_action === 'delete'">Place will be <strong>permanently deleted</strong></li>
-          <li v-if="action.toggle_user_block">
-            Reported user will be <strong>{{ reportedUserDetail?.blocked ? 'unblocked' : 'blocked' }}</strong>
-          </li>
-        </ul>
+        <h3>Keep In Progress?</h3>
+        <p>Are you sure you want to mark this report as in progress?</p>
         <div class="modal-actions">
-          <button class="btn btn-ghost" @click="confirmOpen = false">Cancel</button>
-          <button class="btn btn-danger" :disabled="submitting" @click="enforce">
+          <button class="btn btn-ghost" @click="keepInProgressModal = false">Cancel</button>
+          <button class="btn btn-primary" :disabled="submitting" @click="keepInProgress">
             {{ submitting ? 'Saving…' : 'Confirm' }}
           </button>
         </div>
@@ -292,10 +204,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { useRouter, useRoute, RouterLink } from 'vue-router'
+import { ref, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { getAdminReport, reviewAdminReport } from '../../api/adminReports.js'
-import { adminGetUser, adminBlockUser, adminUnblockUser, adminSetPlaceStatus, adminDeletePlace, adminDeleteReview } from '../../api/adminModeration.js'
+import { adminGetUser, adminBlockUser, adminSetPlaceStatus, adminDeleteReview } from '../../api/adminModeration.js'
 import { staticUrl } from '../../api/client.js'
 
 function avatarUrl(key) { return staticUrl(key) }
@@ -310,20 +222,11 @@ const report = ref(null)
 const submitting = ref(false)
 const actionError = ref('')
 const actionSuccess = ref('')
-const confirmOpen = ref(false)
-const textLimit = 1000
+const keepInProgressModal = ref(false)
 
 const reportedUserDetail = ref(null)
 const userLoading = ref(false)
 
-const action = reactive({
-  admin_response: '',
-  delete_target_review: false,
-  place_action: 'none',
-  toggle_user_block: false,
-})
-
-// Modal state
 const userModal = ref({ open: false, user: null })
 const targetModal = ref({ open: false })
 const finishModal = ref({ open: false, status: 'dismissed', admin_response: '' })
@@ -358,7 +261,6 @@ async function loadReport() {
   error.value = ''
   try {
     report.value = await getAdminReport(route.params.id)
-    action.admin_response = report.value.admin_response || ''
     if (report.value.reported_user_id) {
       loadReportedUser(report.value.reported_user_id)
     }
@@ -369,31 +271,13 @@ async function loadReport() {
   }
 }
 
-async function takeIntoWork() {
+async function keepInProgress() {
   submitting.value = true
   actionError.value = ''
+  keepInProgressModal.value = false
   try {
-    report.value = await reviewAdminReport(route.params.id, {
-      status: 'in_progress',
-      admin_response: action.admin_response || undefined,
-    })
-    actionSuccess.value = 'Marked as in progress.'
-  } catch (e) {
-    actionError.value = e.message
-  } finally {
-    submitting.value = false
-  }
-}
-
-async function dismiss() {
-  submitting.value = true
-  actionError.value = ''
-  try {
-    report.value = await reviewAdminReport(route.params.id, {
-      status: 'dismissed',
-      admin_response: action.admin_response || undefined,
-    })
-    actionSuccess.value = 'Report dismissed.'
+    report.value = await reviewAdminReport(route.params.id, { status: 'in_progress' })
+    actionSuccess.value = 'Kept in progress.'
   } catch (e) {
     actionError.value = e.message
   } finally {
@@ -406,7 +290,6 @@ async function reopen() {
   actionError.value = ''
   try {
     report.value = await reviewAdminReport(route.params.id, { status: 'in_progress' })
-    action.admin_response = report.value.admin_response || ''
     actionSuccess.value = 'Report re-opened.'
   } catch (e) {
     actionError.value = e.message
@@ -415,54 +298,6 @@ async function reopen() {
   }
 }
 
-function openConfirm() {
-  confirmOpen.value = true
-}
-
-async function enforce() {
-  submitting.value = true
-  actionError.value = ''
-  confirmOpen.value = false
-  try {
-    // 1. Place action (separate API call)
-    if (report.value.target_type === 'place' && report.value.target) {
-      if (action.place_action === 'reject') {
-        await adminSetPlaceStatus(report.value.target_id, -10)
-      } else if (action.place_action === 'delete') {
-        await adminDeletePlace(report.value.target_id)
-      }
-    }
-
-    // 2. User block/unblock (separate API call)
-    if (action.toggle_user_block && report.value.reported_user_id) {
-      if (reportedUserDetail.value?.blocked) {
-        await adminUnblockUser(report.value.reported_user_id)
-      } else {
-        await adminBlockUser(report.value.reported_user_id)
-      }
-      loadReportedUser(report.value.reported_user_id)
-    }
-
-    // 3. Update report status
-    const payload = {
-      status: 'actioned',
-      admin_response: action.admin_response || undefined,
-      block_reported_user: false,
-    }
-    if (report.value.target_type === 'review') {
-      payload.delete_target_review = action.delete_target_review || false
-    }
-
-    report.value = await reviewAdminReport(route.params.id, payload)
-    actionSuccess.value = 'Report actioned.'
-  } catch (e) {
-    actionError.value = e.message
-  } finally {
-    submitting.value = false
-  }
-}
-
-// Modal openers
 function openUserModal(user) {
   modalError.value = ''
   userModal.value = { open: true, user }
@@ -539,6 +374,8 @@ onMounted(loadReport)
   align-items: start;
 }
 
+.span-full { grid-column: 1 / -1; }
+
 .report-card, .action-card {
   padding: 24px;
   display: flex;
@@ -555,6 +392,14 @@ onMounted(loadReport)
   letter-spacing: 0.06em;
   color: var(--text-3);
 }
+
+.section-label-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.badge { align-self: flex-start; }
 
 .user-chip {
   display: flex;
@@ -619,20 +464,9 @@ onMounted(loadReport)
 }
 .target-clickable:hover { background: var(--surface-2); }
 
-.view-link {
-  font-size: 0.8rem;
-  color: var(--primary);
-  margin-top: 4px;
-  display: inline-block;
-  text-decoration: none;
-}
-.view-link:hover { text-decoration: underline; }
-
 .meta-row { flex-direction: row; gap: 16px; }
 
 .action-title { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
-.action-section { display: flex; flex-direction: column; gap: 12px; }
-.action-group { display: flex; flex-direction: column; gap: 10px; }
 
 .form-textarea {
   width: 100%;
@@ -648,35 +482,6 @@ onMounted(loadReport)
   box-sizing: border-box;
 }
 .form-textarea:focus { outline: none; border-color: var(--primary); }
-
-.checkbox-group { }
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.875rem;
-  color: var(--text);
-  cursor: pointer;
-}
-
-.radio-group { display: flex; flex-direction: column; gap: 6px; }
-.radio-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.875rem;
-  color: var(--text);
-  cursor: pointer;
-}
-
-.user-action-group { display: flex; flex-direction: column; gap: 6px; }
-.user-block-status {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.action-btns { display: flex; gap: 8px; justify-content: flex-end; align-items: center; }
 
 .error-msg {
   padding: 10px 12px;
@@ -698,7 +503,6 @@ onMounted(loadReport)
 
 .mt-2 { margin-top: 8px; }
 .mt-1 { margin-top: 4px; }
-.mb-1 { margin-bottom: 4px; }
 
 .resolved { opacity: 0.7; }
 
@@ -732,7 +536,19 @@ onMounted(loadReport)
 .state-msg { padding: 32px; text-align: center; color: var(--text-2); }
 .state-msg.error { color: #ef4444; }
 
-.ml-1 { margin-left: 6px; }
+.btns-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.btns-group {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
 .text-sm { font-size: 0.8rem; }
 .text-muted { color: var(--text-2); }
 
@@ -761,15 +577,6 @@ onMounted(loadReport)
 .modal h3 { font-size: 1.1rem; font-weight: 700; }
 .modal p { font-size: 0.9rem; color: var(--text-2); }
 .modal-title { font-size: 1rem; font-weight: 700; }
-
-.confirm-list {
-  font-size: 0.875rem;
-  color: var(--text-2);
-  padding-left: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
 
 .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
 
