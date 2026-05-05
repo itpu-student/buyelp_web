@@ -25,7 +25,7 @@
 
           <div class="card-section">
             <div class="section-label">Reporter</div>
-            <div class="user-chip" v-if="report.reporter_user">
+            <div class="user-chip" v-if="report.reporter_user" @click="openUserModal(report.reporter_user)">
               <img v-if="report.reporter_user.avatar_key" :src="avatarUrl(report.reporter_user.avatar_key)" class="avatar" />
               <div v-else class="avatar avatar-placeholder">{{ initials(report.reporter_user.name) }}</div>
               <div class="user-info">
@@ -46,11 +46,13 @@
             <div>
               <span class="target-type-tag" :class="report.target_type === 'review' ? 'target-badge-review' : 'target-badge-place'">{{ report.target_type === 'review' ? '📋 Review' : '🏢 Place' }}</span>
               <template v-if="report.target">
-                <div class="target-name-row ml-1">
-                  <img v-if="report.target.avatar_key" :src="avatarUrl(report.target.avatar_key)" class="target-logo" />
-                  <span class="font-medium">{{ report.target.name }}</span>
+                <div class="target-clickable" @click="openTargetModal()">
+                  <div class="target-name-row ml-1">
+                    <img v-if="report.target.avatar_key" :src="avatarUrl(report.target.avatar_key)" class="target-logo" />
+                    <span class="font-medium">{{ report.target.name }}</span>
+                  </div>
+                  <p v-if="report.target.content" class="report-text mt-1 content-preview">{{ report.target.content }}</p>
                 </div>
-                <p v-if="report.target.content" class="report-text mt-1 content-preview">{{ report.target.content }}</p>
                 <RouterLink
                   :to="report.target_type === 'review' ? '/admin/reviews' : '/admin/places'"
                   class="view-link"
@@ -64,7 +66,7 @@
 
           <div class="card-section" v-if="report.reported_user">
             <div class="section-label">Reported User</div>
-            <div class="user-chip">
+            <div class="user-chip" @click="openUserModal(report.reported_user)">
               <img v-if="report.reported_user.avatar_key" :src="avatarUrl(report.reported_user.avatar_key)" class="avatar" />
               <div v-else class="avatar avatar-placeholder">{{ initials(report.reported_user.name) }}</div>
               <div class="user-info">
@@ -112,6 +114,9 @@
               <button class="btn btn-primary" :disabled="submitting" @click="takeIntoWork">
                 {{ submitting ? 'Saving…' : 'Take Into Work' }}
               </button>
+            </div>
+            <div class="action-btns">
+              <button class="btn btn-sm btn-ghost" @click="openFinishModal">finish ✍️</button>
             </div>
           </div>
 
@@ -165,6 +170,7 @@
             </div>
 
             <div class="action-btns">
+              <button class="btn btn-sm btn-ghost" @click="openFinishModal">finish ✍️</button>
               <button class="btn btn-ghost" :disabled="submitting" @click="dismiss">Dismiss</button>
               <button class="btn btn-danger" :disabled="submitting" @click="openConfirm">Enforce Action</button>
             </div>
@@ -213,6 +219,75 @@
         </div>
       </div>
     </div>
+
+    <!-- User modal -->
+    <div class="modal-overlay" v-if="userModal.open" @click="userModal.open = false">
+      <div class="modal card" @click.stop>
+        <div class="modal-user-info" v-if="userModal.user">
+          <img v-if="userModal.user.avatar_key" :src="avatarUrl(userModal.user.avatar_key)" class="modal-avatar" />
+          <div v-else class="modal-avatar avatar-placeholder">{{ initials(userModal.user.name) }}</div>
+          <div>
+            <div class="modal-user-name">{{ userModal.user.name }}</div>
+            <div class="modal-user-username">@{{ userModal.user.username }}</div>
+          </div>
+        </div>
+        <div v-if="modalError" class="error-msg">{{ modalError }}</div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" @click="userModal.open = false">Cancel</button>
+          <button class="btn btn-danger" :disabled="modalSubmitting" @click="doBlockUser">
+            {{ modalSubmitting ? 'Saving…' : 'Block User' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Target modal -->
+    <div class="modal-overlay" v-if="targetModal.open" @click="targetModal.open = false">
+      <div class="modal card" @click.stop>
+        <div v-if="report?.target">
+          <span class="target-type-tag" :class="report.target_type === 'review' ? 'target-badge-review' : 'target-badge-place'">
+            {{ report.target_type === 'review' ? '📋 Review' : '🏢 Place' }}
+          </span>
+          <div class="target-name-row mt-1">
+            <img v-if="report.target.avatar_key" :src="avatarUrl(report.target.avatar_key)" class="target-logo" />
+            <span class="font-medium">{{ report.target.name }}</span>
+          </div>
+          <p v-if="report.target.content" class="target-content-preview mt-1">{{ report.target.content }}</p>
+        </div>
+        <div v-if="modalError" class="error-msg">{{ modalError }}</div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" @click="targetModal.open = false">Cancel</button>
+          <button class="btn btn-danger" :disabled="modalSubmitting" @click="doTargetAction">
+            {{ modalSubmitting ? 'Saving…' : report?.target_type === 'review' ? 'Delete Review' : 'Suspend Place' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Finish modal -->
+    <div class="modal-overlay" v-if="finishModal.open" @click="finishModal.open = false">
+      <div class="modal card" @click.stop>
+        <h3 class="modal-title">Finish Report</h3>
+        <div class="modal-field">
+          <label class="field-label">Outcome</label>
+          <select v-model="finishModal.status" class="finish-select">
+            <option value="dismissed">dismissed</option>
+            <option value="actioned">actioned</option>
+          </select>
+        </div>
+        <div class="modal-field">
+          <label class="field-label">Admin Response</label>
+          <textarea v-model="finishModal.admin_response" class="form-textarea" rows="3" placeholder="Optional note…" maxlength="1000"></textarea>
+        </div>
+        <div v-if="modalError" class="error-msg">{{ modalError }}</div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" @click="finishModal.open = false">Cancel</button>
+          <button class="btn btn-primary" :disabled="modalSubmitting" @click="doFinishReport">
+            {{ modalSubmitting ? 'Saving…' : 'Submit' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -220,7 +295,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter, useRoute, RouterLink } from 'vue-router'
 import { getAdminReport, reviewAdminReport } from '../../api/adminReports.js'
-import { adminGetUser, adminBlockUser, adminUnblockUser, adminSetPlaceStatus, adminDeletePlace } from '../../api/adminModeration.js'
+import { adminGetUser, adminBlockUser, adminUnblockUser, adminSetPlaceStatus, adminDeletePlace, adminDeleteReview } from '../../api/adminModeration.js'
 import { staticUrl } from '../../api/client.js'
 
 function avatarUrl(key) { return staticUrl(key) }
@@ -247,6 +322,13 @@ const action = reactive({
   place_action: 'none',
   toggle_user_block: false,
 })
+
+// Modal state
+const userModal = ref({ open: false, user: null })
+const targetModal = ref({ open: false })
+const finishModal = ref({ open: false, status: 'dismissed', admin_response: '' })
+const modalSubmitting = ref(false)
+const modalError = ref('')
 
 function statusClass(s) {
   if (s === 'pending') return 'badge-warning'
@@ -380,6 +462,70 @@ async function enforce() {
   }
 }
 
+// Modal openers
+function openUserModal(user) {
+  modalError.value = ''
+  userModal.value = { open: true, user }
+}
+
+function openTargetModal() {
+  modalError.value = ''
+  targetModal.value = { open: true }
+}
+
+function openFinishModal() {
+  modalError.value = ''
+  finishModal.value = { open: true, status: 'dismissed', admin_response: '' }
+}
+
+async function doBlockUser() {
+  modalSubmitting.value = true
+  modalError.value = ''
+  try {
+    await adminBlockUser(userModal.value.user.id)
+    userModal.value.open = false
+    loadReport()
+  } catch (e) {
+    modalError.value = e.message
+  } finally {
+    modalSubmitting.value = false
+  }
+}
+
+async function doTargetAction() {
+  modalSubmitting.value = true
+  modalError.value = ''
+  try {
+    if (report.value.target_type === 'review') {
+      await adminDeleteReview(report.value.target_id)
+    } else {
+      await adminSetPlaceStatus(report.value.target_id, 'suspended')
+    }
+    targetModal.value.open = false
+    loadReport()
+  } catch (e) {
+    modalError.value = e.message
+  } finally {
+    modalSubmitting.value = false
+  }
+}
+
+async function doFinishReport() {
+  modalSubmitting.value = true
+  modalError.value = ''
+  try {
+    report.value = await reviewAdminReport(route.params.id, {
+      status: finishModal.value.status,
+      admin_response: finishModal.value.admin_response || undefined,
+    })
+    finishModal.value.open = false
+  } catch (e) {
+    modalError.value = e.message
+  } finally {
+    modalSubmitting.value = false
+  }
+}
+
 onMounted(loadReport)
 </script>
 
@@ -410,7 +556,18 @@ onMounted(loadReport)
   color: var(--text-3);
 }
 
-.user-chip { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding: 3px 5px;
+  margin: -3px -5px;
+  transition: background var(--transition);
+}
+.user-chip:hover { background: var(--surface-2); }
 
 .avatar {
   width: 32px;
@@ -452,6 +609,16 @@ onMounted(loadReport)
   -webkit-box-orient: vertical;
 }
 
+.target-clickable {
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding: 4px 6px;
+  margin: 4px -6px 0;
+  transition: background var(--transition);
+  display: inline-block;
+}
+.target-clickable:hover { background: var(--surface-2); }
+
 .view-link {
   font-size: 0.8rem;
   color: var(--primary);
@@ -478,6 +645,7 @@ onMounted(loadReport)
   resize: vertical;
   transition: border-color var(--transition);
   font-family: inherit;
+  box-sizing: border-box;
 }
 .form-textarea:focus { outline: none; border-color: var(--primary); }
 
@@ -508,7 +676,7 @@ onMounted(loadReport)
   gap: 6px;
 }
 
-.action-btns { display: flex; gap: 8px; justify-content: flex-end; }
+.action-btns { display: flex; gap: 8px; justify-content: flex-end; align-items: center; }
 
 .error-msg {
   padding: 10px 12px;
@@ -552,6 +720,15 @@ onMounted(loadReport)
 .target-name-row { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
 .target-logo { width: 20px; height: 20px; border-radius: 4px; object-fit: cover; flex-shrink: 0; }
 
+.target-content-preview {
+  font-size: 0.8rem;
+  color: var(--text-2);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 .state-msg { padding: 32px; text-align: center; color: var(--text-2); }
 .state-msg.error { color: #ef4444; }
 
@@ -559,7 +736,7 @@ onMounted(loadReport)
 .text-sm { font-size: 0.8rem; }
 .text-muted { color: var(--text-2); }
 
-/* Confirmation modal */
+/* Modals */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -583,6 +760,7 @@ onMounted(loadReport)
 
 .modal h3 { font-size: 1.1rem; font-weight: 700; }
 .modal p { font-size: 0.9rem; color: var(--text-2); }
+.modal-title { font-size: 1rem; font-weight: 700; }
 
 .confirm-list {
   font-size: 0.875rem;
@@ -594,6 +772,37 @@ onMounted(loadReport)
 }
 
 .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+.modal-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.modal-user-name { font-weight: 600; font-size: 0.95rem; }
+.modal-user-username { font-size: 0.8rem; color: var(--text-2); }
+
+.modal-field { display: flex; flex-direction: column; gap: 6px; }
+.field-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-2); }
+
+.finish-select {
+  padding: 8px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.875rem;
+  cursor: pointer;
+  width: 100%;
+}
 
 @media (max-width: 768px) {
   .detail-grid { grid-template-columns: 1fr; }
