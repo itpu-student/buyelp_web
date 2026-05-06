@@ -16,3 +16,11 @@ export function adminListAdmins(params = {}) {
 export function adminGetAdmin(id) {
   return apiFetch(`/api/admin/admins/${id}`, { adminAuth: true })
 }
+
+export function adminCreateAdmin(body) {
+  return apiFetch('/api/admin/admins', { method: 'POST', body, adminAuth: true })
+}
+
+export function adminEditAdmin(id, body) {
+  return apiFetch(`/api/admin/admins/${id}`, { method: 'PUT', body, adminAuth: true })
+}
