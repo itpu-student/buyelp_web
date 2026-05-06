@@ -170,31 +170,22 @@
 
               <div v-if="store.isLoggedIn" class="report-place-wrap">
                 <div class="divider-sidebar"></div>
-                <button type="button" class="report-place-btn" @click="placeReportOpen = true">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-                  Report this place
-                </button>
+                <div class="place-actions-row">
+                  <button type="button" class="report-place-btn" @click="placeReportOpen = true">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+                    Report this place
+                  </button>
+                  <button v-if="canClaim" type="button" class="report-place-btn claim-place-btn" @click="claimModalOpen = true">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+                    Claim this place
+                  </button>
+                </div>
               </div>
 
-              <div v-if="canClaim || isOwner" class="ownership-block">
+              <div v-if="isOwner" class="ownership-block">
                 <div class="divider-sidebar"></div>
 
-                <button v-if="canClaim && !claimOpen" type="button" class="btn btn-secondary btn-sm" @click="claimOpen = true">
-                  Claim this place
-                </button>
-                <div v-if="canClaim && claimOpen" class="ownership-form">
-                  <input v-model="claimPhone" class="form-input" placeholder="Contact phone +998..." />
-                  <textarea v-model="claimNote" class="form-input" rows="2" placeholder="Optional note"></textarea>
-                  <div class="row-gap">
-                    <button class="btn btn-primary btn-sm" :disabled="claimSubmitting || !claimPhone" @click="submitClaim">
-                      {{ claimSubmitting ? 'Submitting…' : 'Submit claim' }}
-                    </button>
-                    <button class="btn btn-ghost btn-sm" @click="claimOpen = false">Cancel</button>
-                  </div>
-                </div>
-                <p v-if="claimMsg" class="text-xs text-muted">{{ claimMsg }}</p>
-
-                <button v-if="isOwner && !editOpen" type="button" class="btn btn-secondary btn-sm" @click="openEdit">
+                <button v-if="!editOpen" type="button" class="btn btn-secondary btn-sm" @click="openEdit">
                   Edit place
                 </button>
                 <div v-if="isOwner && editOpen" class="ownership-form">
@@ -256,6 +247,13 @@
     @close="placeReportOpen = false"
     @submitted="placeReportOpen = false"
   />
+
+  <ClaimModal
+    v-if="claimModalOpen && place"
+    :place-id="place._uuid"
+    @close="claimModalOpen = false"
+    @submitted="claimModalOpen = false"
+  />
 </template>
 
 <script setup>
@@ -267,13 +265,13 @@ import { store } from "../store/index.js"
 import { getPlace, updatePlace } from "../api/places.js"
 import { listPlaceReviews, createReview } from "../api/reviews.js"
 import { normalizePlace, normalizeReview } from "../api/normalize.js"
-import { createClaim } from "../api/claims.js"
 import { uploadFile } from "../api/files.js"
 import { categoriesState, ensureCategoriesLoaded } from "../store/categories.js"
 import ReviewCard from "../components/ReviewCard.vue"
 import ReviewInput from "../components/ReviewInput.vue"
 import ReviewDetailModal from "../components/ReviewDetailModal.vue"
 import ReportModal from "../components/ReportModal.vue"
+import ClaimModal from "../components/ClaimModal.vue"
 import StarRating from "../components/StarRating.vue"
 import SidebarHours from "../components/SidebarHours.vue"
 import SvgMapItem from "../components/SvgMapItem.vue"
@@ -351,8 +349,8 @@ const categoryLabel = computed(() => {
   return slug
 })
 
-const isOwner = computed(() => !!(store.user && place.value && place.value.claimedBy && place.value.claimedBy === store.user.id))
-const canClaim = computed(() => !!(store.isLoggedIn && place.value && !place.value.claimedBy && place.value.status === 10))
+const isOwner = computed(() => !!(store.user && place.value?.isClaimed && place.value?.claimedBy === store.user.id))
+const canClaim = computed(() => !!(store.isLoggedIn && place.value && !place.value.isClaimed && place.value.status === "approved"))
 
 // Review detail modal
 const detailReview = ref(null)
@@ -377,24 +375,7 @@ function openReviewReport(review) {
   reportTarget.value = { id: review.id, type: 'review' }
 }
 
-const claimOpen = ref(false)
-const claimPhone = ref("")
-const claimNote = ref("")
-const claimSubmitting = ref(false)
-const claimMsg = ref("")
-
-async function submitClaim() {
-  if (!place.value) return
-  claimSubmitting.value = true
-  claimMsg.value = ""
-  try {
-    await createClaim({ place_id: place.value._uuid, phone: claimPhone.value, note: claimNote.value })
-    claimMsg.value = "Claim submitted — admin will review it."
-    claimOpen.value = false
-  } catch (e) {
-    claimMsg.value = e.message || "Claim failed"
-  } finally { claimSubmitting.value = false }
-}
+const claimModalOpen = ref(false)
 
 const editOpen = ref(false)
 const editForm = reactive({ phone: "", descEn: "", descUz: "", logo_key: "", images: [] })
@@ -739,6 +720,7 @@ onBeforeUnmount(() => {
 .attr-name { color: var(--text-2); font-weight: 600; }
 
 .report-place-wrap { padding: 0 0 4px; }
+.place-actions-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .report-place-btn {
   background: none; border: none; cursor: pointer;
   display: flex; align-items: center; gap: 6px;
@@ -746,6 +728,7 @@ onBeforeUnmount(() => {
   transition: color var(--transition);
 }
 .report-place-btn:hover { color: #dc2626; }
+.claim-place-btn:hover { color: var(--primary); }
 
 .sidebar-map-wrap {
   margin-top: 16px; padding: 12px;
