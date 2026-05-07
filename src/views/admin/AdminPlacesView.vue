@@ -85,6 +85,10 @@
                   :disabled="actionTarget === p.id"
                   @click="setStatus(p, 'rejected')"
                 >Reject</button>
+                <RouterLink
+                  :to="`/admin/places/${p.slug || p.id}/edit`"
+                  class="btn btn-sm btn-ghost"
+                >Edit</RouterLink>
               </td>
             </tr>
           </TransitionGroup>
@@ -118,109 +122,13 @@
       </div>
     </div>
 
-    <!-- Edit modal -->
-    <div class="modal-overlay" v-if="editTarget" @click="editTarget = null">
-      <div class="modal card modal-wide" @click.stop>
-        <div class="modal-header">
-          <h3>Edit Place</h3>
-        </div>
-
-        <div class="modal-body">
-          <div class="form-grid">
-            <div class="field field-full">
-              <label>Name</label>
-              <input v-model="editForm.name" type="text" class="input" />
-            </div>
-
-            <div class="field field-full">
-              <label>Phone</label>
-              <input v-model="editForm.phone" type="text" class="input" />
-            </div>
-
-            <div class="field">
-              <label>Address (EN)</label>
-              <input v-model="editForm.address.en" type="text" class="input" />
-            </div>
-            <div class="field">
-              <label>Address (UZ)</label>
-              <input v-model="editForm.address.uz" type="text" class="input" />
-            </div>
-
-            <div class="field">
-              <label>Description (EN)</label>
-              <textarea v-model="editForm.description.en" class="input" rows="3"></textarea>
-            </div>
-            <div class="field">
-              <label>Description (UZ)</label>
-              <textarea v-model="editForm.description.uz" class="input" rows="3"></textarea>
-            </div>
-
-            <div class="field">
-              <label>Category</label>
-              <select v-model="editForm.category_id" class="input">
-                <option value="">— select —</option>
-                <option v-for="c in categoriesState.list" :key="c.id" :value="c.id">
-                  {{ categoryName(c.name) }}
-                </option>
-              </select>
-            </div>
-
-            <div class="field">
-              <!-- spacer -->
-            </div>
-
-            <div class="field">
-              <label>Latitude</label>
-              <input v-model.number="editForm.lat" type="number" step="any" class="input" />
-            </div>
-            <div class="field">
-              <label>Longitude</label>
-              <input v-model.number="editForm.lon" type="number" step="any" class="input" />
-            </div>
-
-            <div class="field field-full">
-              <label>Logo</label>
-              <div class="file-row">
-                <img v-if="editForm.logo_key" :src="staticUrl(editForm.logo_key)" class="thumb" alt="logo" />
-                <input type="file" accept="image/*" @change="onLogoChange" />
-              </div>
-            </div>
-
-            <div class="field field-full">
-              <label>Images</label>
-              <div class="images-row">
-                <div v-for="(key, idx) in editForm.images" :key="key" class="img-thumb-wrap">
-                  <img :src="staticUrl(key)" class="thumb" alt="" />
-                  <button class="thumb-remove" @click="editForm.images.splice(idx, 1)">×</button>
-                </div>
-              </div>
-              <input type="file" accept="image/*" multiple @change="onImagesChange" />
-              <div v-if="editForm._newImages.length" class="text-sm text-muted">
-                {{ editForm._newImages.length }} new image(s) queued
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="modal-footer">
-          <div v-if="editError" class="edit-error">{{ editError }}</div>
-          <div class="modal-actions">
-            <button class="btn btn-ghost" @click="editTarget = null">Cancel</button>
-            <button class="btn btn-primary" :disabled="editSubmitting" @click="submitEdit">
-              {{ editSubmitting ? 'Saving…' : 'Save' }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
-import { adminListPlaces, adminSetPlaceStatus, adminUpdatePlace } from '../../api/adminModeration.js'
+import { adminListPlaces, adminSetPlaceStatus } from '../../api/adminModeration.js'
 import { categoriesState, ensureCategoriesLoaded } from '../../store/categories.js'
-import { uploadFile } from '../../api/files.js'
 import { staticUrl } from '../../api/client.js'
 import { i18nState } from '../../i18n/index.js'
 
@@ -232,7 +140,6 @@ const limit = 20
 const total = ref(0)
 const actionTarget = ref(null)
 const userModal = ref(null)
-
 const filters = reactive({ status: 'pending' })
 const totalPages = computed(() => Math.ceil(total.value / limit))
 
@@ -243,24 +150,6 @@ const statuses = [
   { value: 'rejected', label: 'Rejected' },
   { value: 'suspended', label: 'Suspended' },
 ]
-
-// Edit modal state
-const editTarget = ref(null)
-const editSubmitting = ref(false)
-const editError = ref('')
-const editForm = reactive({
-  name: '',
-  phone: '',
-  address: { en: '', uz: '' },
-  description: { en: '', uz: '' },
-  category_id: '',
-  lat: 0,
-  lon: 0,
-  logo_key: '',
-  images: [],
-  _logoFile: null,
-  _newImages: [],
-})
 
 const CATEGORY_ICONS = { restaurants: '🍽️', auto: '🚗', health: '🏥', activities: '🏔️', sports: '⚽', tabiat: '🌿' }
 function categoryEmoji(slug) { return CATEGORY_ICONS[slug] || '📍' }
@@ -314,67 +203,6 @@ async function setStatus(place, status) {
   } catch (e) {
     error.value = e.message
     actionTarget.value = null
-  }
-}
-
-function openEdit(place) {
-  editTarget.value = place
-  editError.value = ''
-  editForm.name = place.name || ''
-  editForm.phone = place.phone || ''
-  editForm.address = { en: place.address?.en || '', uz: place.address?.uz || '' }
-  editForm.description = { en: place.description?.en || '', uz: place.description?.uz || '' }
-  editForm.category_id = place.category_id || ''
-  editForm.lat = place.lat || 0
-  editForm.lon = place.lon || 0
-  editForm.logo_key = place.logo_key || ''
-  editForm.images = [...(place.images || [])]
-  editForm._logoFile = null
-  editForm._newImages = []
-}
-
-function onLogoChange(e) {
-  editForm._logoFile = e.target.files[0] || null
-}
-
-function onImagesChange(e) {
-  editForm._newImages = Array.from(e.target.files)
-}
-
-async function submitEdit() {
-  editSubmitting.value = true
-  editError.value = ''
-  try {
-    let logo_key = editForm.logo_key
-    if (editForm._logoFile) {
-      const r = await uploadFile(editForm._logoFile, 'place', { adminAuth: true })
-      logo_key = r.key
-    }
-
-    const newImageKeys = await Promise.all(
-      editForm._newImages.map(f => uploadFile(f, 'place', { adminAuth: true }).then(r => r.key))
-    )
-
-    const payload = {
-      name: editForm.name,
-      phone: editForm.phone,
-      address: editForm.address,
-      description: editForm.description,
-      category_id: editForm.category_id,
-      lat: editForm.lat,
-      lon: editForm.lon,
-      logo_key,
-      images: [...editForm.images, ...newImageKeys],
-    }
-
-    const updated = await adminUpdatePlace(editTarget.value.id, payload)
-    const idx = items.value.findIndex(p => p.id === editTarget.value.id)
-    if (idx >= 0) items.value[idx] = { ...items.value[idx], ...(updated || payload) }
-    editTarget.value = null
-  } catch (e) {
-    editError.value = e.message
-  } finally {
-    editSubmitting.value = false
   }
 }
 
@@ -594,92 +422,4 @@ onMounted(() => {
 }
 .link-btn:hover { color: var(--text); }
 
-/* Modal */
-.modal-overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 2000; backdrop-filter: blur(4px);
-  overflow: hidden;
-}
-
-.modal {
-  display: flex; flex-direction: column;
-  animation: fadeUp 0.2s ease;
-  padding: 0;
-}
-
-.modal-sm {
-  padding: 28px; max-width: 380px; width: 90%; gap: 16px;
-}
-
-.modal-wide {
-  max-width: 620px; width: 90%;
-  max-height: 88vh;
-  overflow: hidden;
-}
-
-.modal-header {
-  padding: 20px 24px 16px;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-
-.modal-header h3 { font-size: 1.1rem; font-weight: 700; margin: 0; }
-
-.modal-body {
-  padding: 20px 24px;
-  overflow-y: auto;
-  flex: 1;
-}
-
-.modal-footer {
-  padding: 14px 24px;
-  border-top: 1px solid var(--border);
-  flex-shrink: 0;
-  display: flex; flex-direction: column; gap: 8px;
-}
-
-.modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
-
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-
-.field { display: flex; flex-direction: column; gap: 5px; }
-.field-full { grid-column: 1 / -1; }
-
-label { font-size: 0.78rem; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.04em; }
-
-.input {
-  padding: 8px 10px;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--text);
-  font-size: 0.875rem;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-textarea.input { resize: vertical; font-family: inherit; }
-
-.file-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-
-.images-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
-
-.thumb { width: 56px; height: 56px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--border); }
-
-.img-thumb-wrap { position: relative; display: inline-block; }
-.thumb-remove {
-  position: absolute; top: -6px; right: -6px;
-  background: #ef4444; color: #fff; border: none;
-  border-radius: 50%; width: 18px; height: 18px;
-  font-size: 12px; line-height: 18px; text-align: center;
-  cursor: pointer; padding: 0;
-}
-
-.edit-error { color: #ef4444; font-size: 0.85rem; }
 </style>

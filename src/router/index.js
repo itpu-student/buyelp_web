@@ -18,6 +18,8 @@ import AdminReviewsView from "../views/admin/AdminReviewsView.vue"
 import AdminUsersView from "../views/admin/AdminUsersView.vue"
 import AdminClaimsView from "../views/admin/AdminClaimsView.vue"
 import AdminAdminsView from "../views/admin/AdminAdminsView.vue"
+import AdminPlaceEditView from "../views/admin/AdminPlaceEditView.vue"
+import BusinessPlaceEditView from "../views/BusinessPlaceEditView.vue"
 
 import { adminStore } from "../store/adminStore.js"
 
@@ -30,6 +32,7 @@ const routes = [
   { path: "/register", name: "register", component: RegisterView },
   { path: "/profile", name: "profile", component: ProfileView },
   { path: "/business", name: "business", component: BusinessView },
+  { path: "/business/:alias/edit", name: "business-place-edit", component: BusinessPlaceEditView },
   { path: "/u/:alias", name: "user", component: UserView },
   {
     path: "/admin",
@@ -40,6 +43,7 @@ const routes = [
       { path: "reports", name: "admin-reports", component: AdminReportsView },
       { path: "reports/:id", name: "admin-report-detail", component: AdminReportDetailView },
       { path: "places", name: "admin-places", component: AdminPlacesView },
+      { path: "places/:alias/edit", name: "admin-place-edit", component: AdminPlaceEditView },
       { path: "reviews", name: "admin-reviews", component: AdminReviewsView },
       { path: "users", name: "admin-users", component: AdminUsersView },
       { path: "claims", name: "admin-claims", component: AdminClaimsView },
