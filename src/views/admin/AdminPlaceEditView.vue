@@ -71,6 +71,7 @@ onMounted(load)
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 24px;
-  max-width: 800px;
+  /* margin: 0 10%; */
+  margin: 0 16% 0 10%;
 }
 </style>
