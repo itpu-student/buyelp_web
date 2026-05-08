@@ -406,6 +406,19 @@ onMounted(() => {
   gap: 1px;
 }
 
+/* Modal */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 2000; backdrop-filter: blur(4px);
+}
+.modal {
+  padding: 28px; max-width: 380px; width: 90%;
+  display: flex; flex-direction: column; gap: 16px;
+  animation: fadeUp 0.2s ease;
+}
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
 /* User modal entity layout */
 .modal-entity-row { display: flex; align-items: center; gap: 12px; }
 .modal-avatar {

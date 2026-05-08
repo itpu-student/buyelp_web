@@ -17,7 +17,7 @@
           You don't own any places yet. Claim one from its place page.
         </div>
         <div v-else class="places-list">
-          <div v-for="p in places" :key="p.id" class="place-card card">
+          <div v-for="p in places" :key="p.id" class="place-card card" @click="router.push(`/place/${p.slug || p.id}`)">
             <div class="place-main">
               <img v-if="p.logo_key" :src="staticUrl(p.logo_key)" class="place-logo" alt="" />
               <div v-else class="place-logo logo-placeholder">
@@ -33,8 +33,7 @@
               </div>
             </div>
             <div class="place-actions">
-              <RouterLink :to="`/place/${p.slug || p.id}`" class="btn btn-sm btn-ghost">View</RouterLink>
-              <RouterLink :to="`/business/${p.slug || p.id}/edit`" class="btn btn-sm btn-primary">Edit</RouterLink>
+              <RouterLink :to="`/business/${p.slug || p.id}/edit`" class="btn btn-sm btn-primary" @click.stop>Edit</RouterLink>
             </div>
           </div>
         </div>
@@ -45,10 +44,12 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { store } from '../store/index.js'
 import { listMyPlaces } from '../api/places.js'
 import { staticUrl } from '../api/client.js'
 
+const router = useRouter()
 const loading = ref(false)
 const error = ref('')
 const places = ref([])
@@ -96,9 +97,14 @@ onMounted(load)
   padding: 16px 20px;
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  transition: box-shadow var(--transition);
+  cursor: pointer;
+  transition: box-shadow var(--transition), transform var(--transition), border-color var(--transition);
 }
-.place-card:hover { box-shadow: var(--shadow-md, 0 4px 12px rgba(0,0,0,0.08)); }
+.place-card:hover {
+  box-shadow: var(--shadow-md, 0 6px 18px rgba(0,0,0,0.10));
+  transform: translateY(-2px);
+  border-color: var(--primary);
+}
 
 .place-main { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; }
 
