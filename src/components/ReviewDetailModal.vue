@@ -54,7 +54,7 @@
             alt="Review photo"
             class="strip-img"
             loading="lazy"
-            @click="openLightbox(i)"
+            @click="openLightbox(reviewImages, i)"
           />
         </div>
 
@@ -76,7 +76,7 @@
                 </div>
                 <p class="prev-text">{{ prev.text }}</p>
                 <div v-if="prev.images?.length" class="prev-images">
-                  <img v-for="(src, i) in prev.images" :key="i" :src="src" alt="Review photo" class="prev-img" loading="lazy" />
+                  <img v-for="(src, i) in prev.images" :key="i" :src="src" alt="Review photo" class="prev-img" loading="lazy" @click="openLightbox(prev.images, i)" />
                 </div>
               </div>
             </div>
@@ -86,35 +86,14 @@
     </div>
   </Teleport>
 
-  <!-- Lightbox -->
-  <Teleport to="body">
-    <div
-      v-if="lightboxOpen"
-      class="lb-backdrop"
-      @click.self="closeLightbox"
-      @keydown.left.window.prevent="lbPrev"
-      @keydown.right.window.prevent="lbNext"
-      @keydown.esc.window.prevent="closeLightbox"
-    >
-      <button class="lb-close" aria-label="Close" @click="closeLightbox">✕</button>
-      <div class="lb-counter">{{ lbIndex + 1 }} / {{ reviewImages.length }}</div>
-      <div class="lb-track-wrap">
-        <div class="lb-track" :style="lbTrackStyle">
-          <div v-for="(src, i) in reviewImages" :key="i" class="lb-slide">
-            <img :src="src" :alt="`Photo ${i + 1}`" class="lb-img" />
-          </div>
-        </div>
-      </div>
-      <button v-if="reviewImages.length > 1" class="lb-btn lb-btn--prev" @click="lbPrev">&#8592;</button>
-      <button v-if="reviewImages.length > 1" class="lb-btn lb-btn--next" @click="lbNext">&#8594;</button>
-    </div>
-  </Teleport>
+  <ImageLightbox :images="lbImages" :start-index="lbStart" :open="lbOpen" @close="lbOpen = false" />
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { RouterLink } from 'vue-router'
 import StarRating from './StarRating.vue'
+import ImageLightbox from './ImageLightbox.vue'
 import { getReviewPrevs } from '../api/reviews.js'
 import { normalizeReview } from '../api/normalize.js'
 
@@ -160,25 +139,15 @@ async function toggleHistory() {
 }
 
 // Lightbox
-const lightboxOpen = ref(false)
-const lbIndex = ref(0)
+const lbImages = ref([])
+const lbStart = ref(0)
+const lbOpen = ref(false)
 
-const lbTrackStyle = computed(() => ({
-  transform: `translateX(-${lbIndex.value * 100}%)`,
-  transition: 'transform 0.4s ease',
-}))
-
-function openLightbox(i) {
-  lbIndex.value = i
-  lightboxOpen.value = true
-  document.body.style.overflow = 'hidden'
+function openLightbox(images, i) {
+  lbImages.value = images
+  lbStart.value = i
+  lbOpen.value = true
 }
-function closeLightbox() {
-  lightboxOpen.value = false
-  document.body.style.overflow = ''
-}
-function lbPrev() { lbIndex.value = (lbIndex.value - 1 + reviewImages.value.length) % reviewImages.value.length }
-function lbNext() { lbIndex.value = (lbIndex.value + 1) % reviewImages.value.length }
 
 onMounted(() => { document.body.style.overflow = 'hidden' })
 onBeforeUnmount(() => { document.body.style.overflow = '' })
@@ -287,23 +256,8 @@ onBeforeUnmount(() => { document.body.style.overflow = '' })
 .prev-sub { display: flex; gap: 8px; font-size: 0.75rem; color: var(--text-3); }
 .prev-text { font-size: 0.85rem; color: var(--text-2); margin: 0; }
 .prev-images { display: flex; gap: 6px; flex-wrap: wrap; }
-.prev-img { width: 70px; height: 62px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+.prev-img { width: 70px; height: 62px; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--border); cursor: pointer; transition: opacity 0.12s; }
+.prev-img:hover { opacity: 0.8; }
 
-/* Lightbox */
-.lb-backdrop {
-  position: fixed; inset: 0; z-index: 9999;
-  background: rgba(0,0,0,0.92);
-  display: flex; align-items: center; justify-content: center;
-}
-.lb-track-wrap { width: 100%; height: 100%; overflow: hidden; display: flex; align-items: center; }
-.lb-track { display: flex; width: 100%; height: 100%; will-change: transform; }
-.lb-slide { flex: 0 0 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding: 56px 10px 44px; box-sizing: border-box; }
-.lb-img { width: 100%; height: 100%; object-fit: contain; border-radius: 6px; }
-.lb-close { position: fixed; top: 18px; right: 22px; z-index: 10001; width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.12); color: #fff; font-size: 1.1rem; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.lb-close:hover { background: rgba(255,255,255,0.25); }
-.lb-counter { position: fixed; top: 22px; left: 50%; transform: translateX(-50%); z-index: 10001; color: rgba(255,255,255,0.75); font-size: 0.82rem; pointer-events: none; }
-.lb-btn { position: fixed; top: 50%; transform: translateY(-50%); z-index: 10001; width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,0.12); color: #fff; font-size: 1.3rem; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.lb-btn:hover { background: rgba(255,255,255,0.25); }
-.lb-btn--prev { left: 18px; }
-.lb-btn--next { right: 18px; }
+
 </style>
