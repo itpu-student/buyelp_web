@@ -137,22 +137,22 @@
     <!-- Images -->
     <div class="form-group">
       <span class="form-label">Photos</span>
-      <div class="photo-strip">
-        <div
-          v-for="(key, i) in form.images"
-          :key="key"
-          class="photo-tile"
-          :class="{ 'drag-over': dropIdx === i }"
-          draggable="true"
-          @dragstart="onDragStart(i)"
-          @dragover.prevent="onDragOver(i)"
-          @drop.prevent="onDrop(i)"
-          @dragend="onDragEnd"
-        >
-          <img :src="staticUrl(key)" :alt="`Photo ${i + 1}`" />
-          <button type="button" class="photo-remove" @click="form.images.splice(i, 1)">×</button>
-          <div class="drag-handle" title="Drag to reorder">⠿</div>
-        </div>
+      <div class="photo-strip" ref="stripEl">
+        <template v-if="form.images.length">
+          <div class="drop-zone" :class="{ 'drop-zone--open': drag.active && drag.insertIdx === 0 }"></div>
+          <template v-for="(key, i) in form.images" :key="key">
+            <div
+              class="photo-tile"
+              :class="{ 'tile--ghost': drag.active && drag.fromIdx === i }"
+              @mousedown.prevent="startDrag($event, i)"
+            >
+              <img :src="staticUrl(key)" :alt="`Photo ${i + 1}`" />
+              <button type="button" class="photo-remove" @mousedown.stop @click="form.images.splice(i, 1)">×</button>
+              <div class="drag-handle">⠿</div>
+            </div>
+            <div class="drop-zone" :class="{ 'drop-zone--open': drag.active && drag.insertIdx === i + 1 }"></div>
+          </template>
+        </template>
         <button
           type="button"
           class="photo-tile photo-add"
@@ -194,10 +194,20 @@
       </button>
     </div>
   </form>
+
+  <Teleport to="body">
+    <div
+      v-if="drag.active && drag.fromIdx >= 0"
+      class="drag-ghost"
+      :style="{ left: drag.x - drag.ox + 'px', top: drag.y - drag.oy + 'px' }"
+    >
+      <img :src="staticUrl(form.images[drag.fromIdx])" />
+    </div>
+  </Teleport>
 </template>
 
 <script setup>
-import { reactive, ref, onMounted } from 'vue'
+import { reactive, ref, onMounted, onUnmounted } from 'vue'
 import { staticUrl } from '../api/client.js'
 import { uploadFile } from '../api/files.js'
 import { updatePlace } from '../api/places.js'
@@ -249,27 +259,68 @@ const hoursForm = reactive(initHours(p.weekly_hours))
 
 const logoInput = ref(null)
 const imagesInput = ref(null)
+const stripEl = ref(null)
 const logoUploading = ref(false)
 const imagesUploading = ref(false)
 const imagesProgress = reactive({ done: 0, total: 0 })
 const submitting = ref(false)
 const error = ref('')
 
-const dragIdx = ref(null)
-const dropIdx = ref(null)
+const drag = reactive({ active: false, fromIdx: -1, insertIdx: -1, x: 0, y: 0, ox: 0, oy: 0 })
 
-function onDragStart(i) { dragIdx.value = i }
-function onDragOver(i) { dropIdx.value = i }
-function onDrop(i) {
-  if (dragIdx.value === null || dragIdx.value === i) return
-  const arr = [...form.images]
-  const [moved] = arr.splice(dragIdx.value, 1)
-  arr.splice(i, 0, moved)
-  form.images = arr
-  dragIdx.value = null
-  dropIdx.value = null
+function startDrag(e, i) {
+  if (e.button !== 0) return
+  const rect = e.currentTarget.getBoundingClientRect()
+  drag.active = true
+  drag.fromIdx = i
+  drag.insertIdx = i + 1
+  drag.x = e.clientX
+  drag.y = e.clientY
+  drag.ox = e.clientX - rect.left
+  drag.oy = e.clientY - rect.top
+  document.addEventListener('mousemove', onDragMove)
+  document.addEventListener('mouseup', onDragUp)
+  document.body.style.setProperty('cursor', 'grabbing', 'important')
+  document.body.style.userSelect = 'none'
 }
-function onDragEnd() { dragIdx.value = null; dropIdx.value = null }
+
+function onDragMove(e) {
+  drag.x = e.clientX
+  drag.y = e.clientY
+  if (!stripEl.value) return
+  const tiles = [...stripEl.value.querySelectorAll('.photo-tile:not(.photo-add)')]
+  let idx = tiles.length
+  for (let i = 0; i < tiles.length; i++) {
+    const r = tiles[i].getBoundingClientRect()
+    if (e.clientX < r.left + r.width / 2) { idx = i; break }
+  }
+  drag.insertIdx = idx
+}
+
+function onDragUp() {
+  document.removeEventListener('mousemove', onDragMove)
+  document.removeEventListener('mouseup', onDragUp)
+  document.body.style.removeProperty('cursor')
+  document.body.style.userSelect = ''
+  const from = drag.fromIdx
+  const to = drag.insertIdx
+  if (from >= 0 && to !== from && to !== from + 1) {
+    const arr = [...form.images]
+    const [moved] = arr.splice(from, 1)
+    arr.splice(to > from ? to - 1 : to, 0, moved)
+    form.images = arr
+  }
+  drag.active = false
+  drag.fromIdx = -1
+  drag.insertIdx = -1
+}
+
+onUnmounted(() => {
+  document.removeEventListener('mousemove', onDragMove)
+  document.removeEventListener('mouseup', onDragUp)
+  document.body.style.removeProperty('cursor')
+  document.body.style.userSelect = ''
+})
 
 async function onLogoPick(e) {
   const file = e.target.files?.[0]
@@ -471,38 +522,107 @@ textarea.form-input { resize: vertical; }
 }
 
 /* Photos */
-.photo-strip { display: flex; gap: 10px; flex-wrap: wrap; padding: 4px 0; }
-.photo-tile {
-  position: relative; flex: 0 0 auto;
-  width: 84px; height: 84px;
-  border-radius: var(--radius-md); overflow: hidden;
-  background: var(--surface); border: 1.5px solid var(--border);
-  transition: border-color var(--transition), box-shadow var(--transition);
-  cursor: grab;
+.photo-strip {
+  display: flex;
+  flex-wrap: wrap;
+  row-gap: 8px;
+  padding: 4px 0;
+  align-items: center;
 }
-.photo-tile.drag-over { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary); }
+
+.drop-zone {
+  width: 8px;
+  height: 84px;
+  flex-shrink: 0;
+  position: relative;
+  pointer-events: none;
+  transition: width 0.2s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.drop-zone--open {
+  width: 84px;
+}
+.drop-zone--open::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border: 2px dashed var(--primary);
+  border-radius: var(--radius-md);
+  background: rgba(20, 184, 166, 0.07);
+  animation: dz-pulse 0.9s ease-in-out infinite alternate;
+}
+@keyframes dz-pulse {
+  from { opacity: 0.6; }
+  to   { opacity: 1; }
+}
+
+.photo-tile {
+  position: relative;
+  flex: 0 0 auto;
+  width: 84px;
+  height: 84px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  cursor: grab;
+  user-select: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+.photo-tile:not(.photo-add):not(.tile--ghost):hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.14);
+}
+.tile--ghost {
+  opacity: 0.2;
+  border-style: dashed;
+}
+.tile--ghost img { visibility: hidden; }
+
 .photo-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .photo-remove {
   position: absolute; top: 4px; right: 4px;
   width: 20px; height: 20px; border-radius: 50%; border: none;
   background: rgba(0,0,0,0.6); color: #fff; cursor: pointer;
   font-size: 0.8rem; display: flex; align-items: center; justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s;
 }
+.photo-tile:hover .photo-remove { opacity: 1; }
 .drag-handle {
   position: absolute; bottom: 4px; left: 50%;
   transform: translateX(-50%);
   font-size: 0.85rem; color: rgba(255,255,255,0.85);
   pointer-events: none; letter-spacing: 1px;
   text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  opacity: 0;
+  transition: opacity 0.15s;
 }
+.photo-tile:hover .drag-handle { opacity: 1; }
+
 .photo-add {
-  border-style: dashed; cursor: pointer;
+  border-style: dashed; cursor: pointer; margin-left: 8px;
   color: var(--text-2); font-size: 1.6rem;
   display: flex; align-items: center; justify-content: center;
   transition: var(--transition);
 }
 .photo-add:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
 .photo-add:disabled { opacity: 0.5; cursor: default; }
+
+/* Floating ghost (teleported to body, not scoped) */
+:global(.drag-ghost) {
+  position: fixed;
+  width: 84px;
+  height: 84px;
+  border-radius: 10px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 9999;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35), 0 6px 20px rgba(0,0,0,0.2);
+  opacity: 0.14;
+}
+:global(.drag-ghost) img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
 
 /* Hours */
 .hours-grid { display: flex; flex-direction: column; gap: 8px; }
