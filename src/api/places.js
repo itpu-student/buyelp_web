@@ -26,3 +26,7 @@ export function updatePlace(uuid, payload) {
 export function listMyPlaces({ page = 1, limit = 50 } = {}) {
   return apiFetch(`/api/places/mine?page=${page}&limit=${limit}`, { auth: true })
 }
+
+export function getPlaceAISummary(uuid) {
+  return apiFetch(`/api/places/${encodeURIComponent(uuid)}/ai-summary`)
+}

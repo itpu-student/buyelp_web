@@ -88,6 +88,17 @@
       <div class="place-container place-body">
         <div class="place-grid">
           <div class="place-main">
+            <div v-if="aiSummaryLoading" class="ai-summary-card ai-summary-card--loading">
+              <span class="ai-summary-icon">✦</span> Generating AI summary…
+            </div>
+            <div v-else-if="aiSummary" class="ai-summary-card">
+              <div class="ai-summary-header">
+                <span class="ai-summary-icon">✦</span>
+                <span class="ai-summary-label">AI Summary</span>
+              </div>
+              <p class="ai-summary-text">{{ locale.locale === 'uz' && aiSummary.uz ? aiSummary.uz : aiSummary.en }}</p>
+            </div>
+
             <section class="info-section">
               <div class="section-title-row">
                 <h2 class="section-title">{{ t("place.reviews") }}</h2>
@@ -262,7 +273,7 @@ import { useRoute, useRouter } from "vue-router"
 import { t, i18nState } from "../i18n/index.js"
 import { resolveTodayHours } from "../data/places.js"
 import { store } from "../store/index.js"
-import { getPlace, updatePlace } from "../api/places.js"
+import { getPlace, updatePlace, getPlaceAISummary } from "../api/places.js"
 import { listPlaceReviews, createReview } from "../api/reviews.js"
 import { normalizePlace, normalizeReview } from "../api/normalize.js"
 import { uploadFile } from "../api/files.js"
@@ -284,6 +295,8 @@ const reviews = ref([])
 const loading = ref(true)
 const loadError = ref("")
 const reviewsLoading = ref(false)
+const aiSummary = ref(null)
+const aiSummaryLoading = ref(false)
 const submitError = ref("")
 const reviewSubmitted = ref(false)
 
@@ -469,6 +482,19 @@ watch(galleryMaxStart, (max) => {
   if (galleryStartIndex.value > max) galleryStartIndex.value = max
 })
 
+async function loadAISummary(uuid) {
+  aiSummaryLoading.value = true
+  aiSummary.value = null
+  try {
+    const res = await getPlaceAISummary(uuid)
+    aiSummary.value = res?.en ? res : null
+  } catch {
+    aiSummary.value = null
+  } finally {
+    aiSummaryLoading.value = false
+  }
+}
+
 async function loadPlace(idOrSlug) {
   loading.value = true
   loadError.value = ""
@@ -480,6 +506,7 @@ async function loadPlace(idOrSlug) {
     place.value = normalizePlace(raw)
     nextTick(measureGalleryViewport)
     loadReviews(place.value._uuid)
+    loadAISummary(place.value._uuid)
   } catch (e) {
     loadError.value = e.status === 404 ? "Place not found" : e.message || "Failed to load"
   } finally {
@@ -677,6 +704,40 @@ onBeforeUnmount(() => {
 .image-keys { list-style: none; padding: 0; margin: 4px 0; display: flex; flex-direction: column; gap: 4px; font-size: 0.75rem; color: var(--text-2); }
 .image-keys li { display: flex; justify-content: space-between; gap: 8px; align-items: center; padding: 4px 8px; background: var(--surface-2); border-radius: 4px; }
 .btn-link { background: none; border: none; cursor: pointer; color: var(--text-2); font-size: 1rem; padding: 0 4px; }
+
+.ai-summary-card {
+  background: linear-gradient(135deg, var(--surface-2) 0%, var(--surface) 100%);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--primary);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+  color: var(--text-2);
+  line-height: 1.6;
+  animation: fadeUp 0.3s ease;
+}
+.ai-summary-card--loading {
+  color: var(--text-3);
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ai-summary-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.ai-summary-icon { color: var(--primary); font-size: 0.85rem; }
+.ai-summary-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--primary); }
+.ai-summary-text { margin: 0; color: var(--text); }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
 .section-title-row {
   display: flex; align-items: center; justify-content: space-between;
