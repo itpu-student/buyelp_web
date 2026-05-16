@@ -1,27 +1,27 @@
 <template>
   <div>
     <div class="view-header">
-      <h2 class="view-title">Reviews</h2>
+      <h2 class="view-title">{{ t('admin.review_list.title') }}</h2>
     </div>
 
-    <div v-if="loading" class="state-msg">Loading…</div>
+    <div v-if="loading" class="state-msg">{{ t('admin.loading') }}</div>
     <div v-else-if="error" class="state-msg error">{{ error }}</div>
     <template v-else>
       <div class="table-wrap">
         <table class="admin-table">
           <thead>
             <tr>
-              <th>Author</th>
-              <th>Place</th>
-              <th>Rating</th>
-              <th>Text</th>
-              <th>Date</th>
-              <th>Actions</th>
+              <th>{{ t('admin.review_list.col_author') }}</th>
+              <th>{{ t('admin.review_list.col_place') }}</th>
+              <th>{{ t('admin.review_list.col_rating') }}</th>
+              <th>{{ t('admin.review_list.col_text') }}</th>
+              <th>{{ t('admin.review_list.col_date') }}</th>
+              <th>{{ t('admin.places.col_actions') }}</th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="items.length === 0">
-              <td colspan="6" class="empty-cell">No reviews found.</td>
+              <td colspan="6" class="empty-cell">{{ t('admin.review_list.empty') }}</td>
             </tr>
             <tr v-for="r in items" :key="r.id">
               <td>
@@ -49,7 +49,7 @@
               <td class="td-text">{{ r.text }}</td>
               <td class="text-sm text-muted nowrap">{{ fmtDate(r.created_at) }}</td>
               <td>
-                <button class="btn btn-sm btn-danger" @click="promptDelete(r)">Delete</button>
+                <button class="btn btn-sm btn-danger" @click="promptDelete(r)">{{ t('admin.delete') }}</button>
               </td>
             </tr>
           </tbody>
@@ -74,7 +74,7 @@
           </a>
         </div>
         <div class="modal-actions">
-          <button class="btn btn-ghost" @click="userModal = null">Close</button>
+          <button class="btn btn-ghost" @click="userModal = null">{{ t('admin.close') }}</button>
         </div>
       </div>
     </div>
@@ -94,24 +94,24 @@
         </div>
         <div class="modal-place-meta">
           <div v-if="placeModal.address?.en" class="meta-row">
-            <span class="meta-label">Address</span>
+            <span class="meta-label">{{ t('admin.review_list.col_address') }}</span>
             <span>{{ placeModal.address.en }}</span>
           </div>
           <div v-if="placeModal.phone" class="meta-row">
-            <span class="meta-label">Phone</span>
+            <span class="meta-label">{{ t('admin.review_list.col_phone') }}</span>
             <span>{{ placeModal.phone }}</span>
           </div>
           <div class="meta-row">
-            <span class="meta-label">Avg rating</span>
+            <span class="meta-label">{{ t('admin.review_list.col_avg_rating') }}</span>
             <span>{{ placeModal.avg_rating }}★</span>
           </div>
           <div class="meta-row">
-            <span class="meta-label">Reviews</span>
+            <span class="meta-label">{{ t('admin.review_list.col_reviews') }}</span>
             <span>{{ placeModal.review_count }}</span>
           </div>
         </div>
         <div class="modal-actions">
-          <button class="btn btn-ghost" @click="placeModal = null">Close</button>
+          <button class="btn btn-ghost" @click="placeModal = null">{{ t('admin.close') }}</button>
         </div>
       </div>
     </div>
@@ -119,12 +119,12 @@
     <!-- Delete confirmation modal -->
     <div class="modal-overlay" v-if="deleteTarget" @click="deleteTarget = null">
       <div class="modal card" @click.stop>
-        <h3>Delete Review</h3>
-        <p>Delete review by <strong>{{ deleteTarget.user?.name || deleteTarget.user_id }}</strong>? This cannot be undone.</p>
+        <h3>{{ t('admin.review_list.delete_title') }}</h3>
+        <p>{{ t('admin.review_list.delete_by') }} <strong>{{ deleteTarget.user?.name || deleteTarget.user_id }}</strong>{{ t('admin.review_list.delete_by_suffix') }}</p>
         <div class="modal-actions">
-          <button class="btn btn-ghost" @click="deleteTarget = null">Cancel</button>
+          <button class="btn btn-ghost" @click="deleteTarget = null">{{ t('admin.cancel') }}</button>
           <button class="btn btn-danger" :disabled="submitting" @click="confirmDelete">
-            {{ submitting ? 'Deleting…' : 'Delete' }}
+            {{ submitting ? t('admin.deleting') : t('admin.delete') }}
           </button>
         </div>
       </div>
@@ -137,6 +137,7 @@ import { ref, computed, onMounted } from 'vue'
 import Pagination from '../../components/Pagination.vue'
 import { adminListReviews, adminDeleteReview } from '../../api/adminModeration.js'
 import { staticUrl } from '../../api/client.js'
+import { t } from '../../i18n/index.js'
 
 const loading = ref(false)
 const error = ref('')

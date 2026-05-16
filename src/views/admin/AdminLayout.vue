@@ -3,7 +3,7 @@
     <aside class="admin-sidebar">
       <div class="sidebar-brand">
         <span class="brand-icon">⚙️</span>
-        <span class="brand-text">Admin</span>
+        <span class="brand-text">{{ t('admin.brand') }}</span>
       </div>
 
       <nav class="sidebar-nav">
@@ -22,9 +22,9 @@
           {{ i18nState.locale === 'en' ? '🇬🇧 EN' : '🇺🇿 UZ' }}
         </button>
         <button class="theme-toggle" @click="toggleTheme">
-          {{ isDark ? '☀️ Light' : '🌙 Dark' }}
+          {{ isDark ? `☀️ ${t('admin.light')}` : `🌙 ${t('admin.dark')}` }}
         </button>
-        <button class="sidebar-logout" @click="logout">Logout</button>
+        <button class="sidebar-logout" @click="logout">{{ t('admin.logout') }}</button>
       </div>
     </aside>
 
@@ -43,7 +43,7 @@
     <aside v-if="sidebarOpen" class="admin-sidebar mobile-open">
       <div class="sidebar-brand">
         <span class="brand-icon">⚙️</span>
-        <span class="brand-text">Admin</span>
+        <span class="brand-text">{{ t('admin.brand') }}</span>
         <button class="close-sidebar" @click="sidebarOpen = false">✕</button>
       </div>
       <nav class="sidebar-nav">
@@ -67,9 +67,9 @@
           {{ i18nState.locale === 'en' ? '🇬🇧 EN' : '🇺🇿 UZ' }}
         </button>
         <button class="theme-toggle" @click="toggleTheme">
-          {{ isDark ? '☀️ Light' : '🌙 Dark' }}
+          {{ isDark ? `☀️ ${t('admin.light')}` : `🌙 ${t('admin.dark')}` }}
         </button>
-        <button class="sidebar-logout" @click="logout">Logout</button>
+        <button class="sidebar-logout" @click="logout">{{ t('admin.logout') }}</button>
       </div>
     </aside>
   </div>
@@ -79,7 +79,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { adminStore } from '../../store/adminStore.js'
-import { i18nState, setLocale } from '../../i18n/index.js'
+import { i18nState, setLocale, t } from '../../i18n/index.js'
 
 function toggleLang() {
   setLocale(i18nState.locale === 'en' ? 'uz' : 'en')
@@ -103,18 +103,18 @@ const router = useRouter()
 const route = useRoute()
 const sidebarOpen = ref(false)
 
-const navItems = [
-  { to: '/admin/reports', icon: '📋', label: 'Reports' },
-  { to: '/admin/places', icon: '🏢', label: 'Places' },
-  { to: '/admin/reviews', icon: '⭐', label: 'Reviews' },
-  { to: '/admin/users', icon: '👥', label: 'Users' },
-  { to: '/admin/claims', icon: '📝', label: 'Claims' },
-  { to: '/admin/admins', icon: '🛡️', label: 'Admins' },
-]
+const navItems = computed(() => [
+  { to: '/admin/reports', icon: '📋', label: t('admin.nav.reports') },
+  { to: '/admin/places', icon: '🏢', label: t('admin.nav.places') },
+  { to: '/admin/reviews', icon: '⭐', label: t('admin.nav.reviews') },
+  { to: '/admin/users', icon: '👥', label: t('admin.nav.users') },
+  { to: '/admin/claims', icon: '📝', label: t('admin.nav.claims') },
+  { to: '/admin/admins', icon: '🛡️', label: t('admin.nav.admins') },
+])
 
 const currentPageTitle = computed(() => {
-  const match = navItems.find((item) => route.path.startsWith(item.to))
-  return match ? match.label : 'Admin'
+  const match = navItems.value.find((item) => route.path.startsWith(item.to))
+  return match ? match.label : t('admin.brand')
 })
 
 function logout() {

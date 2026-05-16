@@ -1,22 +1,22 @@
 <template>
   <div>
     <div class="detail-nav">
-      <button class="btn btn-ghost btn-sm" @click="router.push('/admin/reports')">← Back to Reports</button>
+      <button class="btn btn-ghost btn-sm" @click="router.push('/admin/reports')">{{ t('admin.report_detail.back') }}</button>
     </div>
 
-    <div v-if="loading" class="state-msg">Loading…</div>
+    <div v-if="loading" class="state-msg">{{ t('admin.loading') }}</div>
     <div v-else-if="error" class="state-msg error">{{ error }}</div>
     <template v-else-if="report">
       <div class="detail-grid">
         <!-- Report card -->
         <div class="report-card card" :class="{'span-full': report.status === 'pending' || report.status === 'in_progress'}">
           <div class="card-section">
-            <div class="section-label">Status</div>
+            <div class="section-label">{{ t('admin.report_detail.status_label') }}</div>
             <span class="badge" :class="statusClass(report.status)">{{ report.status }}</span>
           </div>
 
           <div class="card-section" v-if="report.admin && report.status !== 'pending'">
-            <div class="section-label">Handled By</div>
+            <div class="section-label">{{ t('admin.report_detail.handled_by') }}</div>
             <div class="user-row">
               <span class="user-name">{{ report.admin.name }}</span>
               <span class="text-muted">@{{ report.admin.username }}</span>
@@ -24,7 +24,7 @@
           </div>
 
           <div class="card-section">
-            <div class="section-label">Reporter</div>
+            <div class="section-label">{{ t('admin.report_detail.reporter') }}</div>
             <div class="user-chip" v-if="report.reporter_user" @click="openUserModal(report.reporter_user)">
               <img v-if="report.reporter_user.avatar_key" :src="avatarUrl(report.reporter_user.avatar_key)" class="avatar" />
               <div v-else class="avatar avatar-placeholder">{{ initials(report.reporter_user.name) }}</div>
@@ -37,13 +37,13 @@
           </div>
 
           <div class="card-section" v-if="report.text">
-            <div class="section-label">Report Text</div>
+            <div class="section-label">{{ t('admin.report_detail.report_text') }}</div>
             <p class="report-text">{{ report.text }}</p>
           </div>
 
           <div class="card-section">
             <div class="section-label-row">
-              <div class="section-label">Target</div>
+              <div class="section-label">{{ t('admin.report_detail.target') }}</div>
               <span class="target-type-tag" :class="report.target_type === 'review' ? 'target-badge-review' : 'target-badge-place'">{{ report.target_type === 'review' ? '📋 Review' : '🏢 Place' }}</span>
             </div>
             <div v-if="report.target">
@@ -55,11 +55,11 @@
                 <p v-if="report.target.content" class="report-text mt-1 content-preview">{{ report.target.content }}</p>
               </div>
             </div>
-            <span v-else class="text-muted">[removed]</span>
+            <span v-else class="text-muted">{{ t('admin.report_detail.removed') }}</span>
           </div>
 
           <div class="card-section" v-if="report.reported_user">
-            <div class="section-label">Reported User</div>
+            <div class="section-label">{{ t('admin.report_detail.reported_user_label') }}</div>
             <div class="user-chip" @click="openUserModal(report.reported_user)">
               <img v-if="report.reported_user.avatar_key" :src="avatarUrl(report.reported_user.avatar_key)" class="avatar" />
               <div v-else class="avatar avatar-placeholder">{{ initials(report.reported_user.name) }}</div>
@@ -68,42 +68,42 @@
                 <span class="user-username">@{{ report.reported_user.username }}</span>
               </div>
               <span v-if="reportedUserDetail" class="badge" :class="reportedUserDetail.blocked ? 'badge-danger' : 'badge-success'">
-                {{ reportedUserDetail.blocked ? 'Blocked' : 'Active' }}
+                {{ reportedUserDetail.blocked ? t('admin.blocked') : t('admin.active') }}
               </span>
               <span v-else-if="userLoading" class="text-muted text-sm">…</span>
             </div>
           </div>
 
           <div class="card-section">
-            <div class="section-label">Report Type</div>
+            <div class="section-label">{{ t('admin.report_detail.report_type') }}</div>
             <span>{{ report.type || '—' }}</span>
           </div>
 
           <div class="card-section" v-if="report.admin_response">
-            <div class="section-label">Admin Response</div>
+            <div class="section-label">{{ t('admin.report_detail.admin_response') }}</div>
             <p class="report-text">{{ report.admin_response }}</p>
           </div>
 
           <div class="card-section meta-row">
-            <span class="text-muted text-sm">Created {{ fmtDate(report.created_at) }}</span>
-            <span class="text-muted text-sm" v-if="report.reviewed_at">Reviewed {{ fmtDate(report.reviewed_at) }}</span>
+            <span class="text-muted text-sm">{{ t('admin.report_detail.created') }} {{ fmtDate(report.created_at) }}</span>
+            <span class="text-muted text-sm" v-if="report.reviewed_at">{{ t('admin.report_detail.reviewed') }} {{ fmtDate(report.reviewed_at) }}</span>
           </div>
         </div>
 
         <!-- Dismissed: can re-open -->
         <div class="action-card card" v-if="report.status === 'dismissed'">
-          <h3 class="action-title">Dismissed</h3>
-          <p class="text-muted text-sm">This report was dismissed. You can re-open it for further investigation.</p>
+          <h3 class="action-title">{{ t('admin.report_detail.dismissed_title') }}</h3>
+          <p class="text-muted text-sm">{{ t('admin.report_detail.dismissed_msg') }}</p>
           <button class="btn btn-ghost" :disabled="submitting" @click="reopen">
-            {{ submitting ? 'Saving…' : 'Re-open Investigation' }}
+            {{ submitting ? t('admin.saving') : t('admin.report_detail.reopen') }}
           </button>
           <div v-if="actionError" class="error-msg mt-2">{{ actionError }}</div>
         </div>
 
         <!-- Actioned: read-only -->
         <div class="action-card card resolved" v-else-if="report.status === 'actioned'">
-          <h3 class="action-title">Resolved</h3>
-          <p class="text-muted text-sm">This report has been actioned.</p>
+          <h3 class="action-title">{{ t('admin.report_detail.resolved_title') }}</h3>
+          <p class="text-muted text-sm">{{ t('admin.report_detail.resolved_msg') }}</p>
         </div>
       </div>
 
@@ -112,8 +112,8 @@
         <div v-if="actionError" class="error-msg">{{ actionError }}</div>
         <div v-if="actionSuccess" class="success-msg">{{ actionSuccess }}</div>
         <div class="btns-group">
-          <button v-if="report.status === 'pending'" class="btn btn-ghost" :disabled="submitting" @click="keepInProgressModal = true">Keep In Progress 🔄</button>
-          <button class="btn btn-primary" :disabled="submitting" @click="openFinishModal">Finish ✍️</button>
+          <button v-if="report.status === 'pending'" class="btn btn-ghost" :disabled="submitting" @click="keepInProgressModal = true">{{ t('admin.report_detail.keep_in_progress') }}</button>
+          <button class="btn btn-primary" :disabled="submitting" @click="openFinishModal">{{ t('admin.report_detail.finish') }}</button>
         </div>
       </div>
     </template>
@@ -121,12 +121,12 @@
     <!-- Keep In Progress confirmation modal -->
     <div class="modal-overlay" v-if="keepInProgressModal" @click="keepInProgressModal = false">
       <div class="modal card" @click.stop>
-        <h3>Keep In Progress?</h3>
-        <p>Are you sure you want to mark this report as in progress?</p>
+        <h3>{{ t('admin.report_detail.keep_modal_title') }}</h3>
+        <p>{{ t('admin.report_detail.keep_modal_msg') }}</p>
         <div class="modal-actions">
-          <button class="btn btn-ghost" @click="keepInProgressModal = false">Cancel</button>
+          <button class="btn btn-ghost" @click="keepInProgressModal = false">{{ t('admin.cancel') }}</button>
           <button class="btn btn-primary" :disabled="submitting" @click="keepInProgress">
-            {{ submitting ? 'Saving…' : 'Confirm' }}
+            {{ submitting ? t('admin.saving') : t('admin.report_detail.confirm') }}
           </button>
         </div>
       </div>
@@ -145,9 +145,9 @@
         </div>
         <div v-if="modalError" class="error-msg">{{ modalError }}</div>
         <div class="modal-actions">
-          <button class="btn btn-ghost" @click="userModal.open = false">Cancel</button>
+          <button class="btn btn-ghost" @click="userModal.open = false">{{ t('admin.cancel') }}</button>
           <button class="btn btn-danger" :disabled="modalSubmitting" @click="doBlockUser">
-            {{ modalSubmitting ? 'Saving…' : 'Block User' }}
+            {{ modalSubmitting ? t('admin.saving') : t('admin.report_detail.block_user') }}
           </button>
         </div>
       </div>
@@ -168,9 +168,9 @@
         </div>
         <div v-if="modalError" class="error-msg">{{ modalError }}</div>
         <div class="modal-actions">
-          <button class="btn btn-ghost" @click="targetModal.open = false">Cancel</button>
+          <button class="btn btn-ghost" @click="targetModal.open = false">{{ t('admin.cancel') }}</button>
           <button class="btn btn-danger" :disabled="modalSubmitting" @click="doTargetAction">
-            {{ modalSubmitting ? 'Saving…' : report?.target_type === 'review' ? 'Delete Review' : 'Suspend Place' }}
+            {{ modalSubmitting ? t('admin.saving') : report?.target_type === 'review' ? t('admin.report_detail.delete_review') : t('admin.report_detail.suspend_place') }}
           </button>
         </div>
       </div>
@@ -179,23 +179,23 @@
     <!-- Finish modal -->
     <div class="modal-overlay" v-if="finishModal.open" @click="finishModal.open = false">
       <div class="modal card" @click.stop>
-        <h3 class="modal-title">Finish Report</h3>
+        <h3 class="modal-title">{{ t('admin.report_detail.finish_title') }}</h3>
         <div class="modal-field">
-          <label class="field-label">Outcome</label>
+          <label class="field-label">{{ t('admin.report_detail.outcome') }}</label>
           <select v-model="finishModal.status" class="finish-select">
-            <option value="dismissed">dismissed</option>
-            <option value="actioned">actioned</option>
+            <option value="dismissed">{{ t('admin.dismissed') }}</option>
+            <option value="actioned">{{ t('admin.actioned') }}</option>
           </select>
         </div>
         <div class="modal-field">
-          <label class="field-label">Admin Response</label>
-          <textarea v-model="finishModal.admin_response" class="form-textarea" rows="3" placeholder="Optional note…" maxlength="1000"></textarea>
+          <label class="field-label">{{ t('admin.report_detail.admin_response_label') }}</label>
+          <textarea v-model="finishModal.admin_response" class="form-textarea" rows="3" :placeholder="t('admin.report_detail.optional_note')" maxlength="1000"></textarea>
         </div>
         <div v-if="modalError" class="error-msg">{{ modalError }}</div>
         <div class="modal-actions">
-          <button class="btn btn-ghost" @click="finishModal.open = false">Cancel</button>
+          <button class="btn btn-ghost" @click="finishModal.open = false">{{ t('admin.cancel') }}</button>
           <button class="btn btn-primary" :disabled="modalSubmitting" @click="doFinishReport">
-            {{ modalSubmitting ? 'Saving…' : 'Submit' }}
+            {{ modalSubmitting ? t('admin.saving') : t('admin.submit') }}
           </button>
         </div>
       </div>
@@ -209,6 +209,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { getAdminReport, reviewAdminReport } from '../../api/adminReports.js'
 import { adminGetUser, adminBlockUser, adminSetPlaceStatus, adminDeleteReview } from '../../api/adminModeration.js'
 import { staticUrl } from '../../api/client.js'
+import { t } from '../../i18n/index.js'
 
 function avatarUrl(key) { return staticUrl(key) }
 function initials(name) { return (name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() }
@@ -277,7 +278,7 @@ async function keepInProgress() {
   keepInProgressModal.value = false
   try {
     report.value = await reviewAdminReport(route.params.id, { status: 'in_progress' })
-    actionSuccess.value = 'Kept in progress.'
+    actionSuccess.value = t('admin.report_detail.kept_msg')
   } catch (e) {
     actionError.value = e.message
   } finally {
@@ -290,7 +291,7 @@ async function reopen() {
   actionError.value = ''
   try {
     report.value = await reviewAdminReport(route.params.id, { status: 'in_progress' })
-    actionSuccess.value = 'Report re-opened.'
+    actionSuccess.value = t('admin.report_detail.reopened_msg')
   } catch (e) {
     actionError.value = e.message
   } finally {

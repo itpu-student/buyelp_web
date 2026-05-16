@@ -1,27 +1,27 @@
 <template>
   <div>
     <div class="view-header">
-      <h2 class="view-title">Users</h2>
+      <h2 class="view-title">{{ t('admin.user_list.title') }}</h2>
     </div>
 
-    <div v-if="loading" class="state-msg">Loading…</div>
+    <div v-if="loading" class="state-msg">{{ t('admin.loading') }}</div>
     <div v-else-if="error" class="state-msg error">{{ error }}</div>
     <template v-else>
       <div class="table-wrap">
         <table class="admin-table">
           <thead>
             <tr>
-              <th>User</th>
-              <th>Username</th>
-              <th>Phone</th>
-              <th>Joined</th>
-              <th>Status</th>
-              <th>Actions</th>
+              <th>{{ t('admin.user_list.col_user') }}</th>
+              <th>{{ t('admin.user_list.col_username') }}</th>
+              <th>{{ t('admin.user_list.col_phone') }}</th>
+              <th>{{ t('admin.user_list.col_joined') }}</th>
+              <th>{{ t('admin.status') }}</th>
+              <th>{{ t('admin.user_list.col_actions') }}</th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="items.length === 0">
-              <td colspan="6" class="empty-cell">No users found.</td>
+              <td colspan="6" class="empty-cell">{{ t('admin.user_list.empty') }}</td>
             </tr>
             <tr v-for="u in items" :key="u.id">
               <td>
@@ -39,7 +39,7 @@
               <td class="text-sm text-muted">{{ fmtDate(u.created_at) }}</td>
               <td>
                 <span class="badge" :class="u.blocked ? 'badge-danger' : 'badge-success'">
-                  {{ u.blocked ? 'Blocked' : 'Active' }}
+                  {{ u.blocked ? t('admin.blocked') : t('admin.active') }}
                 </span>
               </td>
               <td>
@@ -48,14 +48,14 @@
                   class="btn btn-sm btn-danger"
                   @click="confirmTarget = { user: u, action: 'block' }"
                 >
-                  Block
+                  {{ t('admin.user_list.block') }}
                 </button>
                 <button
                   v-else
                   class="btn btn-sm btn-ghost"
                   @click="confirmTarget = { user: u, action: 'unblock' }"
                 >
-                  Unblock
+                  {{ t('admin.user_list.unblock') }}
                 </button>
               </td>
             </tr>
@@ -78,18 +78,16 @@
             <span class="user-username text-muted text-sm">{{ confirmTarget.user.username ? '@' + confirmTarget.user.username : '' }}</span>
           </div>
         </div>
-        <h3>{{ confirmTarget.action === 'block' ? 'Block User?' : 'Unblock User?' }}</h3>
-        <p>{{ confirmTarget.action === 'block'
-          ? 'This user will lose access to their account.'
-          : 'This user will regain access to their account.' }}</p>
+        <h3>{{ confirmTarget.action === 'block' ? t('admin.user_list.block_title') : t('admin.user_list.unblock_title') }}</h3>
+        <p>{{ confirmTarget.action === 'block' ? t('admin.user_list.block_msg') : t('admin.user_list.unblock_msg') }}</p>
         <div class="modal-actions">
-          <button class="btn btn-ghost" @click="confirmTarget = null">Cancel</button>
+          <button class="btn btn-ghost" @click="confirmTarget = null">{{ t('admin.cancel') }}</button>
           <button
             :class="confirmTarget.action === 'block' ? 'btn btn-danger' : 'btn btn-success'"
             :disabled="submitting"
             @click="executeAction"
           >
-            {{ submitting ? '…' : (confirmTarget.action === 'block' ? 'Block' : 'Unblock') }}
+            {{ submitting ? '…' : (confirmTarget.action === 'block' ? t('admin.user_list.block') : t('admin.user_list.unblock')) }}
           </button>
         </div>
       </div>
@@ -102,6 +100,7 @@ import { ref, computed, onMounted } from 'vue'
 import Pagination from '../../components/Pagination.vue'
 import { adminListUsers, adminBlockUser, adminUnblockUser } from '../../api/adminModeration.js'
 import { staticUrl } from '../../api/client.js'
+import { t } from '../../i18n/index.js'
 
 const loading = ref(false)
 const error = ref('')

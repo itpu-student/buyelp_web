@@ -3,13 +3,13 @@
     <div class="login-card card">
       <div class="login-header">
         <span class="login-icon">⚙️</span>
-        <h1 class="login-title">Admin Login</h1>
-        <p class="text-muted text-sm">Sign in to the admin panel</p>
+        <h1 class="login-title">{{ t('admin.login.title') }}</h1>
+        <p class="text-muted text-sm">{{ t('admin.login.subtitle') }}</p>
       </div>
 
       <form @submit.prevent="submit" class="login-form">
         <div class="form-group">
-          <label class="form-label">Username</label>
+          <label class="form-label">{{ t('admin.login.username') }}</label>
           <input
             v-model="form.username"
             type="text"
@@ -21,7 +21,7 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Password</label>
+          <label class="form-label">{{ t('admin.login.password') }}</label>
           <input
             v-model="form.password"
             type="password"
@@ -35,7 +35,7 @@
         <div v-if="error" class="error-msg">{{ error }}</div>
 
         <button type="submit" class="btn btn-primary w-full" :disabled="loading">
-          {{ loading ? 'Signing in…' : 'Sign In' }}
+          {{ loading ? t('admin.login.signing_in') : t('admin.login.sign_in') }}
         </button>
       </form>
     </div>
@@ -47,6 +47,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { adminLogin } from '../../api/adminAuth.js'
 import { adminStore } from '../../store/adminStore.js'
+import { t } from '../../i18n/index.js'
 
 const router = useRouter()
 const loading = ref(false)
@@ -61,7 +62,7 @@ async function submit() {
     adminStore.setAdminSession({ token: res.token, admin: res.admin })
     router.push('/admin/reports')
   } catch (e) {
-    error.value = e.message || 'Invalid credentials'
+    error.value = e.message || t('admin.login.invalid_creds')
   } finally {
     loading.value = false
   }

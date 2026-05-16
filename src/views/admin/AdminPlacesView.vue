@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="view-header">
-      <h2 class="view-title">Places</h2>
+      <h2 class="view-title">{{ t('admin.places.title') }}</h2>
     </div>
 
     <!-- Status filter tabs -->
@@ -17,25 +17,25 @@
       </button>
     </div>
 
-    <div v-if="loading" class="state-msg">Loading…</div>
+    <div v-if="loading" class="state-msg">{{ t('admin.loading') }}</div>
     <div v-else-if="error" class="state-msg error">{{ error }}</div>
     <template v-else>
       <div class="table-wrap">
         <table class="admin-table">
           <thead>
             <tr>
-              <th>Place</th>
-              <th>Category</th>
-              <th>Info</th>
-              <th>Status</th>
-              <th>Claimed By</th>
-              <th>Created</th>
-              <th>Actions</th>
+              <th>{{ t('admin.places.col_place') }}</th>
+              <th>{{ t('admin.places.col_category') }}</th>
+              <th>{{ t('admin.places.col_info') }}</th>
+              <th>{{ t('admin.status') }}</th>
+              <th>{{ t('admin.places.col_claimed_by') }}</th>
+              <th>{{ t('admin.places.col_created') }}</th>
+              <th>{{ t('admin.places.col_actions') }}</th>
             </tr>
           </thead>
           <TransitionGroup tag="tbody" name="row">
             <tr key="__empty" v-if="items.length === 0">
-              <td colspan="7" class="empty-cell">No places found.</td>
+              <td colspan="7" class="empty-cell">{{ t('admin.places.empty') }}</td>
             </tr>
             <tr v-for="p in items" :key="p.id">
               <td>
@@ -78,17 +78,17 @@
                   class="btn btn-sm btn-success"
                   :disabled="actionTarget === p.id"
                   @click="setStatus(p, 'approved')"
-                >Approve</button>
+                >{{ t('admin.approve') }}</button>
                 <button
                   v-if="p.status !== 'rejected' && p.status !== 'suspended'"
                   class="btn btn-sm btn-danger"
                   :disabled="actionTarget === p.id"
                   @click="setStatus(p, 'rejected')"
-                >Reject</button>
+                >{{ t('admin.reject') }}</button>
                 <RouterLink
                   :to="`/admin/places/${p.slug || p.id}/edit`"
                   class="btn btn-sm btn-ghost"
-                >Edit</RouterLink>
+                >{{ t('admin.places.edit') }}</RouterLink>
               </td>
             </tr>
           </TransitionGroup>
@@ -113,7 +113,7 @@
           </a>
         </div>
         <div class="modal-actions">
-          <button class="btn btn-ghost" @click="userModal = null">Close</button>
+          <button class="btn btn-ghost" @click="userModal = null">{{ t('admin.close') }}</button>
         </div>
       </div>
     </div>
@@ -127,7 +127,7 @@ import Pagination from '../../components/Pagination.vue'
 import { adminListPlaces, adminSetPlaceStatus } from '../../api/adminModeration.js'
 import { categoriesState, ensureCategoriesLoaded } from '../../store/categories.js'
 import { staticUrl } from '../../api/client.js'
-import { i18nState } from '../../i18n/index.js'
+import { i18nState, t } from '../../i18n/index.js'
 
 const loading = ref(false)
 const error = ref('')
@@ -140,13 +140,13 @@ const userModal = ref(null)
 const filters = reactive({ status: 'pending' })
 const totalPages = computed(() => Math.ceil(total.value / limit))
 
-const statuses = [
-  { value: '', label: 'All' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'approved', label: 'Approved' },
-  { value: 'rejected', label: 'Rejected' },
-  { value: 'suspended', label: 'Suspended' },
-]
+const statuses = computed(() => [
+  { value: '', label: t('admin.all') },
+  { value: 'pending', label: t('admin.pending') },
+  { value: 'approved', label: t('admin.approved') },
+  { value: 'rejected', label: t('admin.rejected') },
+  { value: 'suspended', label: t('admin.suspended') },
+])
 
 const CATEGORY_ICONS = { restaurants: '🍽️', auto: '🚗', health: '🏥', activities: '🏔️', sports: '⚽', tabiat: '🌿' }
 function categoryEmoji(slug) { return CATEGORY_ICONS[slug] || '📍' }

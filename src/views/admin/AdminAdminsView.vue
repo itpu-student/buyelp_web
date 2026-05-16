@@ -1,28 +1,28 @@
 <template>
   <div>
     <div class="view-header">
-      <h2 class="view-title">Admins</h2>
-      <button class="btn btn-sm btn-primary" @click="openCreate">➕ New Admin</button>
+      <h2 class="view-title">{{ t('admin.admin_list.title') }}</h2>
+      <button class="btn btn-sm btn-primary" @click="openCreate">{{ t('admin.admin_list.new_admin') }}</button>
     </div>
 
-    <div v-if="loading" class="state-msg">Loading…</div>
+    <div v-if="loading" class="state-msg">{{ t('admin.loading') }}</div>
     <div v-else-if="error" class="state-msg error">{{ error }}</div>
     <template v-else>
       <div class="table-wrap">
         <table class="admin-table">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Username</th>
-              <th>Power</th>
-              <th>Created By</th>
-              <th>Joined</th>
+              <th>{{ t('admin.admin_list.col_name') }}</th>
+              <th>{{ t('admin.admin_list.col_username') }}</th>
+              <th>{{ t('admin.admin_list.col_power') }}</th>
+              <th>{{ t('admin.admin_list.col_created_by') }}</th>
+              <th>{{ t('admin.admin_list.col_joined') }}</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="items.length === 0">
-              <td colspan="6" class="empty-cell">No admins found.</td>
+              <td colspan="6" class="empty-cell">{{ t('admin.admin_list.empty') }}</td>
             </tr>
             <tr v-for="a in items" :key="a.id">
               <td class="font-medium">{{ a.name }}</td>
@@ -37,7 +37,7 @@
                   v-if="canEdit(a)"
                   class="btn btn-xs btn-ghost"
                   @click="openEdit(a)"
-                >Edit</button>
+                >{{ t('admin.admin_list.edit_btn') }}</button>
               </td>
             </tr>
           </tbody>
@@ -51,35 +51,35 @@
     <div v-if="modal.open" class="modal-backdrop" @click.self="closeModal">
       <div class="modal">
         <div class="modal-header">
-          <h3>{{ modal.mode === 'create' ? 'New Admin' : 'Edit Admin' }}</h3>
+          <h3>{{ modal.mode === 'create' ? t('admin.admin_list.modal_create') : t('admin.admin_list.modal_edit') }}</h3>
           <button class="btn-close" @click="closeModal">✕</button>
         </div>
 
         <form @submit.prevent="submitModal" class="modal-body">
           <label class="field">
-            <span>Name</span>
+            <span>{{ t('admin.admin_list.label_name') }}</span>
             <input v-model="form.name" required placeholder="Full name" />
           </label>
 
           <label v-if="modal.mode === 'create'" class="field">
-            <span>Username</span>
+            <span>{{ t('admin.admin_list.label_username') }}</span>
             <input v-model="form.username" required placeholder="username" autocomplete="off" />
           </label>
 
           <label class="field">
-            <span>Password{{ modal.mode === 'edit' ? ' (leave blank to keep)' : '' }}</span>
+            <span>{{ modal.mode === 'edit' ? t('admin.admin_list.label_password_keep') : t('admin.admin_list.label_password') }}</span>
             <input v-model="form.password" type="password" :required="modal.mode === 'create'" autocomplete="new-password" />
           </label>
 
           <label class="field">
-            <span>Power (0–{{ maxPower }})</span>
+            <span>{{ t('admin.admin_list.label_power', { max: maxPower }) }}</span>
             <input v-model.number="form.power" type="number" min="0" :max="maxPower" required />
           </label>
 
           <div class="modal-actions">
-            <button type="button" class="btn btn-sm btn-ghost" @click="closeModal">Cancel</button>
+            <button type="button" class="btn btn-sm btn-ghost" @click="closeModal">{{ t('admin.cancel') }}</button>
             <button type="submit" class="btn btn-sm btn-primary" :disabled="saving">
-              {{ saving ? 'Saving…' : modal.mode === 'create' ? 'Create' : 'Save' }}
+              {{ saving ? t('admin.saving') : modal.mode === 'create' ? t('admin.admin_list.create') : t('admin.admin_list.save') }}
             </button>
           </div>
 
@@ -95,6 +95,7 @@ import { ref, computed, reactive, onMounted } from 'vue'
 import Pagination from '../../components/Pagination.vue'
 import { adminListAdmins, adminCreateAdmin, adminEditAdmin } from '../../api/adminAdmins.js'
 import { adminStore } from '../../store/adminStore.js'
+import { t } from '../../i18n/index.js'
 
 const loading = ref(false)
 const error = ref('')

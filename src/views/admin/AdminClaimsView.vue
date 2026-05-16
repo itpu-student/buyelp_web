@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="view-header">
-      <h2 class="view-title">Claims</h2>
+      <h2 class="view-title">{{ t('admin.claim_list.title') }}</h2>
     </div>
 
     <!-- Status filter tabs -->
@@ -17,25 +17,25 @@
       </button>
     </div>
 
-    <div v-if="loading" class="state-msg">Loading…</div>
+    <div v-if="loading" class="state-msg">{{ t('admin.loading') }}</div>
     <div v-else-if="error" class="state-msg error">{{ error }}</div>
     <template v-else>
       <div class="table-wrap">
         <table class="admin-table">
           <thead>
             <tr>
-              <th>User</th>
-              <th>Place</th>
-              <th>Phone</th>
-              <th>Note</th>
-              <th>Status</th>
-              <th>Date</th>
-              <th>Actions</th>
+              <th>{{ t('admin.claim_list.col_user') }}</th>
+              <th>{{ t('admin.claim_list.col_place') }}</th>
+              <th>{{ t('admin.claim_list.col_phone') }}</th>
+              <th>{{ t('admin.claim_list.col_note') }}</th>
+              <th>{{ t('admin.status') }}</th>
+              <th>{{ t('admin.claim_list.col_date') }}</th>
+              <th>{{ t('admin.claim_list.col_actions') }}</th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="items.length === 0">
-              <td colspan="7" class="empty-cell">No claims found.</td>
+              <td colspan="7" class="empty-cell">{{ t('admin.claim_list.empty') }}</td>
             </tr>
             <tr v-for="c in items" :key="c.id">
               <td>
@@ -66,11 +66,11 @@
               <td>
                 <div class="action-btns">
                   <template v-if="c.status === 'pending'">
-                    <button class="btn btn-sm btn-primary" :disabled="submitting === c.id" @click="doAction(c, 'approved')">Approve</button>
-                    <button class="btn btn-sm btn-ghost" :disabled="submitting === c.id" @click="doAction(c, 'rejected')">Reject</button>
+                    <button class="btn btn-sm btn-primary" :disabled="submitting === c.id" @click="doAction(c, 'approved')">{{ t('admin.approve') }}</button>
+                    <button class="btn btn-sm btn-ghost" :disabled="submitting === c.id" @click="doAction(c, 'rejected')">{{ t('admin.reject') }}</button>
                   </template>
                   <template v-else-if="c.status === 'rejected'">
-                    <button class="btn btn-sm btn-primary" :disabled="submitting === c.id" @click="doAction(c, 'approved')">Approve</button>
+                    <button class="btn btn-sm btn-primary" :disabled="submitting === c.id" @click="doAction(c, 'approved')">{{ t('admin.approve') }}</button>
                   </template>
                   <span v-else class="text-muted text-sm">—</span>
                 </div>
@@ -98,7 +98,7 @@
           </a>
         </div>
         <div class="modal-actions">
-          <button class="btn btn-ghost" @click="userModal = null">Close</button>
+          <button class="btn btn-ghost" @click="userModal = null">{{ t('admin.close') }}</button>
         </div>
       </div>
     </div>
@@ -118,24 +118,24 @@
         </div>
         <div class="modal-place-meta">
           <div v-if="placeModal.address?.en" class="meta-row">
-            <span class="meta-label">Address</span>
+            <span class="meta-label">{{ t('admin.review_list.col_address') }}</span>
             <span>{{ placeModal.address.en }}</span>
           </div>
           <div v-if="placeModal.phone" class="meta-row">
-            <span class="meta-label">Phone</span>
+            <span class="meta-label">{{ t('admin.review_list.col_phone') }}</span>
             <span>{{ placeModal.phone }}</span>
           </div>
           <div class="meta-row">
-            <span class="meta-label">Avg rating</span>
+            <span class="meta-label">{{ t('admin.review_list.col_avg_rating') }}</span>
             <span>{{ placeModal.avg_rating }}★</span>
           </div>
           <div class="meta-row">
-            <span class="meta-label">Reviews</span>
+            <span class="meta-label">{{ t('admin.review_list.col_reviews') }}</span>
             <span>{{ placeModal.review_count }}</span>
           </div>
         </div>
         <div class="modal-actions">
-          <button class="btn btn-ghost" @click="placeModal = null">Close</button>
+          <button class="btn btn-ghost" @click="placeModal = null">{{ t('admin.close') }}</button>
         </div>
       </div>
     </div>
@@ -147,6 +147,7 @@ import { ref, computed, onMounted } from 'vue'
 import Pagination from '../../components/Pagination.vue'
 import { adminListClaims, adminReviewClaim } from '../../api/adminModeration.js'
 import { staticUrl } from '../../api/client.js'
+import { t } from '../../i18n/index.js'
 
 const loading = ref(false)
 const error = ref('')
@@ -160,12 +161,12 @@ const userModal = ref(null)
 const placeModal = ref(null)
 const totalPages = computed(() => Math.ceil(total.value / limit))
 
-const statuses = [
-  { value: '', label: 'All' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'approved', label: 'Approved' },
-  { value: 'rejected', label: 'Rejected' },
-]
+const statuses = computed(() => [
+  { value: '', label: t('admin.all') },
+  { value: 'pending', label: t('admin.pending') },
+  { value: 'approved', label: t('admin.approved') },
+  { value: 'rejected', label: t('admin.rejected') },
+])
 
 const counts = ref({ pending: null, approved: null, rejected: null })
 

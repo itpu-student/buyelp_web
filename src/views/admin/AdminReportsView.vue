@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="view-header">
-      <h2 class="view-title">Reports</h2>
+      <h2 class="view-title">{{ t('admin.report_list.title') }}</h2>
     </div>
 
     <!-- Status filter tabs -->
@@ -20,39 +20,39 @@
     <!-- Additional filters -->
     <div class="filter-row">
       <select v-model="filters.target_type" class="filter-select" @change="load(1)">
-        <option value="">All targets</option>
-        <option value="review">Review</option>
-        <option value="place">Place</option>
+        <option value="">{{ t('admin.report_list.filter_all_targets') }}</option>
+        <option value="review">{{ t('admin.report_list.filter_review') }}</option>
+        <option value="place">{{ t('admin.report_list.filter_place') }}</option>
       </select>
       <select v-model="filters.type" class="filter-select" @change="load(1)">
-        <option value="">All types</option>
-        <option value="spam">Spam</option>
-        <option value="misleading">Misleading</option>
-        <option value="inappropriate">Inappropriate</option>
-        <option value="profanity">Profanity</option>
+        <option value="">{{ t('admin.report_list.filter_all_types') }}</option>
+        <option value="spam">{{ t('admin.report_list.filter_spam') }}</option>
+        <option value="misleading">{{ t('admin.report_list.filter_misleading') }}</option>
+        <option value="inappropriate">{{ t('admin.report_list.filter_inappropriate') }}</option>
+        <option value="profanity">{{ t('admin.report_list.filter_profanity') }}</option>
       </select>
     </div>
 
-    <div v-if="loading" class="state-msg">Loading…</div>
+    <div v-if="loading" class="state-msg">{{ t('admin.loading') }}</div>
     <div v-else-if="error" class="state-msg error">{{ error }}</div>
     <template v-else>
       <div class="table-wrap">
         <table class="admin-table">
           <thead>
             <tr>
-              <th>Reporter</th>
-              <th>Text</th>
-              <th>Reported User</th>
-              <th>Target</th>
-              <th>Type</th>
-              <th v-if="filters.status === ''">Status</th>
-              <th>Date</th>
+              <th>{{ t('admin.report_list.col_reporter') }}</th>
+              <th>{{ t('admin.report_list.col_text') }}</th>
+              <th>{{ t('admin.report_list.col_reported_user') }}</th>
+              <th>{{ t('admin.report_list.col_target') }}</th>
+              <th>{{ t('admin.report_list.col_type') }}</th>
+              <th v-if="filters.status === ''">{{ t('admin.status') }}</th>
+              <th>{{ t('admin.report_list.col_date') }}</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="items.length === 0">
-              <td :colspan="filters.status === '' ? 8 : 7" class="empty-cell">No reports found.</td>
+              <td :colspan="filters.status === '' ? 8 : 7" class="empty-cell">{{ t('admin.report_list.empty') }}</td>
             </tr>
             <tr v-for="r in items" :key="r.id" class="clickable-row" @click="open(r.id)">
               <td>
@@ -101,8 +101,8 @@
               </td>
               <td>
                 <div class="action-btns">
-                  <button class="btn btn-sm btn-ghost" @click.stop="openFinishModal(r)">finish ✍️</button>
-                  <button class="btn btn-sm btn-ghost" @click.stop="open(r.id)">View →</button>
+                  <button class="btn btn-sm btn-ghost" @click.stop="openFinishModal(r)">{{ t('admin.report_list.finish_btn') }}</button>
+                  <button class="btn btn-sm btn-ghost" @click.stop="open(r.id)">{{ t('admin.report_list.view_btn') }}</button>
                 </div>
               </td>
             </tr>
@@ -126,9 +126,9 @@
         </div>
         <div v-if="modalError" class="error-msg">{{ modalError }}</div>
         <div class="modal-actions">
-          <button class="btn btn-ghost" @click="userModal.open = false">Cancel</button>
+          <button class="btn btn-ghost" @click="userModal.open = false">{{ t('admin.cancel') }}</button>
           <button class="btn btn-danger" :disabled="modalSubmitting" @click="doBlockUser">
-            {{ modalSubmitting ? 'Saving…' : 'Block User' }}
+            {{ modalSubmitting ? t('admin.saving') : t('admin.block_user') }}
           </button>
         </div>
       </div>
@@ -149,9 +149,9 @@
         </div>
         <div v-if="modalError" class="error-msg">{{ modalError }}</div>
         <div class="modal-actions">
-          <button class="btn btn-ghost" @click="targetModal.open = false">Cancel</button>
+          <button class="btn btn-ghost" @click="targetModal.open = false">{{ t('admin.cancel') }}</button>
           <button class="btn btn-danger" :disabled="modalSubmitting" @click="doTargetAction">
-            {{ modalSubmitting ? 'Saving…' : targetModal.report?.target_type === 'review' ? 'Delete Review' : 'Suspend Place' }}
+            {{ modalSubmitting ? t('admin.saving') : targetModal.report?.target_type === 'review' ? t('admin.report_list.delete_review') : t('admin.report_list.suspend_place') }}
           </button>
         </div>
       </div>
@@ -160,23 +160,23 @@
     <!-- Finish modal -->
     <div class="modal-overlay" v-if="finishModal.open" @click="finishModal.open = false">
       <div class="modal card" @click.stop>
-        <h3 class="modal-title">Finish Report</h3>
+        <h3 class="modal-title">{{ t('admin.report_list.finish_title') }}</h3>
         <div class="modal-field">
-          <label class="field-label">Outcome</label>
+          <label class="field-label">{{ t('admin.report_list.outcome') }}</label>
           <select v-model="finishModal.status" class="filter-select" style="width:100%">
-            <option value="dismissed">dismissed</option>
-            <option value="actioned">actioned</option>
+            <option value="dismissed">{{ t('admin.dismissed') }}</option>
+            <option value="actioned">{{ t('admin.actioned') }}</option>
           </select>
         </div>
         <div class="modal-field">
-          <label class="field-label">Admin Response</label>
-          <textarea v-model="finishModal.admin_response" class="form-textarea" rows="3" placeholder="Optional note…" maxlength="1000"></textarea>
+          <label class="field-label">{{ t('admin.report_list.admin_response_label') }}</label>
+          <textarea v-model="finishModal.admin_response" class="form-textarea" rows="3" :placeholder="t('admin.report_list.optional_note')" maxlength="1000"></textarea>
         </div>
         <div v-if="modalError" class="error-msg">{{ modalError }}</div>
         <div class="modal-actions">
-          <button class="btn btn-ghost" @click="finishModal.open = false">Cancel</button>
+          <button class="btn btn-ghost" @click="finishModal.open = false">{{ t('admin.cancel') }}</button>
           <button class="btn btn-primary" :disabled="modalSubmitting" @click="doFinishReport">
-            {{ modalSubmitting ? 'Saving…' : 'Submit' }}
+            {{ modalSubmitting ? t('admin.saving') : t('admin.submit') }}
           </button>
         </div>
       </div>
@@ -191,6 +191,7 @@ import Pagination from '../../components/Pagination.vue'
 import { listAdminReports, reviewAdminReport } from '../../api/adminReports.js'
 import { adminBlockUser, adminSetPlaceStatus, adminDeleteReview } from '../../api/adminModeration.js'
 import { staticUrl } from '../../api/client.js'
+import { t } from '../../i18n/index.js'
 
 const router = useRouter()
 const loading = ref(false)
@@ -200,13 +201,13 @@ const page = ref(1)
 const limit = 20
 const total = ref(0)
 
-const statuses = [
-  { value: '', label: 'All' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'in_progress', label: 'In Progress' },
-  { value: 'dismissed', label: 'Dismissed' },
-  { value: 'actioned', label: 'Actioned' },
-]
+const statuses = computed(() => [
+  { value: '', label: t('admin.all') },
+  { value: 'pending', label: t('admin.pending') },
+  { value: 'in_progress', label: t('admin.report_list.in_progress') },
+  { value: 'dismissed', label: t('admin.dismissed') },
+  { value: 'actioned', label: t('admin.actioned') },
+])
 
 const filters = reactive({ status: 'pending', target_type: '', type: '' })
 const counts = reactive({ pending: null, in_progress: null, dismissed: null, actioned: null })
