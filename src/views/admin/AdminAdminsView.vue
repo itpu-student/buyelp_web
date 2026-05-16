@@ -44,11 +44,7 @@
         </table>
       </div>
 
-      <div class="pagination" v-if="total > limit">
-        <button class="btn btn-sm btn-ghost" :disabled="page === 1" @click="load(page - 1)">← Prev</button>
-        <span class="page-info">{{ page }} / {{ totalPages }}</span>
-        <button class="btn btn-sm btn-ghost" :disabled="page >= totalPages" @click="load(page + 1)">Next →</button>
-      </div>
+      <Pagination v-if="totalPages > 1" :current="page" :total="totalPages" @go="load" />
     </template>
 
     <!-- Modal -->
@@ -96,6 +92,7 @@
 
 <script setup>
 import { ref, computed, reactive, onMounted } from 'vue'
+import Pagination from '../../components/Pagination.vue'
 import { adminListAdmins, adminCreateAdmin, adminEditAdmin } from '../../api/adminAdmins.js'
 import { adminStore } from '../../store/adminStore.js'
 
@@ -253,9 +250,6 @@ onMounted(() => load(1))
 
 .state-msg { padding: 32px; text-align: center; color: var(--text-2); }
 .state-msg.error { color: #ef4444; }
-
-.pagination { display: flex; align-items: center; gap: 12px; justify-content: center; margin-top: 20px; }
-.page-info { font-size: 0.85rem; color: var(--text-2); }
 
 /* Modal */
 .modal-backdrop {

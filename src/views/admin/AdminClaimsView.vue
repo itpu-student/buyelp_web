@@ -80,11 +80,7 @@
         </table>
       </div>
 
-      <div class="pagination" v-if="total > limit">
-        <button class="btn btn-sm btn-ghost" :disabled="page === 1" @click="load(page - 1)">← Prev</button>
-        <span class="page-info">{{ page }} / {{ totalPages }}</span>
-        <button class="btn btn-sm btn-ghost" :disabled="page >= totalPages" @click="load(page + 1)">Next →</button>
-      </div>
+      <Pagination v-if="totalPages > 1" :current="page" :total="totalPages" @go="load" />
     </template>
 
     <!-- User info modal -->
@@ -148,6 +144,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import Pagination from '../../components/Pagination.vue'
 import { adminListClaims, adminReviewClaim } from '../../api/adminModeration.js'
 import { staticUrl } from '../../api/client.js'
 
@@ -310,9 +307,6 @@ onMounted(() => { load(1); loadCounts() })
 
 .state-msg { padding: 32px; text-align: center; color: var(--text-2); }
 .state-msg.error { color: #ef4444; }
-
-.pagination { display: flex; align-items: center; gap: 12px; justify-content: center; margin-top: 20px; }
-.page-info { font-size: 0.85rem; color: var(--text-2); }
 
 /* Badges */
 .badge-success  { background: rgba(34, 197, 94, 0.12);  color: #16a34a; }
