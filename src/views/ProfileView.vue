@@ -71,7 +71,7 @@
 
         <!-- Reviews -->
         <section v-show="activeTab === 'reviews'" class="section tab-panel">
-          <div v-if="reviewsLoading && !reviews.length" class="text-muted">{{ t('common.loading') }}</div>
+          <div v-if="reviewsLoading" class="text-muted">{{ t('common.loading') }}</div>
           <div v-else-if="reviews.length" class="reviews-list">
             <ReviewCard
               v-for="r in reviews"
@@ -80,12 +80,12 @@
               show-place
               @open="selectedReview = $event"
             />
-            <button
-              v-if="reviews.length < reviewsTotal"
-              class="btn btn-outline btn-sm load-more"
-              :disabled="reviewsLoading"
-              @click="loadMoreReviews"
-            >{{ reviewsLoading ? t('common.loading') : t('common.load_more') }}</button>
+            <Pagination
+              v-if="reviewsTotalPages > 1"
+              :current="reviewsPage"
+              :total="reviewsTotalPages"
+              @go="setReviewsPage"
+            />
           </div>
           <div v-else class="empty-state">
             <span class="empty-icon">📝</span>
@@ -132,7 +132,7 @@
 
         <!-- Reports -->
         <section v-show="activeTab === 'reports'" class="section tab-panel">
-          <div v-if="reportsLoading && !reports.length" class="text-muted">{{ t('common.loading') }}</div>
+          <div v-if="reportsLoading" class="text-muted">{{ t('common.loading') }}</div>
           <div v-else-if="reports.length" class="reports-list">
             <div v-for="r in reports" :key="r.id" class="report-item card">
               <!-- Target preview -->
@@ -181,12 +181,12 @@
                 <span class="admin-response-label">{{ t('profile.admin_response') }}</span> {{ r.admin_response }}
               </div>
             </div>
-            <button
-              v-if="reports.length < reportsTotal"
-              class="btn btn-outline btn-sm load-more"
-              :disabled="reportsLoading"
-              @click="loadMoreReports"
-            >{{ reportsLoading ? t('common.loading') : t('common.load_more') }}</button>
+            <Pagination
+              v-if="reportsTotalPages > 1"
+              :current="reportsPage"
+              :total="reportsTotalPages"
+              @go="setReportsPage"
+            />
           </div>
           <div v-else class="empty-state">
             <span class="empty-icon">🚩</span>
@@ -206,6 +206,7 @@ import { store } from '../store/index.js'
 import { categoriesState, ensureCategoriesLoaded } from '../store/categories.js'
 import ReviewCard from '../components/ReviewCard.vue'
 import ReviewDetailModal from '../components/ReviewDetailModal.vue'
+import Pagination from '../components/Pagination.vue'
 import { staticUrl } from '../api/client.js'
 import { getMe } from '../api/auth.js'
 import { listUserReviews, updateMe, deleteMe } from '../api/users.js'
@@ -231,6 +232,10 @@ const saveError = ref('')
 const activeTab = ref('reviews')
 
 const locale = computed(() => i18nState.locale)
+
+const LIMIT = 10
+const reviewsTotalPages = computed(() => Math.ceil(reviewsTotal.value / LIMIT) || 1)
+const reportsTotalPages = computed(() => Math.ceil(reportsTotal.value / LIMIT) || 1)
 
 const editingReport = ref(null)
 const editReportForm = reactive({ type: '', text: '' })
@@ -299,7 +304,7 @@ async function loadAll() {
 
   reviewsLoading.value = true
   try {
-    const r = await listUserReviews(me.value.id, { page: 1, limit: 10 })
+    const r = await listUserReviews(me.value.id, { page: 1, limit: LIMIT })
     reviews.value = (r?.items || []).map(normalizeReview)
     reviewsTotal.value = r?.total || 0
     reviewsPage.value = 1
@@ -308,7 +313,7 @@ async function loadAll() {
 
   reportsLoading.value = true
   try {
-    const rep = await listMyReports({ page: 1, limit: 10 })
+    const rep = await listMyReports({ page: 1, limit: LIMIT })
     reports.value = rep?.items || []
     reportsTotal.value = rep?.total || 0
     reportsPage.value = 1
@@ -316,28 +321,26 @@ async function loadAll() {
   finally { reportsLoading.value = false }
 }
 
-async function loadMoreReports() {
+async function setReportsPage(n) {
   if (reportsLoading.value) return
   reportsLoading.value = true
   try {
-    const next = reportsPage.value + 1
-    const rep = await listMyReports({ page: next, limit: 10 })
-    reports.value.push(...(rep?.items || []))
-    reportsTotal.value = rep?.total || reportsTotal.value
-    reportsPage.value = next
+    const rep = await listMyReports({ page: n, limit: LIMIT })
+    reports.value = rep?.items || []
+    reportsTotal.value = rep?.total ?? reportsTotal.value
+    reportsPage.value = n
   } catch (_) {}
   finally { reportsLoading.value = false }
 }
 
-async function loadMoreReviews() {
+async function setReviewsPage(n) {
   if (!me.value?.id || reviewsLoading.value) return
   reviewsLoading.value = true
   try {
-    const next = reviewsPage.value + 1
-    const r = await listUserReviews(me.value.id, { page: next, limit: 10 })
-    reviews.value.push(...(r?.items || []).map(normalizeReview))
-    reviewsTotal.value = r?.total || reviewsTotal.value
-    reviewsPage.value = next
+    const r = await listUserReviews(me.value.id, { page: n, limit: LIMIT })
+    reviews.value = (r?.items || []).map(normalizeReview)
+    reviewsTotal.value = r?.total ?? reviewsTotal.value
+    reviewsPage.value = n
   } catch (_) {}
   finally { reviewsLoading.value = false }
 }
@@ -450,7 +453,6 @@ onMounted(() => {
 
 /* ── Reviews ── */
 .reviews-list { display: flex; flex-direction: column; gap: 16px; }
-.load-more { align-self: center; margin-top: 4px; }
 
 /* ── Saved Places ── */
 .saved-places-list { display: flex; flex-direction: column; gap: 10px; }

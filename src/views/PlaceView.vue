@@ -123,6 +123,12 @@
                   @open="openReviewDetail"
                   @report="openReviewReport"
                 />
+                <Pagination
+                  v-if="reviewsTotalPages > 1"
+                  :current="reviewsPage"
+                  :total="reviewsTotalPages"
+                  @go="setReviewsPage"
+                />
               </div>
               <p v-else class="text-muted text-sm">{{ t("place.no_reviews") }}</p>
             </section>
@@ -286,12 +292,17 @@ import ClaimModal from "../components/ClaimModal.vue"
 import StarRating from "../components/StarRating.vue"
 import SidebarHours from "../components/SidebarHours.vue"
 import SvgMapItem from "../components/SvgMapItem.vue"
+import Pagination from "../components/Pagination.vue"
 
 const route = useRoute()
 const router = useRouter()
 
 const place = ref(null)
 const reviews = ref([])
+const reviewsTotal = ref(0)
+const reviewsPage = ref(1)
+const REVIEWS_LIMIT = 10
+const reviewsTotalPages = computed(() => Math.ceil(reviewsTotal.value / REVIEWS_LIMIT) || 1)
 const loading = ref(true)
 const loadError = ref("")
 const reviewsLoading = ref(false)
@@ -514,21 +525,25 @@ async function loadPlace(idOrSlug) {
   }
 }
 
-async function loadReviews(idOrSlug) {
+async function loadReviews(idOrSlug, p = 1) {
   reviewsLoading.value = true
   try {
-    const res = await listPlaceReviews(idOrSlug)
+    const res = await listPlaceReviews(idOrSlug, { page: p, limit: REVIEWS_LIMIT })
     reviews.value = (res.items || []).map(normalizeReview)
-    if (route.query.review) {
+    reviewsTotal.value = res.total ?? 0
+    reviewsPage.value = p
+    if (p === 1 && route.query.review) {
       const found = reviews.value.find((r) => r.id === route.query.review)
       if (found) detailReview.value = found
     }
-  } catch (e) {
+  } catch {
     reviews.value = []
   } finally {
     reviewsLoading.value = false
   }
 }
+
+function setReviewsPage(n) { loadReviews(place.value._uuid, n) }
 
 async function handleReviewSubmit(payload) {
   if (!place.value) return
@@ -554,7 +569,7 @@ async function handleReviewSubmit(payload) {
     setTimeout(() => (reviewSubmitted.value = false), 3000)
     const fresh = await getPlace(place.value._uuid)
     place.value = normalizePlace(fresh)
-    await loadReviews(place.value._uuid)
+    await loadReviews(place.value._uuid, 1)
   } catch (e) {
     submitError.value = e.status === 403
       ? "This place isn't approved yet — reviews are disabled."

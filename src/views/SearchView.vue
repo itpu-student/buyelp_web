@@ -36,6 +36,7 @@
 
       <div v-if="places.length" class="place-row-list">
         <PlaceRow v-for="place in places" :key="place.id" :place="place" />
+        <Pagination v-if="totalPages > 1" :current="page" :total="totalPages" @go="goToPage" />
       </div>
       <div v-else-if="!loading" class="empty-state">
         <span class="empty-icon">🔍</span>
@@ -53,6 +54,7 @@ import { listPlaces } from '../api/places.js'
 import { normalizePlace } from '../api/normalize.js'
 import { categoriesState, ensureCategoriesLoaded } from '../store/categories.js'
 import PlaceRow from '../components/PlaceRow.vue'
+import Pagination from '../components/Pagination.vue'
 
 const route = useRoute()
 const query = ref('')
@@ -61,6 +63,10 @@ const places = ref([])
 const total = ref(0)
 const loading = ref(true)
 const loadError = ref('')
+const page = ref(1)
+
+const LIMIT = 20
+const totalPages = computed(() => Math.ceil(total.value / LIMIT) || 1)
 
 const categoryIcons = {
   all: '🗺️', restaurants: '🍽️', auto: '🚗', health: '🏥',
@@ -76,7 +82,7 @@ const allCategories = computed(() =>
 )
 
 let fetchToken = 0
-async function runFetch() {
+async function runFetch(p = page.value) {
   const myToken = ++fetchToken
   loading.value = true
   loadError.value = ''
@@ -85,11 +91,13 @@ async function runFetch() {
       query: query.value.trim() || undefined,
       category_id: selectedCategoryId.value,
       sort: 'top',
-      limit: 50,
+      page: p,
+      limit: LIMIT,
     })
     if (myToken !== fetchToken) return
     places.value = (res.items || []).map(normalizePlace)
     total.value = res.total ?? places.value.length
+    page.value = p
   } catch (e) {
     if (myToken !== fetchToken) return
     loadError.value = e.message || 'Failed to load places'
@@ -100,14 +108,17 @@ async function runFetch() {
   }
 }
 
+function goToPage(n) { runFetch(n) }
+
 let debounceTimer = null
-function scheduleFetch() {
+function resetAndFetch() {
+  page.value = 1
   clearTimeout(debounceTimer)
-  debounceTimer = setTimeout(runFetch, 300)
+  debounceTimer = setTimeout(() => runFetch(1), 300)
 }
 
-watch(query, scheduleFetch)
-watch(selectedCategoryId, runFetch)
+watch(query, resetAndFetch)
+watch(selectedCategoryId, () => { page.value = 1; runFetch(1) })
 
 onMounted(async () => {
   if (route.query.q) query.value = String(route.query.q)
