@@ -1,20 +1,20 @@
 <template>
   <div class="page-content">
     <div class="container">
-      <h1 class="page-title">My places</h1>
+      <h1 class="page-title">{{ t('business.title') }}</h1>
 
       <div v-if="!store.isLoggedIn" class="nudge card">
         <p>
-          <RouterLink to="/login" class="text-primary font-semibold">Sign in</RouterLink>
-          to manage your places.
+          <RouterLink to="/login" class="text-primary font-semibold">{{ t('auth.signin_link') }}</RouterLink>
+          {{ t('business.sign_in_post') }}
         </p>
       </div>
 
       <template v-else>
-        <div v-if="loading" class="state-msg">Loading…</div>
+        <div v-if="loading" class="state-msg">{{ t('common.loading') }}</div>
         <div v-else-if="error" class="state-msg error">{{ error }}</div>
         <div v-else-if="!places.length" class="state-msg">
-          You don't own any places yet. Claim one from its place page.
+          {{ t('business.no_places') }}
         </div>
         <div v-else class="places-list">
           <div v-for="p in places" :key="p.id" class="place-card card" @click="router.push(`/place/${p.slug || p.id}`)">
@@ -28,12 +28,12 @@
                 <span class="place-slug text-muted">{{ p.slug }}</span>
                 <div class="place-meta">
                   <span class="badge" :class="statusClass(p.status)">{{ p.status }}</span>
-                  <span class="text-muted text-sm">{{ p.avg_rating?.toFixed(1) }}★ · {{ p.review_count }} reviews</span>
+                  <span class="text-muted text-sm">{{ p.avg_rating?.toFixed(1) }}★ · {{ p.review_count }} {{ t('common.reviews_count') }}</span>
                 </div>
               </div>
             </div>
             <div class="place-actions">
-              <RouterLink :to="`/business/${p.slug || p.id}/edit`" class="btn btn-sm btn-primary" @click.stop>Edit</RouterLink>
+              <RouterLink :to="`/business/${p.slug || p.id}/edit`" class="btn btn-sm btn-primary" @click.stop>{{ t('common.edit') }}</RouterLink>
             </div>
           </div>
         </div>
@@ -45,6 +45,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { t } from '../i18n/index.js'
 import { store } from '../store/index.js'
 import { listMyPlaces } from '../api/places.js'
 import { staticUrl } from '../api/client.js'

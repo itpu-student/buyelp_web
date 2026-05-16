@@ -1,29 +1,29 @@
 <template>
   <div class="page-content">
     <div class="container narrow">
-      <h1 class="section-title">Add a place</h1>
+      <h1 class="section-title">{{ t('add_place.title') }}</h1>
       <p class="text-muted text-sm mt-2">
-        New places start pending review. Required fields are marked with *.
+        {{ t('add_place.subtitle') }}
       </p>
 
       <div v-if="!store.isLoggedIn" class="nudge card">
         <p>
-          You need to
-          <RouterLink to="/login" class="text-primary font-semibold">sign in</RouterLink>
-          to add a place.
+          {{ t('add_place.sign_in_pre') }}
+          <RouterLink to="/login" class="text-primary font-semibold">{{ t('auth.signin_link') }}</RouterLink>
+          {{ t('add_place.sign_in_post') }}
         </p>
       </div>
 
       <form v-else class="form" @submit.prevent="submit">
         <div class="form-group">
-          <label class="form-label" for="name">Name *</label>
+          <label class="form-label" for="name">{{ t('add_place.label_name') }}</label>
           <input id="name" v-model.trim="form.name" type="text" class="form-input" required />
         </div>
 
         <div class="form-group">
-          <span class="form-label">Category *</span>
+          <span class="form-label">{{ t('add_place.label_category') }}</span>
           <div v-if="categoriesState.loading && !filteredCategories.length" class="text-muted text-sm">
-            Loading categories…
+            {{ t('add_place.loading_categories') }}
           </div>
           <div v-else-if="categoriesState.error" class="form-error">
             {{ categoriesState.error.message || 'Failed to load categories' }}
@@ -39,29 +39,29 @@
               @click="form.category_id = c.id"
             >
               <span class="cat-emoji">{{ c.emoji || '🏷️' }}</span>
-              <span class="cat-name">{{ c.name?.en || c.slug }}</span>
+              <span class="cat-name">{{ c.name?.[i18nState.locale] || c.name?.en || c.slug }}</span>
             </button>
           </div>
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label" for="addr-uz">Address (UZ) *</label>
+            <label class="form-label" for="addr-uz">{{ t('add_place.label_address_uz') }}</label>
             <input id="addr-uz" v-model.trim="form.addressUz" type="text" class="form-input" required />
           </div>
           <div class="form-group">
-            <label class="form-label" for="addr-en">Address (EN)</label>
+            <label class="form-label" for="addr-en">{{ t('add_place.label_address_en') }}</label>
             <input id="addr-en" v-model.trim="form.addressEn" type="text" class="form-input" />
           </div>
         </div>
 
         <div class="form-group">
-          <span class="form-label">Location *</span>
+          <span class="form-label">{{ t('add_place.label_location') }}</span>
           <MapPicker v-model:lat="form.lat" v-model:lon="form.lon" />
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="phone">Phone</label>
+          <label class="form-label" for="phone">{{ t('add_place.label_phone') }}</label>
           <input
             id="phone"
             v-model.trim="form.phone"
@@ -75,17 +75,17 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label" for="desc-uz">Description (UZ)</label>
+            <label class="form-label" for="desc-uz">{{ t('add_place.label_desc_uz') }}</label>
             <textarea id="desc-uz" v-model="form.descUz" class="form-input" rows="3"></textarea>
           </div>
           <div class="form-group">
-            <label class="form-label" for="desc-en">Description (EN)</label>
+            <label class="form-label" for="desc-en">{{ t('add_place.label_desc_en') }}</label>
             <textarea id="desc-en" v-model="form.descEn" class="form-input" rows="3"></textarea>
           </div>
         </div>
 
         <div class="form-group">
-          <span class="form-label">Logo</span>
+          <span class="form-label">{{ t('add_place.label_logo') }}</span>
           <div class="logo-row">
             <button
               type="button"
@@ -119,7 +119,7 @@
         </div>
 
         <div class="form-group">
-          <span class="form-label">Photos</span>
+          <span class="form-label">{{ t('add_place.label_photos') }}</span>
           <div class="photo-strip">
             <div v-for="(k, i) in form.images" :key="k" class="photo-tile">
               <img :src="staticUrl(k)" :alt="`Photo ${i + 1}`" />
@@ -146,18 +146,19 @@
             />
           </div>
           <small v-if="imagesUploading" class="text-muted">
-            Uploading {{ imagesProgress.done }} of {{ imagesProgress.total }}…
+            {{ t('add_place.uploading_photos') }} {{ imagesProgress.done }} / {{ imagesProgress.total }}
           </small>
         </div>
 
         <div v-if="error" class="form-error">{{ error }}</div>
         <div v-if="success" class="form-success">
-          Created! <RouterLink :to="`/place/${success}`" class="text-primary font-semibold">View place →</RouterLink>
+          {{ t('add_place.created') }}
+          <RouterLink :to="`/place/${success}`" class="text-primary font-semibold">{{ t('add_place.view_place') }}</RouterLink>
         </div>
 
         <div class="actions">
           <button type="submit" class="btn btn-primary" :disabled="submitting">
-            {{ submitting ? 'Submitting…' : 'Create place' }}
+            {{ submitting ? t('add_place.submitting') : t('add_place.submit') }}
           </button>
         </div>
       </form>
@@ -168,6 +169,7 @@
 <script setup>
 import { reactive, ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { t, i18nState } from '../i18n/index.js'
 import { store } from '../store/index.js'
 import { createPlace } from '../api/places.js'
 import { uploadFile } from '../api/files.js'
@@ -244,15 +246,15 @@ async function submit() {
   error.value = ''
   success.value = ''
   if (!form.category_id) {
-    error.value = 'Please pick a category'
+    error.value = t('add_place.error_category')
     return
   }
   if (form.lat == null || form.lon == null) {
-    error.value = 'Please pick a location on the map'
+    error.value = t('add_place.error_location')
     return
   }
   if (form.phone && !/^\+\d{12}$/.test(form.phone)) {
-    error.value = 'Phone must be in format +998XXXXXXXXX (12 digits)'
+    error.value = t('add_place.error_phone')
     return
   }
   submitting.value = true

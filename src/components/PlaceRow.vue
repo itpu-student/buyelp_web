@@ -67,7 +67,7 @@
             {{ place.isOpen === true ? t('place.open_now') : place.isOpen === false ? t('place.closed') : t('place.hours_unknown') }}
           </span>
           <span class="place-row__tag place-row__tag--category">
-            {{ categoryIcon }} {{ t(`categories.${place.category}`) }}
+            {{ categoryIcon }} {{ categoryLabel }}
           </span>
         </div>
 
@@ -114,6 +114,7 @@ import { ref, computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { t, i18nState } from '../i18n/index.js'
 import { resolveTodayHours } from '../data/places.js'
+import { categoriesState } from '../store/categories.js'
 import StarRating from './StarRating.vue'
 import SvgMapItem from './SvgMapItem.vue'
 
@@ -138,6 +139,10 @@ const categoryIcons = {
   activities: '🏔️', sports: '⚽', tabiat: '🌿',
 }
 const categoryIcon = computed(() => categoryIcons[props.place.category] || '📍')
+const categoryLabel = computed(() => {
+  const cat = categoriesState.byId[props.place._categoryId]
+  return cat?.name?.[i18nState.locale] || cat?.name?.en || t(`categories.${props.place.category}`)
+})
 
 const hoursSummary = computed(() => resolveTodayHours(props.place) ?? t('place.hours_unknown'))
 

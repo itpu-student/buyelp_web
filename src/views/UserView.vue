@@ -9,9 +9,9 @@
 
       <div v-else-if="notFound" class="state-box">
         <span class="state-icon">🔍</span>
-        <h2>User not found</h2>
-        <p class="text-muted">No user with that username exists.</p>
-        <RouterLink to="/" class="btn btn-primary btn-sm">Go home</RouterLink>
+        <h2>{{ t('user.not_found_title') }}</h2>
+        <p class="text-muted">{{ t('user.not_found_msg') }}</p>
+        <RouterLink to="/" class="btn btn-primary btn-sm">{{ t('user.go_home') }}</RouterLink>
       </div>
 
       <template v-else-if="user">
@@ -25,10 +25,10 @@
                 <span v-if="user.username">@{{ user.username }}</span>
               </p>
               <p class="profile-joined text-muted text-xs">
-                Joined: {{ user.created_at ? formatDate(user.created_at) : '—' }}
+                {{ t('user.joined') }} {{ user.created_at ? formatDate(user.created_at) : '—' }}
               </p>
               <p class="profile-review-count text-muted text-xs">
-                {{ publicData.review_count }} {{ publicData.review_count === 1 ? 'review' : 'reviews' }}
+                {{ publicData.review_count }} {{ t('common.reviews_count') }}
               </p>
             </div>
           </div>
@@ -37,13 +37,13 @@
         <!-- Tab bar (scaffold for future tabs) -->
         <div class="tab-bar">
           <button class="tab-btn active">
-            Reviews<span v-if="reviewsTotal" class="tab-count">{{ reviewsTotal }}</span>
+            {{ t('place.reviews') }}<span v-if="reviewsTotal" class="tab-count">{{ reviewsTotal }}</span>
           </button>
         </div>
 
         <!-- Reviews tab -->
         <section class="section tab-panel">
-          <div v-if="reviewsLoading && !reviews.length" class="text-muted">Loading…</div>
+          <div v-if="reviewsLoading && !reviews.length" class="text-muted">{{ t('common.loading') }}</div>
           <div v-else-if="reviews.length" class="reviews-list">
             <ReviewCard
               v-for="r in reviews"
@@ -57,11 +57,11 @@
               class="btn btn-outline btn-sm load-more"
               :disabled="reviewsLoading"
               @click="loadMoreReviews"
-            >{{ reviewsLoading ? 'Loading…' : 'Load more' }}</button>
+            >{{ reviewsLoading ? t('common.loading') : t('common.load_more') }}</button>
           </div>
           <div v-else class="empty-state">
             <span class="empty-icon">📝</span>
-            <p>No reviews yet.</p>
+            <p>{{ t('user.no_reviews') }}</p>
           </div>
         </section>
 
@@ -75,6 +75,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { t } from '../i18n/index.js'
 import ReviewCard from '../components/ReviewCard.vue'
 import ReviewDetailModal from '../components/ReviewDetailModal.vue'
 import { getUser, listUserReviews } from '../api/users.js'

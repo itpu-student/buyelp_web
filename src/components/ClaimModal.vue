@@ -3,24 +3,24 @@
     <div class="modal-backdrop" @click.self="$emit('close')" @keydown.esc.window="$emit('close')">
       <div class="modal-box" role="dialog" aria-modal="true">
         <button class="modal-close" aria-label="Close" @click="$emit('close')">✕</button>
-        <h3 class="modal-title">Claim this place</h3>
-        <p class="modal-hint">Provide a contact number so admins can verify ownership.</p>
+        <h3 class="modal-title">{{ t('claim.title') }}</h3>
+        <p class="modal-hint">{{ t('claim.hint') }}</p>
 
         <label class="form-row">
-          <span>Contact phone <span class="required">*</span></span>
+          <span>{{ t('claim.label_phone') }} <span class="required">*</span></span>
           <input v-model="phone" class="form-input" placeholder="+998 ..." />
         </label>
         <label class="form-row">
-          <span>Note (optional)</span>
-          <textarea v-model="note" class="form-input" rows="3" placeholder="Why you're the owner…"></textarea>
+          <span>{{ t('claim.label_note') }}</span>
+          <textarea v-model="note" class="form-input" rows="3" :placeholder="t('claim.placeholder_note')"></textarea>
         </label>
 
         <div v-if="errorMsg" class="error-msg">{{ errorMsg }}</div>
         <div class="modal-actions">
           <button class="btn btn-primary btn-sm" :disabled="!phone.trim() || submitting" @click="submit">
-            {{ submitting ? 'Submitting…' : 'Submit claim' }}
+            {{ submitting ? t('claim.submitting') : t('claim.submit') }}
           </button>
-          <button class="btn btn-ghost btn-sm" @click="$emit('close')">Cancel</button>
+          <button class="btn btn-ghost btn-sm" @click="$emit('close')">{{ t('common.cancel') }}</button>
         </div>
       </div>
     </div>
@@ -29,6 +29,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { t } from '../i18n/index.js'
 import { createClaim } from '../api/claims.js'
 
 const props = defineProps({
@@ -50,7 +51,7 @@ async function submit() {
     emit('submitted')
     emit('close')
   } catch (e) {
-    errorMsg.value = e.message || 'Failed to submit claim'
+    errorMsg.value = e.message || t('claim.error')
   } finally {
     submitting.value = false
   }

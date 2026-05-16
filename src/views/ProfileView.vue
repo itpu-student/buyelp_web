@@ -2,7 +2,7 @@
   <div class="page-content">
     <div class="container">
       <div v-if="!store.isLoggedIn" class="not-logged-in">
-        <h2>Please log in to view your profile.</h2>
+        <h2>{{ t('profile.not_logged_in') }}</h2>
         <RouterLink to="/login" class="btn btn-primary mt-4">{{ t('auth.login_btn') }}</RouterLink>
       </div>
 
@@ -15,7 +15,7 @@
               <h1 class="profile-name">{{ me?.name || '—' }}</h1>
               <p class="profile-email text-muted text-sm">
                 <span v-if="me?.username">@{{ me.username }}</span>
-                <span v-else class="text-muted">no username yet</span>
+                <span v-else class="text-muted">{{ t('profile.no_username') }}</span>
               </p>
               <p class="profile-joined text-muted text-xs">
                 {{ t('profile.joined') }}: {{ me?.created_at ? formatDate(me.created_at) : '—' }}
@@ -24,33 +24,33 @@
             </div>
             <div class="profile-actions">
               <button class="btn btn-outline btn-sm" @click="editing = !editing">
-                {{ editing ? 'Cancel' : 'Edit profile' }}
+                {{ editing ? t('common.cancel') : t('profile.edit_profile') }}
               </button>
-              <button class="btn btn-ghost btn-sm" @click="confirmDelete">Delete account</button>
+              <button class="btn btn-ghost btn-sm" @click="confirmDelete">{{ t('profile.delete_account') }}</button>
             </div>
           </div>
         </div>
 
         <section class="section card edit-card" v-if="editing">
-          <h3 class="section-title">Edit profile</h3>
+          <h3 class="section-title">{{ t('profile.edit_profile') }}</h3>
           <div class="edit-grid">
             <label class="form-row">
-              <span>Name</span>
+              <span>{{ t('profile.label_name') }}</span>
               <input v-model="form.name" class="form-input" />
             </label>
             <label class="form-row">
-              <span>Username (a–z, 0–9, _)</span>
+              <span>{{ t('profile.label_username') }}</span>
               <input v-model="form.username" class="form-input" placeholder="handle" />
             </label>
             <label class="form-row">
-              <span>Avatar</span>
+              <span>{{ t('profile.label_avatar') }}</span>
               <input type="file" accept="image/*" @change="onAvatarPick" />
-              <small v-if="uploading" class="text-muted">Uploading…</small>
+              <small v-if="uploading" class="text-muted">{{ t('common.uploading') }}</small>
             </label>
           </div>
           <div class="edit-actions">
             <button class="btn btn-primary" :disabled="saving" @click="saveProfile">
-              {{ saving ? 'Saving…' : 'Save changes' }}
+              {{ saving ? t('common.saving') : t('profile.save_changes') }}
             </button>
             <span v-if="saveError" class="error-msg">{{ saveError }}</span>
           </div>
@@ -59,19 +59,19 @@
         <!-- Tab bar -->
         <div class="tab-bar">
           <button :class="['tab-btn', { active: activeTab === 'reviews' }]" @click="activeTab = 'reviews'">
-            My Reviews<span v-if="reviewsTotal" class="tab-count">{{ reviewsTotal }}</span>
+            {{ t('profile.my_reviews') }}<span v-if="reviewsTotal" class="tab-count">{{ reviewsTotal }}</span>
           </button>
           <button :class="['tab-btn', { active: activeTab === 'saved' }]" @click="activeTab = 'saved'">
-            Saved Places<span v-if="savedPlaces.length" class="tab-count">{{ savedPlaces.length }}</span>
+            {{ t('profile.tab_saved') }}<span v-if="savedPlaces.length" class="tab-count">{{ savedPlaces.length }}</span>
           </button>
           <button :class="['tab-btn', { active: activeTab === 'reports' }]" @click="activeTab = 'reports'">
-            My Reports<span v-if="reportsTotal" class="tab-count">{{ reportsTotal }}</span>
+            {{ t('profile.tab_reports') }}<span v-if="reportsTotal" class="tab-count">{{ reportsTotal }}</span>
           </button>
         </div>
 
         <!-- Reviews -->
         <section v-show="activeTab === 'reviews'" class="section tab-panel">
-          <div v-if="reviewsLoading && !reviews.length" class="text-muted">Loading…</div>
+          <div v-if="reviewsLoading && !reviews.length" class="text-muted">{{ t('common.loading') }}</div>
           <div v-else-if="reviews.length" class="reviews-list">
             <ReviewCard
               v-for="r in reviews"
@@ -85,12 +85,12 @@
               class="btn btn-outline btn-sm load-more"
               :disabled="reviewsLoading"
               @click="loadMoreReviews"
-            >{{ reviewsLoading ? 'Loading…' : 'Load more' }}</button>
+            >{{ reviewsLoading ? t('common.loading') : t('common.load_more') }}</button>
           </div>
           <div v-else class="empty-state">
             <span class="empty-icon">📝</span>
-            <p>You haven't written any reviews yet.</p>
-            <RouterLink to="/search" class="btn btn-primary btn-sm">Find Places</RouterLink>
+            <p>{{ t('profile.no_reviews_yet') }}</p>
+            <RouterLink to="/search" class="btn btn-primary btn-sm">{{ t('common.find_places') }}</RouterLink>
           </div>
         </section>
 
@@ -100,8 +100,8 @@
         <section v-show="activeTab === 'saved'" class="section tab-panel">
           <div v-if="!savedPlaces.length" class="empty-state">
             <span class="empty-icon">🔖</span>
-            <p>No saved places yet.</p>
-            <RouterLink to="/search" class="btn btn-primary btn-sm">Explore</RouterLink>
+            <p>{{ t('profile.no_saved') }}</p>
+            <RouterLink to="/search" class="btn btn-primary btn-sm">{{ t('common.explore') }}</RouterLink>
           </div>
           <div v-else class="saved-places-list">
             <RouterLink
@@ -119,12 +119,12 @@
                 <span v-if="p.slug" class="saved-place-slug text-xs text-muted">@{{ p.slug }}</span>
                 <div class="saved-place-stats text-xs text-muted">
                   <span>⭐ {{ p.rating.toFixed(1) }}</span>
-                  <span>· {{ p.reviewCount }} reviews</span>
+                  <span>· {{ p.reviewCount }} {{ t('common.reviews_count') }}</span>
                   <span v-if="categoriesState.byId[p._categoryId]">
-                    · {{ categoriesState.byId[p._categoryId].emoji }} {{ t(`categories.${p.category}`) }}
+                    · {{ categoriesState.byId[p._categoryId].emoji }} {{ categoriesState.byId[p._categoryId].name?.[locale] || categoriesState.byId[p._categoryId].name?.en }}
                   </span>
                 </div>
-                <span v-if="p._savedAt" class="saved-place-date text-xs text-muted">Saved {{ formatDateTime(p._savedAt) }}</span>
+                <span v-if="p._savedAt" class="saved-place-date text-xs text-muted">{{ t('profile.saved_on') }} {{ formatDateTime(p._savedAt) }}</span>
               </div>
             </RouterLink>
           </div>
@@ -132,7 +132,7 @@
 
         <!-- Reports -->
         <section v-show="activeTab === 'reports'" class="section tab-panel">
-          <div v-if="reportsLoading && !reports.length" class="text-muted">Loading…</div>
+          <div v-if="reportsLoading && !reports.length" class="text-muted">{{ t('common.loading') }}</div>
           <div v-else-if="reports.length" class="reports-list">
             <div v-for="r in reports" :key="r.id" class="report-item card">
               <!-- Target preview -->
@@ -153,10 +153,10 @@
               </div>
               <!-- Meta row -->
               <div class="report-meta-row">
-                <span class="report-type-badge">{{ reportTypeLabel[r.type] || r.type }}</span>
+                <span class="report-type-badge">{{ t(`profile.report_type_${r.type}`) || r.type }}</span>
                 <span class="report-target-badge">{{ r.target_type }}</span>
                 <span class="report-date text-xs text-muted">{{ formatDate(r.created_at) }}</span>
-                <span class="report-status" :data-s="r.status">{{ reportStatusLabel[r.status] || r.status }}</span>
+                <span class="report-status" :data-s="r.status">{{ t(`profile.report_status_${r.status}`) || r.status }}</span>
               </div>
               <!-- User's report text -->
               <p class="report-text text-sm">{{ r.text || '—' }}</p>
@@ -165,20 +165,20 @@
                 <textarea v-model="editReportForm.text" class="form-input" rows="2"></textarea>
                 <div class="row-gap">
                   <button class="btn btn-primary btn-sm" :disabled="editReportSaving" @click="saveEditReport(r)">
-                    {{ editReportSaving ? 'Saving…' : 'Save' }}
+                    {{ editReportSaving ? t('common.saving') : t('common.save') }}
                   </button>
-                  <button class="btn btn-ghost btn-sm" @click="cancelEditReport">Cancel</button>
+                  <button class="btn btn-ghost btn-sm" @click="cancelEditReport">{{ t('common.cancel') }}</button>
                 </div>
                 <span v-if="editReportError" class="error-msg">{{ editReportError }}</span>
               </div>
               <!-- Actions -->
               <div class="report-actions" v-if="r.status === 'pending'">
-                <button class="btn-link" @click="startEditReport(r)">Edit</button>
-                <button class="btn-link btn-link--danger" @click="removeReport(r)">Delete</button>
+                <button class="btn-link" @click="startEditReport(r)">{{ t('common.edit') }}</button>
+                <button class="btn-link btn-link--danger" @click="removeReport(r)">{{ t('common.delete') }}</button>
               </div>
               <!-- Admin response -->
               <div v-if="r.admin_response" class="admin-response">
-                <span class="admin-response-label">Admin response:</span> {{ r.admin_response }}
+                <span class="admin-response-label">{{ t('profile.admin_response') }}</span> {{ r.admin_response }}
               </div>
             </div>
             <button
@@ -186,11 +186,11 @@
               class="btn btn-outline btn-sm load-more"
               :disabled="reportsLoading"
               @click="loadMoreReports"
-            >{{ reportsLoading ? 'Loading…' : 'Load more' }}</button>
+            >{{ reportsLoading ? t('common.loading') : t('common.load_more') }}</button>
           </div>
           <div v-else class="empty-state">
             <span class="empty-icon">🚩</span>
-            <p>No reports yet.</p>
+            <p>{{ t('profile.no_reports') }}</p>
           </div>
         </section>
       </template>
@@ -258,15 +258,13 @@ async function saveEditReport(r) {
   finally { editReportSaving.value = false }
 }
 async function removeReport(r) {
-  if (!confirm('Delete this report?')) return
+  if (!confirm(t('profile.delete_report_confirm'))) return
   try {
     await deleteReport(r.id)
     reports.value = reports.value.filter((x) => x.id !== r.id)
   } catch (e) { alert(e.message || 'Failed to delete') }
 }
 
-const reportStatusLabel = { pending: 'Pending', in_progress: 'In review', dismissed: 'Dismissed', actioned: 'Actioned' }
-const reportTypeLabel = { spam: 'Spam', misleading: 'Misleading', inappropriate: 'Inappropriate', profanity: 'Profanity' }
 
 const savedPlaces = computed(() => store.savedPlaces)
 
@@ -376,7 +374,7 @@ async function saveProfile() {
 }
 
 async function confirmDelete() {
-  if (!confirm('Delete your account permanently? Reviews stay (anonymized).')) return
+  if (!confirm(t('profile.delete_account_confirm'))) return
   try {
     await deleteMe()
     store.logout()

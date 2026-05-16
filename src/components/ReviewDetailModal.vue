@@ -3,7 +3,7 @@
     <div class="modal-backdrop" @click.self="$emit('close')" @keydown.esc.window="$emit('close')">
       <div class="modal-box" role="dialog" aria-modal="true">
         <button class="modal-close" aria-label="Close" @click="$emit('close')">✕</button>
-        <button class="modal-share" :title="copied ? 'Copied!' : 'Copy share link'" @click="copyShareLink">
+        <button class="modal-share" :title="copied ? t('review.copied') : t('review.copy_link')" @click="copyShareLink">
           <svg v-if="!copied" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
           <span v-else style="font-size:0.75rem;font-weight:700;">✓</span>
         </button>
@@ -35,11 +35,11 @@
 
         <div v-if="review.priceRating || review.qualityRating" class="sub-ratings">
           <div v-if="review.priceRating" class="sub-rating-row">
-            <span class="sub-label">Price</span>
+            <span class="sub-label">{{ t('review.price') }}</span>
             <span v-for="(c, i) in coinIcons" :key="i" class="sub-coin" :class="{ active: i + 1 <= review.priceRating }">{{ c }}</span>
           </div>
           <div v-if="review.qualityRating" class="sub-rating-row">
-            <span class="sub-label">Quality</span>
+            <span class="sub-label">{{ t('review.quality') }}</span>
             <span v-for="(c, i) in recommendIcons" :key="i" class="sub-coin" :class="{ active: i + 1 <= review.qualityRating }">{{ c }}</span>
           </div>
         </div>
@@ -60,10 +60,10 @@
 
         <div v-if="review.prevCount > 0" class="history-section">
           <button class="history-toggle" @click="toggleHistory">
-            {{ historyOpen ? '▲' : '▼' }} {{ review.prevCount }} previous version{{ review.prevCount > 1 ? 's' : '' }}
+            {{ historyOpen ? '▲' : '▼' }} {{ review.prevCount }} {{ t('review.prev_versions') }}
           </button>
           <div v-if="historyOpen">
-            <div v-if="historyLoading" class="text-muted text-sm">Loading history…</div>
+            <div v-if="historyLoading" class="text-muted text-sm">{{ t('review.loading_history') }}</div>
             <div class="prev-list">
               <div v-for="prev in history" :key="prev.id" class="prev-version">
                 <div class="prev-header">
@@ -71,8 +71,8 @@
                   <StarRating :rating="prev.rating" :size="13" mode="simple" />
                 </div>
                 <div v-if="prev.priceRating || prev.qualityRating" class="prev-sub">
-                  <span v-if="prev.priceRating">Price: {{ prev.priceRating }}</span>
-                  <span v-if="prev.qualityRating">Quality: {{ prev.qualityRating }}</span>
+                  <span v-if="prev.priceRating">{{ t('review.price') }}: {{ prev.priceRating }}</span>
+                  <span v-if="prev.qualityRating">{{ t('review.quality') }}: {{ prev.qualityRating }}</span>
                 </div>
                 <p class="prev-text">{{ prev.text }}</p>
                 <div v-if="prev.images?.length" class="prev-images">
@@ -96,6 +96,7 @@ import StarRating from './StarRating.vue'
 import ImageLightbox from './ImageLightbox.vue'
 import { getReviewPrevs } from '../api/reviews.js'
 import { normalizeReview } from '../api/normalize.js'
+import { t } from '../i18n/index.js'
 
 const props = defineProps({
   review: { type: Object, required: true },

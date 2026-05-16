@@ -3,34 +3,34 @@
     <div class="modal-backdrop" @click.self="$emit('close')" @keydown.esc.window="$emit('close')">
       <div class="modal-box" role="dialog" aria-modal="true">
         <button class="modal-close" aria-label="Close" @click="$emit('close')">✕</button>
-        <h3 class="modal-title">Report {{ targetType }}</h3>
+        <h3 class="modal-title">{{ t(`report.title_${targetType}`) }}</h3>
 
-        <div v-if="metaLoading" class="text-muted text-sm">Loading…</div>
+        <div v-if="metaLoading" class="text-muted text-sm">{{ t('common.loading') }}</div>
         <template v-else>
           <label class="form-row">
-            <span>Reason</span>
+            <span>{{ t('report.label_reason') }}</span>
             <select v-model="form.type" class="form-input">
-              <option value="">Select a reason</option>
-              <option v-for="t in reportTypes" :key="t.value" :value="t.value">{{ t.label }}</option>
+              <option value="">{{ t('report.select_reason') }}</option>
+              <option v-for="rt in reportTypes" :key="rt.value" :value="rt.value">{{ rt.label }}</option>
             </select>
           </label>
           <label class="form-row">
-            <span>Details (optional)</span>
+            <span>{{ t('report.label_details') }}</span>
             <textarea
               v-model="form.text"
               class="form-input"
               rows="3"
               :maxlength="textLimit"
-              placeholder="Additional context…"
+              :placeholder="t('report.placeholder_details')"
             ></textarea>
             <span class="char-count">{{ form.text.length }} / {{ textLimit }}</span>
           </label>
           <div v-if="errorMsg" class="error-msg">{{ errorMsg }}</div>
           <div class="modal-actions">
             <button class="btn btn-primary btn-sm" :disabled="!form.type || submitting" @click="submit">
-              {{ submitting ? 'Submitting…' : 'Submit report' }}
+              {{ submitting ? t('report.submitting') : t('report.submit') }}
             </button>
-            <button class="btn btn-ghost btn-sm" @click="$emit('close')">Cancel</button>
+            <button class="btn btn-ghost btn-sm" @click="$emit('close')">{{ t('common.cancel') }}</button>
           </div>
         </template>
       </div>
@@ -40,6 +40,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import { t } from '../i18n/index.js'
 import { getReportMeta, submitReport } from '../api/reports.js'
 
 const props = defineProps({
@@ -60,9 +61,9 @@ onMounted(async () => {
   try {
     const meta = await getReportMeta()
     textLimit.value = meta.text_input_limit || 500
-    reportTypes.value = (meta.types || []).map((t) => ({
-      value: t.value,
-      label: t.label?.en || t.value,
+    reportTypes.value = (meta.types || []).map((rt) => ({
+      value: rt.value,
+      label: rt.label?.en || rt.value,
     }))
   } catch (_) {}
   finally { metaLoading.value = false }
@@ -82,7 +83,7 @@ async function submit() {
     emit('submitted')
     emit('close')
   } catch (e) {
-    errorMsg.value = e.message || 'Failed to submit report'
+    errorMsg.value = e.message || t('report.error')
   } finally { submitting.value = false }
 }
 </script>

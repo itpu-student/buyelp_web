@@ -1,7 +1,7 @@
 <template>
   <div class="review-card" role="button" tabindex="0" :style="review.latest === false ? { background: '#101726' } : {}" @click="$emit('open', review)" @keydown.enter="$emit('open', review)">
     <span v-if="review.latest != null" class="latest-badge" :class="review.latest ? 'latest-badge--yes' : 'latest-badge--no'">
-      {{ review.latest ? 'Latest' : 'Not latest' }}
+      {{ review.latest ? t('review.latest') : t('review.not_latest') }}
     </span>
     <!-- Place info row (profile/user context) -->
     <RouterLink
@@ -24,7 +24,7 @@
         <span v-if="review.place.slug" class="place-slug">@{{ review.place.slug }}</span>
         <div class="place-stats">
           <span>⭐ {{ review.place.avgRating.toFixed(1) }}</span>
-          <span>· {{ review.place.reviewCount }} reviews</span>
+          <span>· {{ review.place.reviewCount }} {{ t('common.reviews_count') }}</span>
           <span v-if="categoriesState.byId[review.place._categoryId]">
             · {{ categoriesState.byId[review.place._categoryId].emoji }}
           </span>
@@ -46,8 +46,8 @@
         <div class="review-date-row">
           <span class="review-date">{{ formatDate(review.date) }}</span>
           <span v-if="review.prevCount > 0" class="edited-badge">{{ review.prevCount }}</span>
-          <span v-if="review.priceRating" class="sub-rating">Price: {{ review.priceRating }}</span>
-          <span v-if="review.qualityRating" class="sub-rating">Quality: {{ review.qualityRating }}</span>
+          <span v-if="review.priceRating" class="sub-rating">{{ t('review.price') }}: {{ review.priceRating }}</span>
+          <span v-if="review.qualityRating" class="sub-rating">{{ t('review.quality') }}: {{ review.qualityRating }}</span>
         </div>
       </div>
       <StarRating :rating="review.rating" :size="15" mode="simple" />
@@ -67,8 +67,8 @@
       <StarRating :rating="review.rating" :size="15" mode="simple" />
       <span class="review-date">{{ formatDate(review.date) }}</span>
       <span v-if="review.prevCount > 0" class="edited-badge">{{ review.prevCount }}</span>
-      <span v-if="review.priceRating" class="sub-rating">Price: {{ review.priceRating }}</span>
-      <span v-if="review.qualityRating" class="sub-rating">Quality: {{ review.qualityRating }}</span>
+      <span v-if="review.priceRating" class="sub-rating">{{ t('review.price') }}: {{ review.priceRating }}</span>
+      <span v-if="review.qualityRating" class="sub-rating">{{ t('review.quality') }}: {{ review.qualityRating }}</span>
     </div>
     <p class="review-text">{{ review.text }}</p>
 
@@ -142,6 +142,7 @@ import StarRating from './StarRating.vue'
 import ImageLightbox from './ImageLightbox.vue'
 import { store } from '../store/index.js'
 import { categoriesState } from '../store/categories.js'
+import { t } from '../i18n/index.js'
 
 const props = defineProps({
   review: { type: Object, required: true },

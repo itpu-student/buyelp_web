@@ -1,10 +1,10 @@
 <template>
   <div class="page-content">
-    <div v-if="loading" class="place-container loading">Loading…</div>
+    <div v-if="loading" class="place-container loading">{{ t('common.loading') }}</div>
 
     <div v-else-if="!place" class="place-container not-found">
-      <h2>{{ loadError || 'Place not found' }}</h2>
-      <RouterLink to="/search" class="btn btn-primary mt-4">Back to Search</RouterLink>
+      <h2>{{ loadError || t('place.not_found') }}</h2>
+      <RouterLink to="/search" class="btn btn-primary mt-4">{{ t('place.back_to_search') }}</RouterLink>
     </div>
 
     <template v-else>
@@ -39,7 +39,7 @@
             </template>
           </div>
         </div>
-        <div v-else class="carousel-placeholder">No photos</div>
+        <div v-else class="carousel-placeholder">{{ t('place.no_photos') }}</div>
 
         <div class="place-container place-header-inner">
           <div class="place-header-row">
@@ -89,12 +89,12 @@
         <div class="place-grid">
           <div class="place-main">
             <div v-if="aiSummaryLoading" class="ai-summary-card ai-summary-card--loading">
-              <span class="ai-summary-icon">✦</span> Generating AI summary…
+              <span class="ai-summary-icon">✦</span> {{ t('place.ai_generating') }}
             </div>
             <div v-else-if="aiSummary" class="ai-summary-card">
               <div class="ai-summary-header">
                 <span class="ai-summary-icon">✦</span>
-                <span class="ai-summary-label">AI Summary</span>
+                <span class="ai-summary-label">{{ t('place.ai_label') }}</span>
               </div>
               <p class="ai-summary-text">{{ locale.locale === 'uz' && aiSummary.uz ? aiSummary.uz : aiSummary.en }}</p>
             </div>
@@ -106,15 +106,15 @@
               </div>
 
               <div v-if="submitError" class="submit-error">{{ submitError }}</div>
-              <div v-if="reviewSubmitted" class="submitted-msg">✅ Review posted!</div>
+              <div v-if="reviewSubmitted" class="submitted-msg">✅ {{ t('place.review_posted') }}</div>
               <div v-if="!store.isLoggedIn" class="review-login-nudge">
                 <p>
                   <RouterLink to="/login" class="text-primary font-semibold">{{ t("auth.signin_link") }}</RouterLink>
-                  to write a review.
+                  {{ t('place.sign_in_to_review') }}
                 </p>
               </div>
 
-              <div v-if="reviewsLoading" class="text-muted text-sm">Loading reviews…</div>
+              <div v-if="reviewsLoading" class="text-muted text-sm">{{ t('place.loading_reviews') }}</div>
               <div v-else-if="reviews.length" class="reviews-list">
                 <ReviewCard
                   v-for="r in reviews"
@@ -171,11 +171,11 @@
               <div v-if="place.createdByUser || place.claimedByUser" class="attribution-block">
                 <div v-if="place.createdByUser" class="attribution-line">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-                  Added by <span class="attr-name">{{ place.createdByUser.name || ('@' + place.createdByUser.username) }}</span>
+                  {{ t('place.added_by') }} <span class="attr-name">{{ place.createdByUser.name || ('@' + place.createdByUser.username) }}</span>
                 </div>
                 <div v-if="place.claimedByUser" class="attribution-line">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                  Claimed by <span class="attr-name">{{ place.claimedByUser.name || ('@' + place.claimedByUser.username) }}</span>
+                  {{ t('place.claimed_by') }} <span class="attr-name">{{ place.claimedByUser.name || ('@' + place.claimedByUser.username) }}</span>
                 </div>
               </div>
 
@@ -184,11 +184,11 @@
                 <div class="place-actions-row">
                   <button type="button" class="report-place-btn" @click="placeReportOpen = true">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-                    Report this place
+                    {{ t('place.report_this') }}
                   </button>
                   <button v-if="canClaim" type="button" class="report-place-btn claim-place-btn" @click="claimModalOpen = true">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-                    Claim this place
+                    {{ t('place.claim_this') }}
                   </button>
                 </div>
               </div>
@@ -197,26 +197,26 @@
                 <div class="divider-sidebar"></div>
 
                 <button v-if="!editOpen" type="button" class="btn btn-secondary btn-sm" @click="openEdit">
-                  Edit place
+                  {{ t('place.edit') }}
                 </button>
                 <div v-if="isOwner && editOpen" class="ownership-form">
-                  <label class="form-row"><span>Phone</span><input v-model="editForm.phone" class="form-input" /></label>
-                  <label class="form-row"><span>Description (EN)</span><textarea v-model="editForm.descEn" class="form-input" rows="2"></textarea></label>
-                  <label class="form-row"><span>Description (UZ)</span><textarea v-model="editForm.descUz" class="form-input" rows="2"></textarea></label>
-                  <label class="form-row"><span>Logo</span><input type="file" accept="image/*" @change="onEditLogoPick" /></label>
-                  <label class="form-row"><span>Add images</span><input type="file" accept="image/*" multiple @change="onEditImagesPick" /></label>
+                  <label class="form-row"><span>{{ t('add_place.label_phone') }}</span><input v-model="editForm.phone" class="form-input" /></label>
+                  <label class="form-row"><span>{{ t('add_place.label_desc_en') }}</span><textarea v-model="editForm.descEn" class="form-input" rows="2"></textarea></label>
+                  <label class="form-row"><span>{{ t('add_place.label_desc_uz') }}</span><textarea v-model="editForm.descUz" class="form-input" rows="2"></textarea></label>
+                  <label class="form-row"><span>{{ t('add_place.label_logo') }}</span><input type="file" accept="image/*" @change="onEditLogoPick" /></label>
+                  <label class="form-row"><span>{{ t('place.label_add_images') }}</span><input type="file" accept="image/*" multiple @change="onEditImagesPick" /></label>
                   <ul v-if="editForm.images.length" class="image-keys">
                     <li v-for="(k, i) in editForm.images" :key="k">
                       <span>{{ k }}</span>
                       <button class="btn-link" type="button" @click="removeEditImage(i)">×</button>
                     </li>
                   </ul>
-                  <small v-if="editUploading" class="text-muted">Uploading…</small>
+                  <small v-if="editUploading" class="text-muted">{{ t('common.uploading') }}</small>
                   <div class="row-gap">
                     <button class="btn btn-primary btn-sm" :disabled="editSaving" @click="saveEdit">
-                      {{ editSaving ? 'Saving…' : 'Save' }}
+                      {{ editSaving ? t('common.saving') : t('common.save') }}
                     </button>
-                    <button class="btn btn-ghost btn-sm" @click="editOpen = false">Cancel</button>
+                    <button class="btn btn-ghost btn-sm" @click="editOpen = false">{{ t('common.cancel') }}</button>
                   </div>
                 </div>
                 <p v-if="editMsg" class="text-xs text-muted">{{ editMsg }}</p>

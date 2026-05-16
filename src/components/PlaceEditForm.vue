@@ -6,7 +6,7 @@
       <div class="info-stats">
         <span class="stat-rating">{{ place.avg_rating?.toFixed(1) ?? '—' }}★</span>
         <span class="stat-sep">·</span>
-        <span class="stat-reviews">{{ place.review_count ?? 0 }} reviews</span>
+        <span class="stat-reviews">{{ place.review_count ?? 0 }} {{ t('common.reviews_count') }}</span>
       </div>
       <div v-if="mode === 'admin' && place.claimed_by_user" class="claimed-chip">
         <img v-if="place.claimed_by_user.avatar_key" :src="staticUrl(place.claimed_by_user.avatar_key)" class="claimed-avatar" />
@@ -18,7 +18,7 @@
 
     <!-- Status (admin only) -->
     <div v-if="mode === 'admin'" class="form-group">
-      <span class="form-label">Status</span>
+      <span class="form-label">{{ t('place_edit.label_status') }}</span>
       <div class="status-chips">
         <button
           v-for="s in STATUSES"
@@ -27,26 +27,26 @@
           class="status-chip"
           :class="[s.cls, { 'is-active': form.status === s.value }]"
           @click="form.status = s.value"
-        >{{ s.label }}</button>
+        >{{ t('admin.' + s.value) }}</button>
       </div>
     </div>
 
     <!-- Name + Slug -->
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label" for="pef-name">Name *</label>
+        <label class="form-label" for="pef-name">{{ t('place_edit.label_name') }}</label>
         <input id="pef-name" v-model.trim="form.name" type="text" class="form-input" required />
       </div>
       <div class="form-group">
-        <label class="form-label" for="pef-slug">Slug</label>
+        <label class="form-label" for="pef-slug">{{ t('place_edit.label_slug') }}</label>
         <input id="pef-slug" v-model.trim="form.slug" type="text" class="form-input" />
       </div>
     </div>
 
     <!-- Category -->
     <div class="form-group">
-      <span class="form-label">Category</span>
-      <div v-if="categoriesState.loading && !categoriesState.list.length" class="text-muted text-sm">Loading…</div>
+      <span class="form-label">{{ t('place_edit.label_category') }}</span>
+      <div v-if="categoriesState.loading && !categoriesState.list.length" class="text-muted text-sm">{{ t('common.loading') }}</div>
       <div v-else class="cat-grid">
         <button
           v-for="c in categoriesState.list.filter(c => c.id)"
@@ -66,24 +66,24 @@
     <!-- Address -->
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label" for="pef-addr-uz">Address (UZ)</label>
+        <label class="form-label" for="pef-addr-uz">{{ t('place_edit.label_address_uz') }}</label>
         <input id="pef-addr-uz" v-model.trim="form.addressUz" type="text" class="form-input" />
       </div>
       <div class="form-group">
-        <label class="form-label" for="pef-addr-en">Address (EN)</label>
+        <label class="form-label" for="pef-addr-en">{{ t('place_edit.label_address_en') }}</label>
         <input id="pef-addr-en" v-model.trim="form.addressEn" type="text" class="form-input" />
       </div>
     </div>
 
     <!-- Map -->
     <div class="form-group">
-      <span class="form-label">Location</span>
+      <span class="form-label">{{ t('place_edit.label_location') }}</span>
       <MapPicker v-model:lat="form.lat" v-model:lon="form.lon" />
     </div>
 
     <!-- Phone -->
     <div class="form-group">
-      <label class="form-label" for="pef-phone">Phone</label>
+      <label class="form-label" for="pef-phone">{{ t('place_edit.label_phone') }}</label>
       <input
         id="pef-phone"
         v-model.trim="form.phone"
@@ -98,18 +98,18 @@
     <!-- Description -->
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label" for="pef-desc-uz">Description (UZ)</label>
+        <label class="form-label" for="pef-desc-uz">{{ t('place_edit.label_desc_uz') }}</label>
         <textarea id="pef-desc-uz" v-model="form.descUz" class="form-input" rows="3"></textarea>
       </div>
       <div class="form-group">
-        <label class="form-label" for="pef-desc-en">Description (EN)</label>
+        <label class="form-label" for="pef-desc-en">{{ t('place_edit.label_desc_en') }}</label>
         <textarea id="pef-desc-en" v-model="form.descEn" class="form-input" rows="3"></textarea>
       </div>
     </div>
 
     <!-- Logo -->
     <div class="form-group">
-      <span class="form-label">Logo</span>
+      <span class="form-label">{{ t('place_edit.label_logo') }}</span>
       <div class="logo-row">
         <button
           type="button"
@@ -120,7 +120,7 @@
           <img v-if="form.logo_key" :src="staticUrl(form.logo_key)" alt="Logo" />
           <span v-else class="logo-placeholder">
             <span class="logo-plus">＋</span>
-            <span class="logo-hint">Logo</span>
+            <span class="logo-hint">{{ t('place_edit.label_logo') }}</span>
           </span>
           <span v-if="logoUploading" class="logo-busy">…</span>
         </button>
@@ -136,7 +136,7 @@
 
     <!-- Images -->
     <div class="form-group">
-      <span class="form-label">Photos</span>
+      <span class="form-label">{{ t('place_edit.label_photos') }}</span>
       <div class="photo-strip" ref="stripEl">
         <template v-if="form.images.length">
           <div class="drop-zone" :class="{ 'drop-zone--open': drag.active && drag.insertIdx === 0 }"></div>
@@ -168,19 +168,19 @@
 
     <!-- Weekly hours -->
     <div class="form-group">
-      <span class="form-label">Hours</span>
+      <span class="form-label">{{ t('place_edit.label_hours') }}</span>
       <div class="hours-grid">
         <div v-for="d in DAYS" :key="d" class="hours-row">
           <label class="day-toggle">
             <input type="checkbox" v-model="hoursForm[d].enabled" />
-            <span class="day-label">{{ DAY_LABELS[d] }}</span>
+            <span class="day-label">{{ t('days_short.' + d) }}</span>
           </label>
           <template v-if="hoursForm[d].enabled">
             <input v-model="hoursForm[d].open" type="time" class="time-input" />
             <span class="time-sep">–</span>
             <input v-model="hoursForm[d].close" type="time" class="time-input" />
           </template>
-          <span v-else class="closed-label">Closed</span>
+          <span v-else class="closed-label">{{ t('place.closed') }}</span>
         </div>
       </div>
     </div>
@@ -190,7 +190,7 @@
     <div class="actions">
       <slot name="cancel" />
       <button type="submit" class="btn btn-primary" :disabled="submitting || logoUploading || imagesUploading">
-        {{ submitting ? 'Saving…' : 'Save changes' }}
+        {{ submitting ? t('common.saving') : t('place_edit.save_changes') }}
       </button>
     </div>
   </form>
@@ -208,6 +208,7 @@
 
 <script setup>
 import { reactive, ref, onMounted, onUnmounted } from 'vue'
+import { t } from '../i18n/index.js'
 import { staticUrl } from '../api/client.js'
 import { uploadFile } from '../api/files.js'
 import { updatePlace } from '../api/places.js'
@@ -222,12 +223,11 @@ const props = defineProps({
 const emit = defineEmits(['saved'])
 
 const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
-const DAY_LABELS = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' }
 const STATUSES = [
-  { value: 'pending', label: 'Pending', cls: 'chip-warning' },
-  { value: 'approved', label: 'Approved', cls: 'chip-success' },
-  { value: 'rejected', label: 'Rejected', cls: 'chip-danger' },
-  { value: 'suspended', label: 'Suspended', cls: 'chip-suspended' },
+  { value: 'pending', cls: 'chip-warning' },
+  { value: 'approved', cls: 'chip-success' },
+  { value: 'rejected', cls: 'chip-danger' },
+  { value: 'suspended', cls: 'chip-suspended' },
 ]
 
 function initHours(wh) {
@@ -331,7 +331,7 @@ async function onLogoPick(e) {
   try {
     const r = await uploadFile(file, 'place', { adminAuth: props.mode === 'admin' })
     form.logo_key = r.key
-  } catch (e) { error.value = e.message || 'Upload failed' }
+  } catch (e) { error.value = e.message || t('place_edit.error_upload') }
   finally { logoUploading.value = false }
 }
 
@@ -349,7 +349,7 @@ async function onImagesPick(e) {
       form.images.push(r.key)
       imagesProgress.done++
     }
-  } catch (e) { error.value = e.message || 'Upload failed' }
+  } catch (e) { error.value = e.message || t('place_edit.error_upload') }
   finally { imagesUploading.value = false }
 }
 
@@ -360,7 +360,7 @@ function initials(name) {
 async function submit() {
   error.value = ''
   if (form.phone && !/^\+\d{12}$/.test(form.phone)) {
-    error.value = 'Phone must be +998XXXXXXXXX (12 digits after +)'
+    error.value = t('place_edit.error_phone')
     return
   }
 
@@ -395,7 +395,7 @@ async function submit() {
     }
     emit('saved')
   } catch (e) {
-    error.value = e.message || 'Save failed'
+    error.value = e.message || t('place_edit.error_save')
   } finally {
     submitting.value = false
   }
