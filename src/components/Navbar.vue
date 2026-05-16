@@ -108,7 +108,7 @@ function toggleLang() {
 function toggleTheme() {
   isDark.value = !isDark.value
   document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : 'light')
-  localStorage.setItem('buyelp_theme', isDark.value ? 'dark' : 'light')
+  localStorage.setItem('s101__theme', isDark.value ? 'dark' : 'light')
 }
 
 watch(route, () => {
@@ -124,7 +124,7 @@ function logout() {
 
 onMounted(() => {
   window.addEventListener('scroll', onScroll)
-  const savedTheme = localStorage.getItem('buyelp_theme')
+  const savedTheme = localStorage.getItem('s101__theme')
   if (savedTheme === 'dark') {
     isDark.value = true
     document.documentElement.setAttribute('data-theme', 'dark')

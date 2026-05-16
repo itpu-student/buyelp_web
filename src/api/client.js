@@ -1,7 +1,7 @@
 export const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"
 
 export const TOKEN_KEY = "s101_token"
-export const ADMIN_TOKEN_KEY = "s101_admin_token"
+export const ADMIN_TOKEN_KEY = "_s101_token"
 
 export function staticUrl(key) {
   if (!key) return ""

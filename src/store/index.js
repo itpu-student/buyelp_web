@@ -1,11 +1,13 @@
 import { reactive } from "vue"
-import { setToken } from "../api/client.js"
+import { setToken, getToken } from "../api/client.js"
 import { listBookmarks, addBookmark, removeBookmark } from "../api/bookmarks.js"
 import { normalizePlace } from "../api/normalize.js"
+import { getMe } from "../api/auth.js"
 
-const USER_KEY = "buyelp_user"
-const SAVED_PLACES_KEY = "buyelp_saved_places"
+const USER_KEY = "s101_user"
+const SAVED_PLACES_KEY = "s101_saved_places"
 const savedUser = JSON.parse(localStorage.getItem(USER_KEY) || "null")
+const hasToken = !!getToken()
 const savedPlaces = JSON.parse(localStorage.getItem(SAVED_PLACES_KEY) || "[]")
 
 function persistSaved(ids) {
@@ -13,7 +15,7 @@ function persistSaved(ids) {
 }
 
 export const store = reactive({
-  isLoggedIn: !!savedUser,
+  isLoggedIn: !!(savedUser || hasToken),
   user: savedUser,
 
   savedPlaceIds: Array.isArray(savedPlaces) ? savedPlaces : [],
@@ -65,6 +67,22 @@ export const store = reactive({
     }
   },
 
+  async bootstrap() {
+    if (!getToken()) return
+    if (!this.user) {
+      try {
+        const user = await getMe()
+        this.user = user
+        this.isLoggedIn = true
+        localStorage.setItem(USER_KEY, JSON.stringify(user))
+      } catch (_) {
+        this.logout()
+        return
+      }
+    }
+    this.hydrateBookmarks()
+  },
+
   async toggleSavedPlace(placeId) {
     if (!this.isLoggedIn) return
     const id = String(placeId)
@@ -92,4 +110,4 @@ export const store = reactive({
   },
 })
 
-if (store.isLoggedIn) store.hydrateBookmarks()
+store.bootstrap()

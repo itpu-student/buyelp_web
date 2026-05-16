@@ -89,10 +89,10 @@ const isDark = ref(document.documentElement.getAttribute('data-theme') === 'dark
 function toggleTheme() {
   isDark.value = !isDark.value
   document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : 'light')
-  localStorage.setItem('buyelp_theme', isDark.value ? 'dark' : 'light')
+  localStorage.setItem('s101__theme', isDark.value ? 'dark' : 'light')
 }
 onMounted(() => {
-  const saved = localStorage.getItem('buyelp_theme')
+  const saved = localStorage.getItem('s101__theme')
   if (saved) {
     isDark.value = saved === 'dark'
     document.documentElement.setAttribute('data-theme', saved)

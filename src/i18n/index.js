@@ -494,12 +494,12 @@ export const messages = {
 import { reactive } from "vue"
 
 export const i18nState = reactive({
-  locale: localStorage.getItem("buyelp_lang") || "en",
+  locale: localStorage.getItem("s101__lang") || "en",
 })
 
 export function setLocale(lang) {
   i18nState.locale = lang
-  localStorage.setItem("buyelp_lang", lang)
+  localStorage.setItem("s101__lang", lang)
 }
 
 export function t(keyPath) {

@@ -10,7 +10,7 @@ export const categoriesState = reactive({
   bySlug: {},
 })
 
-const CATS_KEY = "buyelp_categories"
+const CATS_KEY = "s101__categories"
 
 function applyCategories(cats) {
   categoriesState.list = cats
