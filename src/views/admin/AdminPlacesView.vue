@@ -39,7 +39,7 @@
             </tr>
             <tr v-for="p in items" :key="p.id">
               <td>
-                <div class="place-chip">
+                <div class="place-chip" @click="openPlaceModal(p)">
                   <img v-if="p.logo_key" :src="staticUrl(p.logo_key)" class="place-logo" />
                   <div class="place-info">
                     <span class="place-name">{{ p.name }}</span>
@@ -80,6 +80,12 @@
                   @click="setStatus(p, 'approved')"
                 >{{ t('admin.approve') }}</button>
                 <button
+                  v-if="p.status === 'approved'"
+                  class="btn btn-sm btn-warning"
+                  :disabled="actionTarget === p.id"
+                  @click="setStatus(p, 'suspended')"
+                >{{ t('admin.suspend') }}</button>
+                <button
                   v-if="p.status !== 'rejected' && p.status !== 'suspended'"
                   class="btn btn-sm btn-danger"
                   :disabled="actionTarget === p.id"
@@ -97,6 +103,43 @@
 
       <Pagination v-if="totalPages > 1" :current="page" :total="totalPages" @go="load" />
     </template>
+
+    <!-- Place info modal -->
+    <div class="modal-overlay" v-if="placeModal" @click="placeModal = null">
+      <div class="modal modal-sm card" @click.stop>
+        <div class="modal-entity-row">
+          <img v-if="placeModal.logo_key" :src="staticUrl(placeModal.logo_key)" class="modal-place-logo" />
+          <div class="modal-entity-info">
+            <div class="modal-entity-name">{{ placeModal.name }}</div>
+            <div class="modal-entity-sub">{{ placeModal.slug }}</div>
+          </div>
+          <a :href="`/place/${placeModal.slug}`" target="_blank" class="btn btn-sm btn-ghost link-btn" title="Open place">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </a>
+        </div>
+        <div class="modal-place-meta">
+          <div v-if="placeModal.address?.en" class="meta-row">
+            <span class="meta-label">{{ t('admin.review_list.col_address') }}</span>
+            <span>{{ placeModal.address.en }}</span>
+          </div>
+          <div v-if="placeModal.phone" class="meta-row">
+            <span class="meta-label">{{ t('admin.review_list.col_phone') }}</span>
+            <span>{{ placeModal.phone }}</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">{{ t('admin.review_list.col_avg_rating') }}</span>
+            <span>{{ placeModal.avg_rating }}★</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">{{ t('admin.review_list.col_reviews') }}</span>
+            <span>{{ placeModal.review_count }}</span>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" @click="placeModal = null">{{ t('admin.close') }}</button>
+        </div>
+      </div>
+    </div>
 
     <!-- User info modal -->
     <div class="modal-overlay" v-if="userModal" @click="userModal = null">
@@ -137,6 +180,7 @@ const limit = 20
 const total = ref(0)
 const actionTarget = ref(null)
 const userModal = ref(null)
+const placeModal = ref(null)
 const filters = reactive({ status: 'pending' })
 const totalPages = computed(() => Math.ceil(total.value / limit))
 
@@ -167,6 +211,7 @@ function statusClass(s) {
 
 function initials(name) { return (name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() }
 function openUserModal(user) { userModal.value = user }
+function openPlaceModal(place) { placeModal.value = place }
 function fmtDateOnly(d) { return d ? new Date(d).toLocaleDateString() : '' }
 function fmtTimeOnly(d) { return d ? new Date(d).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '' }
 
@@ -289,6 +334,9 @@ onMounted(() => {
 .btn-success { background: rgba(34, 197, 94, 0.15); color: #16a34a; border: 1px solid rgba(34, 197, 94, 0.3); }
 .btn-success:hover:not(:disabled) { background: rgba(34, 197, 94, 0.25); }
 
+.btn-warning { background: rgba(245, 158, 11, 0.15); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.3); }
+.btn-warning:hover:not(:disabled) { background: rgba(245, 158, 11, 0.25); }
+
 .empty-cell { text-align: center; color: var(--text-2); padding: 32px !important; }
 .font-medium { font-weight: 600; }
 .text-sm { font-size: 0.8rem; }
@@ -304,7 +352,13 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding: 2px 4px;
+  margin: -2px -4px;
+  transition: background var(--transition);
 }
+.place-chip:hover { background: var(--border); }
 
 .place-logo {
   width: 28px;
@@ -398,6 +452,36 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 1px;
+}
+
+.modal-place-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.modal-place-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.875rem;
+}
+
+.meta-row {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.meta-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  min-width: 72px;
 }
 
 /* Modal */
