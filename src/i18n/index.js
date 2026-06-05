@@ -348,6 +348,7 @@ export const messages = {
       filter: "Filter",
       no_results: "No places found. Try a different search.",
       results_for: "Results for",
+      places_found: "{count} places found",
     },
     common: {
       rating: "Rating",
@@ -760,6 +761,7 @@ export const messages = {
       filter: "Filtr",
       no_results: "Hech narsa topilmadi. Boshqacha qidirib ko'ring.",
       results_for: "Natijalar",
+      places_found: "{count} ta joy topildi",
     },
     common: {
       rating: "Baho",

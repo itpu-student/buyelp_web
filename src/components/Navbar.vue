@@ -95,7 +95,7 @@ const isScrolled = ref(false)
 const mobileOpen = ref(false)
 const userMenuOpen = ref(false)
 const isDark = ref(document.documentElement.getAttribute('data-theme') === 'dark')
-const locale = i18nState
+const locale = computed(() => i18nState.locale)
 
 function onScroll() {
   isScrolled.value = window.scrollY > 20

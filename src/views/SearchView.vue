@@ -4,9 +4,9 @@
       <div class="search-page-header">
         <h1 class="section-title">{{ t('search.title') }}</h1>
         <p class="text-muted text-sm mt-2">
-          <span v-if="loading">Loading…</span>
+          <span v-if="loading">{{ t('common.loading') }}</span>
           <span v-else-if="loadError" class="error-text">{{ loadError }}</span>
-          <span v-else>{{ total }} {{ total === 1 ? 'place' : 'places' }} found</span>
+          <span v-else>{{ t('search.places_found', { count: total }) }}</span>
         </p>
       </div>
 
