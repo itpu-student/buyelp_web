@@ -25,65 +25,15 @@
                 @click="rating = n"
               >★</button>
             </div>
-
-            <div class="badges">
-              <button
-                type="button"
-                class="badge optional-rating-btn"
-                :class="{ active: showCoinRow || priceLevel > 0 }"
-                aria-label="Price level"
-                @click="toggleCoinRow"
-              >💲</button>
-              <button
-                type="button"
-                class="badge optional-rating-btn"
-                :class="{ active: showRecommendRow || recommendLevel > 0 }"
-                aria-label="Recommend"
-                @click="toggleRecommendRow"
-              >✔️</button>
-            </div>
           </div>
 
-          <div v-if="showCoinRow || priceLevel > 0" class="coin-rating-row">
-            <span class="coin-label">How pricey?</span>
-            <div class="coins" @mouseleave="hoverCoin = 0">
-              <button
-                v-for="(c, i) in coinIcons"
-                :key="i"
-                type="button"
-                class="coin"
-                :class="{ active: (i + 1) <= (hoverCoin || priceLevel) }"
-                :aria-label="`Price level ${i + 1}`"
-                @mouseenter="hoverCoin = i + 1"
-                @click="priceLevel = priceLevel === i + 1 ? 0 : i + 1"
-              >{{ c }}</button>
-            </div>
-            <span v-if="priceLevel" class="coin-hint">{{ coinHints[priceLevel - 1] }}</span>
-          </div>
-
-          <div v-if="showRecommendRow || recommendLevel > 0" class="coin-rating-row">
-            <span class="coin-label">How's the quality?</span>
-            <div class="coins" @mouseleave="hoverRecommend = 0">
-              <button
-                v-for="(r, i) in recommendIcons"
-                :key="i"
-                type="button"
-                class="coin"
-                :class="{ active: (i + 1) <= (hoverRecommend || recommendLevel) }"
-                :aria-label="`Recommend level ${i + 1}`"
-                @mouseenter="hoverRecommend = i + 1"
-                @click="recommendLevel = recommendLevel === i + 1 ? 0 : i + 1"
-              >{{ r }}</button>
-            </div>
-            <span v-if="recommendLevel" class="coin-hint">{{ recommendHints[recommendLevel - 1] }}</span>
-          </div>
-
-          <textarea
+          <input
             v-model="text"
-            class="form-input modal-text"
-            rows="4"
+            type="text"
+            class="form-input"
+            maxlength="160"
             :placeholder="t('place.review_placeholder')"
-          ></textarea>
+          />
 
           <div class="media-row">
             <label class="media-add">
@@ -123,43 +73,12 @@ const emit = defineEmits(['submit'])
 const isOpen = ref(false)
 const rating = ref(0)
 const hoverStar = ref(0)
-const showCoinRow = ref(false)
-const priceLevel = ref(0)
-const hoverCoin = ref(0)
-const showRecommendRow = ref(false)
-const recommendLevel = ref(0)
-const hoverRecommend = ref(0)
 const text = ref('')
 const media = ref([])
 
-const coinIcons = ['🪙', '💵', '💶', '💰', '💎']
-const coinHints = ['Cheap', 'Affordable', 'Mid-range', 'Pricey', 'Luxury']
-const recommendIcons = ['❌', '⚠️', '🆗', '✅', '👑']
-const recommendHints = ['Avoid', 'Mixed', 'Okay', 'Recommended', 'Must-try']
-
-const canSubmit = computed(() => rating.value > 0 && text.value.trim().length > 0)
+const canSubmit = computed(() => rating.value > 0)
 
 function open() { isOpen.value = true }
-
-function toggleCoinRow() {
-  if (showCoinRow.value || priceLevel.value > 0) {
-    showCoinRow.value = false
-    priceLevel.value = 0
-    hoverCoin.value = 0
-  } else {
-    showCoinRow.value = true
-  }
-}
-
-function toggleRecommendRow() {
-  if (showRecommendRow.value || recommendLevel.value > 0) {
-    showRecommendRow.value = false
-    recommendLevel.value = 0
-    hoverRecommend.value = 0
-  } else {
-    showRecommendRow.value = true
-  }
-}
 
 function close() {
   isOpen.value = false
@@ -168,12 +87,6 @@ function close() {
 function reset() {
   rating.value = 0
   hoverStar.value = 0
-  showCoinRow.value = false
-  priceLevel.value = 0
-  hoverCoin.value = 0
-  showRecommendRow.value = false
-  recommendLevel.value = 0
-  hoverRecommend.value = 0
   text.value = ''
   media.value.forEach((m) => URL.revokeObjectURL(m.url))
   media.value = []
@@ -197,8 +110,6 @@ function submit() {
   emit('submit', {
     rating: rating.value,
     text: text.value.trim(),
-    priceLevel: priceLevel.value,
-    recommendLevel: recommendLevel.value,
     files: media.value.map((m) => m.file),
   })
   reset()
@@ -308,73 +219,6 @@ watch(isOpen, (v) => {
 .star.active { color: var(--accent); }
 .star:hover { transform: scale(1.1); }
 
-.badges { display: flex; gap: 6px; }
-
-.coin-rating-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  padding: 10px 12px;
-  background: var(--surface-1a, var(--surface-2));
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm);
-}
-
-.coin-label {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-2);
-}
-
-.coins { display: flex; gap: 4px; }
-
-.coin {
-  background: transparent;
-  border: none;
-  font-size: 1.3rem;
-  padding: 2px 4px;
-  cursor: pointer;
-  line-height: 1;
-  filter: grayscale(1);
-  opacity: 0.45;
-  transition: filter var(--transition), opacity var(--transition), transform var(--transition);
-}
-
-.coin.active {
-  filter: none;
-  opacity: 1;
-}
-
-.coin:hover { transform: scale(1.15); }
-
-.coin-hint {
-  font-size: 0.8rem;
-  color: var(--text-3);
-  font-style: italic;
-  margin-left: auto;
-}
-
-.badge {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  cursor: pointer;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--text-2);
-  transition: all var(--transition);
-}
-
-.badge.active {
-  background: var(--primary);
-  color: #fff;
-  border-color: var(--primary);
-}
-
-.modal-text { resize: vertical; min-height: 90px; }
 
 .media-row {
   display: flex;

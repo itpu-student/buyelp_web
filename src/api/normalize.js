@@ -55,6 +55,7 @@ export function normalizePlace(api) {
     _weeklyHoursRaw: api.weekly_hours || {},
     isOpen: api.is_open == null ? null : !!api.is_open,
     status: api.status ?? "",
+    savedCount: api.saved_count || 0,
     isClaimed: !!api.is_claimed,
     claimedBy: api.claimed_by || null,
     claimedByUser: normalizeUserMini(api.claimed_by_user),

@@ -37,6 +37,14 @@
                 />
               </div>
             </template>
+
+            <div v-if="place" class="hero-overlay">
+              <span class="hero-rating">★ {{ place.rating.toFixed(1) }}</span>
+              <span v-if="place.isOpen !== null" class="hero-status" :class="place.isOpen ? 'open' : 'closed'">
+                {{ place.isOpen ? t('place.open_now') : t('place.closed') }}
+              </span>
+              <span v-if="place.savedCount > 0" class="hero-saves">💾 {{ place.savedCount }}</span>
+            </div>
           </div>
         </div>
         <div v-else class="carousel-placeholder">{{ t('place.no_photos') }}</div>
@@ -47,19 +55,31 @@
           <div class="place-title-block">
             <div class="place-title-row">
               <h1 class="place-title">{{ placeName }}</h1>
-              <button
-                type="button"
-                class="save-btn"
-                :class="{ 'save-btn--active': isSaved }"
-                :aria-pressed="isSaved"
-                :aria-label="isSaved ? t('place.saved') : t('place.save')"
-                @click="toggleSaved"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" :fill="isSaved ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-                </svg>
-                <span>{{ isSaved ? t("place.saved") : t("place.save") }}</span>
-              </button>
+              <div class="place-actions">
+                <a
+                  :href="mapsUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="directions-btn"
+                  :aria-label="t('place.directions')"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  <span>{{ t('place.directions') }}</span>
+                </a>
+                <button
+                  type="button"
+                  class="save-btn"
+                  :class="{ 'save-btn--active': isSaved }"
+                  :aria-pressed="isSaved"
+                  :aria-label="isSaved ? t('place.saved') : t('place.save')"
+                  @click="toggleSaved"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" :fill="isSaved ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                  </svg>
+                  <span>{{ isSaved ? t("place.saved") : t("place.save") }}</span>
+                </button>
+              </div>
             </div>
             <div class="place-title-meta">
               <span class="cat-pill">{{ categoryIcon }} {{ categoryLabel }}</span>
@@ -79,6 +99,10 @@
                 <span class="today-label">{{ t("place.today_hours") }}:</span>
                 {{ todayHoursDisplay }}
               </span>
+              <template v-if="place.savedCount > 0">
+                <span class="meta-dot" aria-hidden="true">·</span>
+                <span class="saves-count">💾 {{ place.savedCount }}</span>
+              </template>
             </div>
           </div>
           </div>
@@ -191,10 +215,6 @@
                   <button type="button" class="report-place-btn" @click="placeReportOpen = true">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
                     {{ t('place.report_this') }}
-                  </button>
-                  <button v-if="canClaim" type="button" class="report-place-btn claim-place-btn" @click="claimModalOpen = true">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-                    {{ t('place.claim_this') }}
                   </button>
                 </div>
               </div>
@@ -374,7 +394,6 @@ const categoryLabel = computed(() => {
 })
 
 const isOwner = computed(() => !!(store.user && place.value?.isClaimed && place.value?.claimedBy === store.user.id))
-const canClaim = computed(() => !!(store.isLoggedIn && place.value && !place.value.isClaimed && place.value.status === "approved"))
 
 // Review detail modal
 const detailReview = ref(null)
@@ -465,7 +484,10 @@ async function saveEdit() {
 const isSaved = computed(() => !!place.value && store.isPlaceSaved(place.value._uuid))
 function toggleSaved() {
   if (!store.isLoggedIn) { router.push('/login'); return }
-  if (place.value) store.toggleSavedPlace(place.value._uuid).catch(() => {})
+  if (place.value) {
+    store.toggleSavedPlace(place.value._uuid).catch(() => {})
+    navigator.vibrate?.(10)
+  }
 }
 
 const todayHoursDisplay = computed(() => {
@@ -632,24 +654,44 @@ onBeforeUnmount(() => {
 
 .place-title-row {
   display: flex; align-items: flex-start; justify-content: space-between;
-  gap: 16px; margin-bottom: 8px;
+  gap: 16px; margin-bottom: 8px; flex-wrap: wrap;
+}
+
+.place-actions {
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0; flex-wrap: wrap;
 }
 .place-title {
   font-size: clamp(1.75rem, 4vw, 2.25rem);
   font-weight: 800; color: var(--text); line-height: 1.2;
   margin-bottom: 0; flex: 1 1 auto; min-width: 0;
 }
+.directions-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border: 1px solid var(--primary); border-radius: 999px;
+  background: var(--primary); color: #fff;
+  font-size: 0.875rem; font-weight: 600; cursor: pointer; text-decoration: none;
+  transition: opacity var(--transition);
+}
+.directions-btn:hover { opacity: 0.85; }
+
 .save-btn {
   flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px;
   padding: 8px 14px; border: 1px solid var(--border); border-radius: 999px;
   background: var(--surface); color: var(--text);
   font-size: 0.875rem; font-weight: 600; cursor: pointer;
   transition: background var(--transition), color var(--transition), border-color var(--transition);
-  margin-top: 4px;
 }
 .save-btn:hover { background: var(--surface-2); border-color: var(--primary); color: var(--primary); }
-.save-btn--active { background: var(--primary); border-color: var(--primary); color: #fff; }
+.save-btn--active { background: var(--primary); border-color: var(--primary); color: #fff; animation: save-pulse 0.3s ease; }
 .save-btn--active:hover { background: var(--primary); color: #fff; }
+
+@keyframes save-pulse {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
+.saves-count { color: var(--text-3); font-size: 0.85rem; }
 
 .cat-pill { display: inline-block; font-size: 0.8rem; font-weight: 600; color: var(--text-2); margin-bottom: 12px; }
 
@@ -700,6 +742,26 @@ onBeforeUnmount(() => {
 
 .carousel-placeholder {
   width: 100%; padding: 48px 24px; text-align: center; color: var(--text-3);
+}
+
+.hero-overlay {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 32px 16px 14px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.7));
+  display: flex; align-items: flex-end; gap: 10px;
+  color: #fff; z-index: 2; pointer-events: none;
+}
+.hero-rating {
+  font-size: 1.25rem; font-weight: 800; letter-spacing: -0.01em;
+}
+.hero-status {
+  font-size: 0.8rem; font-weight: 700; padding: 3px 9px;
+  border-radius: 999px; border: 1px solid rgba(255,255,255,0.4);
+}
+.hero-status.open  { background: rgba(34, 197, 94, 0.85); }
+.hero-status.closed { background: rgba(239, 68, 68, 0.85); }
+.hero-saves {
+  font-size: 0.8rem; font-weight: 600; opacity: 0.9; margin-left: auto;
 }
 
 .place-body { padding-top: 32px; padding-bottom: 80px; }
