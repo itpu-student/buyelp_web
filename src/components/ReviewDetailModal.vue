@@ -103,7 +103,7 @@ const props = defineProps({
 })
 
 const coinIcons = ['🪙', '💵', '💶', '💰', '💎']
-const recommendIcons = ['❌', '⚠️', '☑️', '✅', '👑']
+const recommendIcons = ['❌', '⚠️', '🆗', '✅', '👑']
 defineEmits(['close'])
 
 const copied = ref(false)

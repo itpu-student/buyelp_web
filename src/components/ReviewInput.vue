@@ -134,7 +134,7 @@ const media = ref([])
 
 const coinIcons = ['🪙', '💵', '💶', '💰', '💎']
 const coinHints = ['Cheap', 'Affordable', 'Mid-range', 'Pricey', 'Luxury']
-const recommendIcons = ['❌', '⚠️', '☑️', '✅', '👑']
+const recommendIcons = ['❌', '⚠️', '🆗', '✅', '👑']
 const recommendHints = ['Avoid', 'Mixed', 'Okay', 'Recommended', 'Must-try']
 
 const canSubmit = computed(() => rating.value > 0 && text.value.trim().length > 0)
