@@ -12,7 +12,8 @@
 
           <h3 class="modal-title">{{ t('place.write_review') }}</h3>
 
-          <div class="rating-row">
+          <div class="step-stars">
+            <p class="step-label">{{ rating ? '' : 'How was it?' }}</p>
             <div class="stars" @mouseleave="hoverStar = 0">
               <button
                 v-for="n in 5"
@@ -25,79 +26,72 @@
                 @click="rating = n"
               >★</button>
             </div>
-
-            <div class="badges">
-              <button
-                type="button"
-                class="badge optional-rating-btn"
-                :class="{ active: showCoinRow || priceLevel > 0 }"
-                aria-label="Price level"
-                @click="toggleCoinRow"
-              >💲</button>
-              <button
-                type="button"
-                class="badge optional-rating-btn"
-                :class="{ active: showRecommendRow || recommendLevel > 0 }"
-                aria-label="Recommend"
-                @click="toggleRecommendRow"
-              >✔️</button>
-            </div>
           </div>
 
-          <div v-if="showCoinRow || priceLevel > 0" class="coin-rating-row">
-            <span class="coin-label">How pricey?</span>
-            <div class="coins" @mouseleave="hoverCoin = 0">
-              <button
-                v-for="(c, i) in coinIcons"
-                :key="i"
-                type="button"
-                class="coin"
-                :class="{ active: (i + 1) <= (hoverCoin || priceLevel) }"
-                :aria-label="`Price level ${i + 1}`"
-                @mouseenter="hoverCoin = i + 1"
-                @click="priceLevel = priceLevel === i + 1 ? 0 : i + 1"
-              >{{ c }}</button>
-            </div>
-            <span v-if="priceLevel" class="coin-hint">{{ coinHints[priceLevel - 1] }}</span>
-          </div>
+          <Transition name="slide-down">
+            <div v-if="rating > 0" class="step-body">
+              <textarea
+                v-model="text"
+                class="form-input modal-text"
+                rows="4"
+                :placeholder="t('place.review_placeholder')"
+                autofocus
+              ></textarea>
 
-          <div v-if="showRecommendRow || recommendLevel > 0" class="coin-rating-row">
-            <span class="coin-label">How's the quality?</span>
-            <div class="coins" @mouseleave="hoverRecommend = 0">
-              <button
-                v-for="(r, i) in recommendIcons"
-                :key="i"
-                type="button"
-                class="coin"
-                :class="{ active: (i + 1) <= (hoverRecommend || recommendLevel) }"
-                :aria-label="`Recommend level ${i + 1}`"
-                @mouseenter="hoverRecommend = i + 1"
-                @click="recommendLevel = recommendLevel === i + 1 ? 0 : i + 1"
-              >{{ r }}</button>
-            </div>
-            <span v-if="recommendLevel" class="coin-hint">{{ recommendHints[recommendLevel - 1] }}</span>
-          </div>
+              <details class="extras-toggle">
+                <summary class="extras-summary">Add more details ↓</summary>
+                <div class="extras-body">
+                  <div class="coin-rating-row">
+                    <span class="coin-label">How pricey?</span>
+                    <div class="coins" @mouseleave="hoverCoin = 0">
+                      <button
+                        v-for="(c, i) in coinIcons"
+                        :key="i"
+                        type="button"
+                        class="coin"
+                        :class="{ active: (i + 1) <= (hoverCoin || priceLevel) }"
+                        :aria-label="`Price level ${i + 1}`"
+                        @mouseenter="hoverCoin = i + 1"
+                        @click="priceLevel = priceLevel === i + 1 ? 0 : i + 1"
+                      >{{ c }}</button>
+                    </div>
+                    <span v-if="priceLevel" class="coin-hint">{{ coinHints[priceLevel - 1] }}</span>
+                  </div>
 
-          <textarea
-            v-model="text"
-            class="form-input modal-text"
-            rows="4"
-            :placeholder="t('place.review_placeholder')"
-          ></textarea>
+                  <div class="coin-rating-row">
+                    <span class="coin-label">How's the quality?</span>
+                    <div class="coins" @mouseleave="hoverRecommend = 0">
+                      <button
+                        v-for="(r, i) in recommendIcons"
+                        :key="i"
+                        type="button"
+                        class="coin"
+                        :class="{ active: (i + 1) <= (hoverRecommend || recommendLevel) }"
+                        :aria-label="`Recommend level ${i + 1}`"
+                        @mouseenter="hoverRecommend = i + 1"
+                        @click="recommendLevel = recommendLevel === i + 1 ? 0 : i + 1"
+                      >{{ r }}</button>
+                    </div>
+                    <span v-if="recommendLevel" class="coin-hint">{{ recommendHints[recommendLevel - 1] }}</span>
+                  </div>
 
-          <div class="media-row">
-            <label class="media-add">
-              <input type="file" accept="image/*,video/*" multiple hidden @change="onMedia" />
-              <span>➕ Add media</span>
-            </label>
-            <div v-if="media.length" class="media-thumbs">
-              <div v-for="(m, i) in media" :key="i" class="thumb">
-                <img v-if="m.type.startsWith('image')" :src="m.url" alt="" />
-                <span v-else>🎞️</span>
-                <button type="button" class="thumb-x" aria-label="Remove" @click="removeMedia(i)">×</button>
-              </div>
+                  <div class="media-row">
+                    <label class="media-add">
+                      <input type="file" accept="image/*,video/*" multiple hidden @change="onMedia" />
+                      <span>➕ Add media</span>
+                    </label>
+                    <div v-if="media.length" class="media-thumbs">
+                      <div v-for="(m, i) in media" :key="i" class="thumb">
+                        <img v-if="m.type.startsWith('image')" :src="m.url" alt="" />
+                        <span v-else>🎞️</span>
+                        <button type="button" class="thumb-x" aria-label="Remove" @click="removeMedia(i)">×</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </details>
             </div>
-          </div>
+          </Transition>
 
           <div class="modal-actions">
             <button type="button" class="btn btn-ghost" @click="close">Cancel</button>
@@ -123,10 +117,8 @@ const emit = defineEmits(['submit'])
 const isOpen = ref(false)
 const rating = ref(0)
 const hoverStar = ref(0)
-const showCoinRow = ref(false)
 const priceLevel = ref(0)
 const hoverCoin = ref(0)
-const showRecommendRow = ref(false)
 const recommendLevel = ref(0)
 const hoverRecommend = ref(0)
 const text = ref('')
@@ -141,26 +133,6 @@ const canSubmit = computed(() => rating.value > 0 && text.value.trim().length > 
 
 function open() { isOpen.value = true }
 
-function toggleCoinRow() {
-  if (showCoinRow.value || priceLevel.value > 0) {
-    showCoinRow.value = false
-    priceLevel.value = 0
-    hoverCoin.value = 0
-  } else {
-    showCoinRow.value = true
-  }
-}
-
-function toggleRecommendRow() {
-  if (showRecommendRow.value || recommendLevel.value > 0) {
-    showRecommendRow.value = false
-    recommendLevel.value = 0
-    hoverRecommend.value = 0
-  } else {
-    showRecommendRow.value = true
-  }
-}
-
 function close() {
   isOpen.value = false
 }
@@ -168,10 +140,8 @@ function close() {
 function reset() {
   rating.value = 0
   hoverStar.value = 0
-  showCoinRow.value = false
   priceLevel.value = 0
   hoverCoin.value = 0
-  showRecommendRow.value = false
   recommendLevel.value = 0
   hoverRecommend.value = 0
   text.value = ''
@@ -284,20 +254,12 @@ watch(isOpen, (v) => {
   color: var(--text);
 }
 
-.rating-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.stars { display: flex; gap: 2px; }
+.stars { display: flex; gap: 4px; }
 
 .star {
   background: transparent;
   border: none;
-  font-size: 1.9rem;
+  font-size: 2.4rem;
   color: var(--border);
   cursor: pointer;
   padding: 2px;
@@ -306,9 +268,7 @@ watch(isOpen, (v) => {
 }
 
 .star.active { color: var(--accent); }
-.star:hover { transform: scale(1.1); }
-
-.badges { display: flex; gap: 6px; }
+.star:hover { transform: scale(1.15); }
 
 .coin-rating-row {
   display: flex;
@@ -355,23 +315,53 @@ watch(isOpen, (v) => {
   margin-left: auto;
 }
 
-.badge {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  cursor: pointer;
-  font-size: 0.95rem;
-  font-weight: 700;
+
+.step-stars {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 0 4px;
+}
+.step-label {
+  font-size: 0.85rem;
   color: var(--text-2);
-  transition: all var(--transition);
+  font-weight: 500;
+  min-height: 1.2em;
+}
+.step-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
-.badge.active {
-  background: var(--primary);
-  color: #fff;
-  border-color: var(--primary);
+.slide-down-enter-active { transition: all 0.25s ease; }
+.slide-down-leave-active { transition: all 0.2s ease; }
+.slide-down-enter-from { opacity: 0; transform: translateY(-8px); }
+.slide-down-leave-to { opacity: 0; transform: translateY(-4px); }
+
+.extras-toggle {
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.extras-summary {
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-3);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.extras-summary::-webkit-details-marker { display: none; }
+.extras-summary:hover { color: var(--text-2); }
+.extras-body {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid var(--border-light);
 }
 
 .modal-text { resize: vertical; min-height: 90px; }

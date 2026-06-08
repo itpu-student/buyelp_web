@@ -1,53 +1,31 @@
 import { createRouter, createWebHistory } from "vue-router"
-import HomeView from "../views/HomeView.vue"
-import SearchView from "../views/SearchView.vue"
-import PlaceView from "../views/PlaceView.vue"
-import LoginView from "../views/LoginView.vue"
-import RegisterView from "../views/RegisterView.vue"
-import ProfileView from "../views/ProfileView.vue"
-import AddPlaceView from "../views/AddPlaceView.vue"
-import BusinessView from "../views/BusinessView.vue"
-import UserView from "../views/UserView.vue"
-
-import AdminLayout from "../views/admin/AdminLayout.vue"
-import AdminLoginView from "../views/admin/AdminLoginView.vue"
-import AdminReportsView from "../views/admin/AdminReportsView.vue"
-import AdminReportDetailView from "../views/admin/AdminReportDetailView.vue"
-import AdminPlacesView from "../views/admin/AdminPlacesView.vue"
-import AdminReviewsView from "../views/admin/AdminReviewsView.vue"
-import AdminUsersView from "../views/admin/AdminUsersView.vue"
-import AdminClaimsView from "../views/admin/AdminClaimsView.vue"
-import AdminAdminsView from "../views/admin/AdminAdminsView.vue"
-import AdminPlaceEditView from "../views/admin/AdminPlaceEditView.vue"
-import BusinessPlaceEditView from "../views/BusinessPlaceEditView.vue"
-
 import { adminStore } from "../store/adminStore.js"
 
 const routes = [
-  { path: "/", name: "home", component: HomeView },
-  { path: "/search", name: "search", component: SearchView },
-  { path: "/place/:id", name: "place", component: PlaceView },
-  { path: "/places/new", name: "place-new", component: AddPlaceView },
-  { path: "/login", name: "login", component: LoginView },
-  { path: "/register", name: "register", component: RegisterView },
-  { path: "/profile", name: "profile", component: ProfileView },
-  { path: "/business", name: "business", component: BusinessView },
-  { path: "/business/:alias/edit", name: "business-place-edit", component: BusinessPlaceEditView },
-  { path: "/u/:alias", name: "user", component: UserView },
+  { path: "/", name: "home", component: () => import("../views/HomeView.vue") },
+  { path: "/search", name: "search", component: () => import("../views/SearchView.vue") },
+  { path: "/place/:id", name: "place", component: () => import("../views/PlaceView.vue") },
+  { path: "/places/new", name: "place-new", component: () => import("../views/AddPlaceView.vue") },
+  { path: "/login", name: "login", component: () => import("../views/LoginView.vue") },
+  { path: "/register", name: "register", component: () => import("../views/RegisterView.vue") },
+  { path: "/profile", name: "profile", component: () => import("../views/ProfileView.vue") },
+  { path: "/business", name: "business", component: () => import("../views/BusinessView.vue") },
+  { path: "/business/:alias/edit", name: "business-place-edit", component: () => import("../views/BusinessPlaceEditView.vue") },
+  { path: "/u/:alias", name: "user", component: () => import("../views/UserView.vue") },
   {
     path: "/admin",
-    component: AdminLayout,
+    component: () => import("../views/admin/AdminLayout.vue"),
     children: [
       { path: "", redirect: "/admin/reports" },
-      { path: "login", name: "admin-login", component: AdminLoginView },
-      { path: "reports", name: "admin-reports", component: AdminReportsView },
-      { path: "reports/:id", name: "admin-report-detail", component: AdminReportDetailView },
-      { path: "places", name: "admin-places", component: AdminPlacesView },
-      { path: "places/:alias/edit", name: "admin-place-edit", component: AdminPlaceEditView },
-      { path: "reviews", name: "admin-reviews", component: AdminReviewsView },
-      { path: "users", name: "admin-users", component: AdminUsersView },
-      { path: "claims", name: "admin-claims", component: AdminClaimsView },
-      { path: "admins", name: "admin-admins", component: AdminAdminsView },
+      { path: "login", name: "admin-login", component: () => import("../views/admin/AdminLoginView.vue") },
+      { path: "reports", name: "admin-reports", component: () => import("../views/admin/AdminReportsView.vue") },
+      { path: "reports/:id", name: "admin-report-detail", component: () => import("../views/admin/AdminReportDetailView.vue") },
+      { path: "places", name: "admin-places", component: () => import("../views/admin/AdminPlacesView.vue") },
+      { path: "places/:alias/edit", name: "admin-place-edit", component: () => import("../views/admin/AdminPlaceEditView.vue") },
+      { path: "reviews", name: "admin-reviews", component: () => import("../views/admin/AdminReviewsView.vue") },
+      { path: "users", name: "admin-users", component: () => import("../views/admin/AdminUsersView.vue") },
+      { path: "claims", name: "admin-claims", component: () => import("../views/admin/AdminClaimsView.vue") },
+      { path: "admins", name: "admin-admins", component: () => import("../views/admin/AdminAdminsView.vue") },
     ],
   },
 ]
@@ -66,12 +44,10 @@ router.beforeEach((to) => {
   const loggedIn = adminStore.isAdminLoggedIn
 
   if (to.name === "admin-login") {
-    // Already logged in → go to reports
     if (loggedIn) return "/admin/reports"
     return true
   }
 
-  // All other /admin/* require admin token
   if (!loggedIn) return "/admin/login"
   return true
 })

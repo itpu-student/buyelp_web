@@ -27,10 +27,22 @@
               <p class="profile-joined text-muted text-xs">
                 {{ t('user.joined') }} {{ user.created_at ? formatDate(user.created_at) : '—' }}
               </p>
-              <p class="profile-review-count text-muted text-xs">
-                {{ publicData.review_count }} {{ t('common.reviews_count') }}
-              </p>
             </div>
+          </div>
+        </div>
+
+        <div v-if="tasteProfile" class="taste-profile">
+          <div class="taste-chip">
+            <span class="taste-icon">{{ tasteProfile.topCategoryIcon }}</span>
+            <span>Mostly reviews <strong>{{ tasteProfile.topCategory }}</strong></span>
+          </div>
+          <div class="taste-chip">
+            <span class="taste-icon">⭐</span>
+            <span>Avg rating <strong>{{ tasteProfile.avgRating }}</strong></span>
+          </div>
+          <div class="taste-chip">
+            <span class="taste-icon">📝</span>
+            <span><strong>{{ publicData.review_count }}</strong> {{ t('common.reviews_count') }}</span>
           </div>
         </div>
 
@@ -96,6 +108,33 @@ const reviewsPage = ref(1)
 const selectedReview = ref(null)
 const LIMIT = 10
 const reviewsTotalPages = computed(() => Math.ceil(reviewsTotal.value / LIMIT) || 1)
+
+const categoryIcons = {
+  restaurants: '🍽️', auto: '🚗', health: '🏥',
+  activities: '🏔️', sports: '⚽', tabiat: '🌿',
+}
+const categoryLabels = {
+  restaurants: 'Restaurants', auto: 'Auto Services', health: 'Health',
+  activities: 'Activities', sports: 'Sports', tabiat: 'Nature',
+}
+
+const tasteProfile = computed(() => {
+  if (!reviews.value.length) return null
+  const catCounts = {}
+  let ratingSum = 0
+  for (const r of reviews.value) {
+    const cat = r.place?.category
+    if (cat) catCounts[cat] = (catCounts[cat] || 0) + 1
+    ratingSum += r.rating || 0
+  }
+  const topCat = Object.entries(catCounts).sort((a, b) => b[1] - a[1])[0]?.[0]
+  const avgRating = (ratingSum / reviews.value.length).toFixed(1)
+  return {
+    topCategory: categoryLabels[topCat] || topCat || '—',
+    topCategoryIcon: categoryIcons[topCat] || '📍',
+    avgRating,
+  }
+})
 
 const avatarSrc = computed(() => {
   if (!user.value) return ''
@@ -174,6 +213,28 @@ async function setReviewsPage(n) {
 .profile-info { flex: 1; padding-top: 52px; min-width: 0; }
 .profile-name { font-size: 1.5rem; font-weight: 800; color: var(--text); }
 .profile-username, .profile-joined, .profile-review-count { margin-top: 4px; }
+
+.taste-profile {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.taste-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-full);
+  font-size: 0.83rem;
+  color: var(--text-2);
+}
+
+.taste-chip strong { color: var(--text); }
+.taste-icon { font-size: 1rem; line-height: 1; }
 
 .tab-bar {
   display: flex;

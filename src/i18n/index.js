@@ -19,6 +19,9 @@ export const messages = {
       featured_title: "Popular Hangout Spots",
       toprated_title: "Most Loved Places",
       see_all: "See All",
+      near_me: "Near Me",
+      near_me_title: "Near You",
+      near_me_clear: "Clear",
     },
     categories: {
       all: "All",
@@ -432,6 +435,9 @@ export const messages = {
       featured_title: "Mashhur yig'inish joylari",
       toprated_title: "Eng sevimli joylar",
       see_all: "Hammasini ko'rish",
+      near_me: "Yaqinimda",
+      near_me_title: "Yaqiningizda",
+      near_me_clear: "Tozalash",
     },
     categories: {
       all: "Hammasi",
