@@ -65,36 +65,6 @@
         <p v-else class="text-muted text-sm">No places yet.</p>
       </section>
 
-      <section class="section">
-        <div class="section-header">
-          <h2 class="section-title">{{ t('home.toprated_title') }}</h2>
-          <RouterLink to="/search" class="see-all-link">{{ t('home.see_all') }} →</RouterLink>
-        </div>
-        <div v-if="loading" class="top-rated-list">
-          <div v-for="n in 5" :key="n" class="skeleton-top-item skeleton" />
-        </div>
-        <div v-else-if="topRated.length" class="top-rated-list">
-          <RouterLink
-            v-for="(place, idx) in topRated"
-            :key="place.id"
-            :to="`/place/${place.id}`"
-            class="top-item card"
-          >
-            <span class="top-rank">#{{ idx + 1 }}</span>
-            <img v-if="place.images[0]" :src="place.images[0]" :alt="place.name.en" class="top-image" loading="lazy" />
-            <div v-else class="top-image top-image-ph"></div>
-            <div class="top-info">
-              <span class="top-name">{{ place.name[locale.locale] || place.name.en }}</span>
-              <span class="top-addr">{{ place.address[locale.locale] || place.address.en }}</span>
-            </div>
-            <div class="top-rating">
-              <StarRating :rating="place.rating" :size="16" />
-              <span class="rating-val">{{ place.rating.toFixed(1) }}</span>
-            </div>
-          </RouterLink>
-        </div>
-        <p v-else-if="!loadError" class="text-muted text-sm">No rated places yet.</p>
-      </section>
     </div>
   </div>
 </template>

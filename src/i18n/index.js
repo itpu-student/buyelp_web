@@ -830,7 +830,7 @@ export const messages = {
 import { reactive } from "vue"
 
 export const i18nState = reactive({
-  locale: localStorage.getItem("s101__lang") || "en",
+  locale: localStorage.getItem("s101__lang") || "uz",
 })
 
 export function setLocale(lang) {
