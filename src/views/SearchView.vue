@@ -30,18 +30,49 @@
       </div>
 
       <div class="results-bar">
-        <div class="sort-segment" role="group" :aria-label="t('search.sort_by')">
-          <button
-            v-for="opt in sortOptions"
-            :key="opt.value"
-            class="sort-btn"
-            :class="{ active: sortBy === opt.value }"
-            :disabled="geoLoading"
-            @click="setSort(opt.value)"
-          >
-            <span class="sort-icon">{{ opt.icon }}</span>
-            {{ geoLoading && opt.value === 'nearest' ? t('search.locating') : t(`search.${opt.key}`) }}
-          </button>
+        <div class="sort-wrap">
+          <div class="sort-segment" role="group" :aria-label="t('search.sort_by')">
+            <button
+              v-for="opt in sortOptions"
+              :key="opt.value"
+              class="sort-btn"
+              :class="{ active: sortBy === opt.value }"
+              :disabled="geoLoading"
+              @click="setSort(opt.value)"
+            >
+              <span class="sort-icon">{{ opt.icon }}</span>
+              {{ geoLoading && opt.value === 'nearest' ? t('search.locating') : t(`search.${opt.key}`) }}
+            </button>
+          </div>
+          <Transition name="radius-fade">
+            <div v-if="sortBy === 'nearest'" class="radius-dd">
+              <button
+                class="radius-trigger"
+                :aria-label="t('search.radius')"
+                aria-haspopup="listbox"
+                :aria-expanded="radiusOpen"
+                @click="radiusOpen = !radiusOpen"
+              >
+                {{ formatRadius(maxDistance) }}
+                <span class="radius-caret" :class="{ open: radiusOpen }">▾</span>
+              </button>
+              <Transition name="radius-menu">
+                <ul v-if="radiusOpen" class="radius-menu" role="listbox">
+                  <li v-for="(r, i) in radiusOptions" :key="r" role="option" :aria-selected="r === maxDistance">
+                    <button
+                      class="radius-opt"
+                      :class="{ active: r === maxDistance }"
+                      :style="{ fontWeight: rampWeights[i] }"
+                      @click="selectRadius(r)"
+                    >
+                      <span class="radius-opt-num">{{ formatRadius(r) }}</span>
+                      <span class="radius-bar" :style="{ width: barWidths[i] }"></span>
+                    </button>
+                  </li>
+                </ul>
+              </Transition>
+            </div>
+          </Transition>
         </div>
         <p class="results-count text-muted text-sm">
           <span v-if="loading">{{ t('common.loading') }}</span>
@@ -64,7 +95,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { t, i18nState } from '../i18n/index.js'
 import { listPlaces } from '../api/places.js'
@@ -86,6 +117,24 @@ const sortBy = ref('top')
 const coords = ref(null)        // cached {lat, lon} once granted — avoids re-prompting
 const geoLoading = ref(false)
 const geoError = ref('')
+
+const radiusOptions = [250, 500, 1000, 2000, 5000, 10000]  // meters
+const maxDistance = ref(500)
+const radiusOpen = ref(false)
+const formatRadius = (m) => (m < 1000 ? `${m}m` : `${m / 1000}km`)
+// weight + bar length grow with distance, so a bigger radius reads as "farther"
+const rampWeights = [500, 600, 650, 700, 750, 800]
+const barWidths = ['14px', '24px', '34px', '46px', '58px', '72px']
+
+function selectRadius(r) {
+  radiusOpen.value = false
+  maxDistance.value = r
+}
+function closeRadiusOnOutside(e) {
+  if (radiusOpen.value && !e.target.closest('.radius-dd')) radiusOpen.value = false
+}
+onMounted(() => document.addEventListener('click', closeRadiusOnOutside))
+onUnmounted(() => document.removeEventListener('click', closeRadiusOnOutside))
 
 const sortOptions = [
   { value: 'top', icon: '⭐', key: 'sort_top' },
@@ -150,6 +199,7 @@ async function runFetch(p = page.value) {
       near: sortBy.value === 'nearest' && coords.value
         ? `${coords.value.lat},${coords.value.lon}`
         : undefined,
+      near_max_distance: sortBy.value === 'nearest' ? maxDistance.value : undefined,
       page: p,
       limit: LIMIT,
     })
@@ -179,6 +229,7 @@ function resetAndFetch() {
 watch(query, resetAndFetch)
 watch(selectedCategoryId, () => { page.value = 1; runFetch(1) })
 watch(sortBy, () => { page.value = 1; runFetch(1) })
+watch(maxDistance, () => { if (sortBy.value === 'nearest') { page.value = 1; runFetch(1) } })
 
 onMounted(async () => {
   if (route.query.q) query.value = String(route.query.q)
@@ -214,12 +265,12 @@ onMounted(async () => {
   gap: 12px;
   margin-bottom: 24px;
 }
-.sort-segment { justify-self: start; }
+.sort-wrap { justify-self: start; display: inline-flex; align-items: center; gap: 8px; }
 .results-count { grid-column: 2; margin: 0; text-align: center; }
 
 @media (max-width: 640px) {
   .results-bar { grid-template-columns: 1fr; justify-items: center; gap: 14px; }
-  .sort-segment { justify-self: center; }
+  .sort-wrap { justify-self: center; }
   .results-count { grid-column: auto; }
 }
 
@@ -249,6 +300,66 @@ onMounted(async () => {
 }
 .sort-btn:disabled { cursor: wait; opacity: 0.7; }
 .sort-icon { font-size: 0.9rem; line-height: 1; }
+
+.radius-dd { position: relative; }
+.radius-trigger {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 12px;
+  font-size: 0.8rem; font-weight: 600;
+  color: var(--text-2);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: color var(--transition), border-color var(--transition);
+}
+.radius-trigger:hover { color: var(--text); border-color: var(--text-3); }
+.radius-caret { font-size: 0.65rem; transition: transform var(--transition); }
+.radius-caret.open { transform: rotate(180deg); }
+
+.radius-menu {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 20;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  display: flex; flex-direction: column; gap: 2px;
+}
+.radius-opt {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; text-align: left;
+  padding: 7px 14px;
+  font-size: 0.82rem;
+  color: var(--text-2);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: color var(--transition), background var(--transition);
+}
+.radius-opt:hover { background: var(--surface-2); color: var(--text); }
+.radius-opt.active { color: var(--primary); background: var(--surface-2); }
+/* fixed-width number column so every bar starts at the same x — lengths stay comparable */
+.radius-opt-num { flex: none; width: 44px; }
+.radius-bar {
+  flex: none; height: 3px;
+  border-radius: var(--radius-full);
+  background: var(--primary);
+  opacity: 0.5;
+  transition: opacity var(--transition);
+}
+.radius-opt:hover .radius-bar,
+.radius-opt.active .radius-bar { opacity: 1; }
+
+.radius-fade-enter-active, .radius-fade-leave-active {
+  transition: opacity var(--transition), transform var(--transition);
+}
+.radius-fade-enter-from, .radius-fade-leave-to { opacity: 0; transform: translateY(4px); }
+
+.radius-menu-enter-active, .radius-menu-leave-active {
+  transition: opacity var(--transition), transform var(--transition);
+  transform-origin: top;
+}
+.radius-menu-enter-from, .radius-menu-leave-to { opacity: 0; transform: translateY(-4px) scale(0.98); }
 
 .geo-error {
   margin: -12px 0 20px;
