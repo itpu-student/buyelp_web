@@ -36,6 +36,26 @@ export class ApiError extends Error {
   }
 }
 
+// Called when an admin-authenticated request returns 401. Registered in main.js
+// to log out and redirect to the admin login page.
+let onAdminUnauthorized = null
+export function setAdminUnauthorizedHandler(fn) {
+  onAdminUnauthorized = fn
+}
+
+async function parseResponse(res, adminAuth) {
+  if (res.status === 204) return null
+  const text = await res.text()
+  const data = text ? JSON.parse(text) : null
+  if (!res.ok) {
+    if (adminAuth && res.status === 401) onAdminUnauthorized?.()
+    const code = data?.error || "error"
+    const message = data?.message || res.statusText
+    throw new ApiError(res.status, code, message)
+  }
+  return data
+}
+
 export async function apiFetch(path, { method = "GET", body, auth = false, adminAuth = false } = {}) {
   const headers = { "Accept": "application/json" }
   if (body !== undefined) headers["Content-Type"] = "application/json"
@@ -53,17 +73,7 @@ export async function apiFetch(path, { method = "GET", body, auth = false, admin
     body: body === undefined ? undefined : JSON.stringify(body),
   })
 
-  if (res.status === 204) return null
-
-  const text = await res.text()
-  const data = text ? JSON.parse(text) : null
-
-  if (!res.ok) {
-    const code = data?.error || "error"
-    const message = data?.message || res.statusText
-    throw new ApiError(res.status, code, message)
-  }
-  return data
+  return parseResponse(res, adminAuth)
 }
 
 export async function apiUpload(path, formData, { auth = true, adminAuth = false } = {}) {
@@ -76,13 +86,5 @@ export async function apiUpload(path, formData, { auth = true, adminAuth = false
     if (token) headers["Authorization"] = `Bearer ${token}`
   }
   const res = await fetch(`${BASE_URL}${path}`, { method: "POST", headers, body: formData })
-  if (res.status === 204) return null
-  const text = await res.text()
-  const data = text ? JSON.parse(text) : null
-  if (!res.ok) {
-    const code = data?.error || "error"
-    const message = data?.message || res.statusText
-    throw new ApiError(res.status, code, message)
-  }
-  return data
+  return parseResponse(res, adminAuth)
 }
