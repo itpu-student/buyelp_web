@@ -31,6 +31,15 @@
 
       <div class="results-bar">
         <div class="sort-wrap">
+          <button
+            class="open-now-toggle"
+            :class="{ active: openNow }"
+            :aria-pressed="openNow"
+            @click="openNow = !openNow"
+          >
+            <span class="on-dot"></span>
+            {{ t('search.open_now') }}
+          </button>
           <div class="sort-segment" role="group" :aria-label="t('search.sort_by')">
             <button
               v-for="opt in sortOptions"
@@ -114,6 +123,7 @@ const loadError = ref('')
 const page = ref(1)
 
 const sortBy = ref('top')
+const openNow = ref(false)
 const coords = ref(null)        // cached {lat, lon} once granted — avoids re-prompting
 const geoLoading = ref(false)
 const geoError = ref('')
@@ -200,6 +210,7 @@ async function runFetch(p = page.value) {
         ? `${coords.value.lat},${coords.value.lon}`
         : undefined,
       near_max_distance: sortBy.value === 'nearest' ? maxDistance.value : undefined,
+      open_now: openNow.value || undefined,
       page: p,
       limit: LIMIT,
     })
@@ -229,6 +240,7 @@ function resetAndFetch() {
 watch(query, resetAndFetch)
 watch(selectedCategoryId, () => { page.value = 1; runFetch(1) })
 watch(sortBy, () => { page.value = 1; runFetch(1) })
+watch(openNow, () => { page.value = 1; runFetch(1) })
 watch(maxDistance, () => { if (sortBy.value === 'nearest') { page.value = 1; runFetch(1) } })
 
 onMounted(async () => {
@@ -265,7 +277,7 @@ onMounted(async () => {
   gap: 12px;
   margin-bottom: 24px;
 }
-.sort-wrap { justify-self: start; display: inline-flex; align-items: center; gap: 8px; }
+.sort-wrap { justify-self: start; display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .results-count { grid-column: 2; margin: 0; text-align: center; }
 
 @media (max-width: 640px) {
@@ -300,6 +312,35 @@ onMounted(async () => {
 }
 .sort-btn:disabled { cursor: wait; opacity: 0.7; }
 .sort-icon { font-size: 0.9rem; line-height: 1; }
+
+/* filter, not sort — distinct pill that turns green ("open") when on */
+.open-now-toggle {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 14px;
+  font-size: 0.8rem; font-weight: 600;
+  color: var(--text-2);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: color var(--transition), background var(--transition), border-color var(--transition);
+}
+.open-now-toggle:hover:not(.active) { color: var(--text); border-color: var(--text-3); }
+.open-now-toggle.active {
+  color: #16a34a;
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.4);
+}
+.on-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--text-3);
+  transition: background var(--transition), box-shadow var(--transition);
+}
+.open-now-toggle.active .on-dot {
+  background: #16a34a;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.22);
+}
 
 .radius-dd { position: relative; }
 .radius-trigger {

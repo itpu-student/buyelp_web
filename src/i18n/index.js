@@ -41,7 +41,7 @@ export const messages = {
       your_rating: "Your Rating",
       your_review: "Your Review",
       review_placeholder: "Share your experience…",
-      open_now: "Open Now",
+      open_now: "Open",
       closed: "Closed",
       today_hours: "Today",
       full_week_hours: "Full week hours",
@@ -355,6 +355,7 @@ export const messages = {
       sort_nearest: "Nearest",
       radius: "Search radius",
       locating: "Locating…",
+      open_now: "Open",
       geo_error: "Couldn't get your location.",
     },
     common: {
@@ -775,6 +776,7 @@ export const messages = {
       sort_nearest: "Eng yaqin",
       radius: "Qidiruv radiusi",
       locating: "Aniqlanmoqda…",
+      open_now: "Ochiq",
       geo_error: "Joylashuvni aniqlab bo'lmadi.",
     },
     common: {

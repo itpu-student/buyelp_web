@@ -1,12 +1,13 @@
 import { apiFetch } from "./client.js"
 
-export function listPlaces({ query, category_id, sort, near, near_max_distance, page = 1, limit = 100 } = {}) {
+export function listPlaces({ query, category_id, sort, near, near_max_distance, open_now, page = 1, limit = 100 } = {}) {
   const params = new URLSearchParams()
   if (query) params.set("query", query)
   if (category_id) params.set("category_id", category_id)
   if (sort) params.set("sort", sort)
   if (near) params.set("near", near)
   if (near_max_distance) params.set("near_max_distance", String(near_max_distance))
+  if (open_now) params.set("open_now", "true")
   params.set("page", String(page))
   params.set("limit", String(limit))
   return apiFetch(`/api/places?${params.toString()}`)
