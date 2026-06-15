@@ -28,7 +28,7 @@
                 {{ t('user.joined') }} {{ user.created_at ? formatDate(user.created_at) : '—' }}
               </p>
               <p class="profile-review-count text-muted text-xs">
-                {{ publicData.review_count }} {{ t('common.reviews_count') }}
+                📝 <strong class="review-count-num">{{ publicData.review_count }}</strong> {{ t('common.reviews_count') }}
               </p>
             </div>
           </div>
