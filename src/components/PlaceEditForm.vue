@@ -4,7 +4,7 @@
     <!-- Info bar -->
     <div class="info-bar">
       <div class="info-stats">
-        <span class="stat-rating">{{ place.avg_rating?.toFixed(1) ?? '—' }}★</span>
+        <span class="stat-rating">{{ place.avg_ratings?.star?.toFixed(1) ?? '—' }}★</span>
         <span class="stat-sep">·</span>
         <span class="stat-reviews">{{ place.review_count ?? 0 }} {{ t('common.reviews_count') }}</span>
       </div>

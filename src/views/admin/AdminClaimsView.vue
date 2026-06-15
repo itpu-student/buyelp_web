@@ -127,7 +127,7 @@
           </div>
           <div class="meta-row">
             <span class="meta-label">{{ t('admin.review_list.col_avg_rating') }}</span>
-            <span>{{ placeModal.avg_rating }}★</span>
+            <span>{{ placeModal.avg_ratings?.star }}★</span>
           </div>
           <div class="meta-row">
             <span class="meta-label">{{ t('admin.review_list.col_reviews') }}</span>

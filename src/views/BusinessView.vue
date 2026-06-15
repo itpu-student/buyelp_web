@@ -28,7 +28,7 @@
                 <span class="place-slug text-muted">{{ p.slug }}</span>
                 <div class="place-meta">
                   <span class="badge" :class="statusClass(p.status)">{{ p.status }}</span>
-                  <span class="text-muted text-sm">{{ p.avg_rating?.toFixed(1) }}★ · {{ p.review_count }} {{ t('common.reviews_count') }}</span>
+                  <span class="text-muted text-sm">{{ p.avg_ratings?.star?.toFixed(1) }}★ · {{ p.review_count }} {{ t('common.reviews_count') }}</span>
                 </div>
               </div>
             </div>

@@ -51,7 +51,7 @@
               <td>
                 <div class="info-cell">
                   <span class="text-sm">{{ p.phone || '—' }}</span>
-                  <span class="text-xs text-muted">{{ p.avg_rating }}★ · {{ p.review_count }} reviews</span>
+                  <span class="text-xs text-muted">{{ p.avg_ratings?.star }}★ · {{ p.review_count }} reviews</span>
                 </div>
               </td>
               <td><span class="badge" :class="statusClass(p.status)">{{ p.status }}</span></td>
@@ -128,7 +128,7 @@
           </div>
           <div class="meta-row">
             <span class="meta-label">{{ t('admin.review_list.col_avg_rating') }}</span>
-            <span>{{ placeModal.avg_rating }}★</span>
+            <span>{{ placeModal.avg_ratings?.star }}★</span>
           </div>
           <div class="meta-row">
             <span class="meta-label">{{ t('admin.review_list.col_reviews') }}</span>
