@@ -1,4 +1,12 @@
-export const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"
+// VITE_API_BASE_URL starting with ":" means "same host, this port" — e.g.
+// ":8080" resolves to "<current-protocol>//<current-hostname>:8080" at runtime.
+function resolveBaseUrl(raw) {
+  if (!raw) return "http://localhost:8080"
+  if (raw.startsWith(":")) return `${window.location.protocol}//${window.location.hostname}${raw}`
+  return raw
+}
+
+export const BASE_URL = resolveBaseUrl(import.meta.env.VITE_API_BASE_URL)
 
 export const TOKEN_KEY = "s101_token"
 export const ADMIN_TOKEN_KEY = "_s101_token"
