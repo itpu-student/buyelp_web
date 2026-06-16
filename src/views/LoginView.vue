@@ -39,7 +39,7 @@
 
       <p class="auth-switch">
         Don't have a code yet?
-        <RouterLink to="/register" class="text-primary font-semibold">How to get one</RouterLink>
+        <a href="https://t.me/BuYelpUzBot" target="_blank" rel="noopener noreferrer" class="text-primary font-semibold">How to get one</a>
       </p>
     </div>
 
