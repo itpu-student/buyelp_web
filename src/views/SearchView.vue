@@ -92,7 +92,7 @@
           class="show-me-toggle"
           :class="{ active: showMe }"
           :aria-pressed="showMe"
-          @click="showMe = !showMe"
+          @click="toggleShowMe"
         >
           <span class="on-dot"></span>
           {{ t('search.show_me') }}
@@ -119,6 +119,7 @@ import { t, i18nState } from '../i18n/index.js'
 import { listPlaces } from '../api/places.js'
 import { normalizePlace } from '../api/normalize.js'
 import { categoriesState, ensureCategoriesLoaded } from '../store/categories.js'
+import { locationState, toggleShowMe, ensureCoords, ensureCoordsIfShowing } from '../store/userLocation.js'
 import PlaceRow from '../components/PlaceRow.vue'
 import Pagination from '../components/Pagination.vue'
 
@@ -133,12 +134,13 @@ const page = ref(1)
 
 const sortBy = ref('top')
 const openNow = ref(false)
-const showMe = ref(false)
+// "Show me" toggle + cached coords live in a shared store (persisted, reused on /place)
+const showMe = computed(() => locationState.showMe)
+const coords = computed(() => locationState.coords)
+const geoLoading = computed(() => locationState.geoLoading)
+const geoError = computed(() => locationState.geoError)
 // Coords passed to each map's blue "you are here" dot — only while "Show me" is on
 const userCoords = computed(() => (showMe.value ? coords.value : null))
-const coords = ref(null)        // cached {lat, lon} once granted — avoids re-prompting
-const geoLoading = ref(false)
-const geoError = ref('')
 
 const radiusOptions = [250, 500, 1000, 2000, 5000, 10000]  // meters
 const maxDistance = ref(500)
@@ -167,29 +169,13 @@ const sortOptions = [
 const LIMIT = 20
 const totalPages = computed(() => Math.ceil(total.value / LIMIT) || 1)
 
-function getCoords() {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) { reject(new Error(t('search.geo_error'))); return }
-    navigator.geolocation.getCurrentPosition(
-      (p) => resolve({ lat: p.coords.latitude, lon: p.coords.longitude }),
-      () => reject(new Error(t('search.geo_error'))),
-      { enableHighAccuracy: true, timeout: 10000 },
-    )
-  })
-}
-
 async function setSort(value) {
   if (value === sortBy.value || geoLoading.value) return
-  geoError.value = ''
   if (value === 'nearest' && !coords.value) {
-    geoLoading.value = true
     try {
-      coords.value = await getCoords()
+      await ensureCoords()
     } catch (e) {
-      geoError.value = e.message
       return
-    } finally {
-      geoLoading.value = false
     }
   }
   sortBy.value = value
@@ -253,20 +239,6 @@ watch(query, resetAndFetch)
 watch(selectedCategoryId, () => { page.value = 1; runFetch(1) })
 watch(sortBy, () => { page.value = 1; runFetch(1) })
 watch(openNow, () => { page.value = 1; runFetch(1) })
-// "Show me" needs the user's location; request it once, reusing any cached fix
-watch(showMe, async (on) => {
-  if (!on || coords.value) return
-  geoLoading.value = true
-  geoError.value = ''
-  try {
-    coords.value = await getCoords()
-  } catch (e) {
-    geoError.value = e.message
-    showMe.value = false
-  } finally {
-    geoLoading.value = false
-  }
-})
 watch(maxDistance, () => { if (sortBy.value === 'nearest') { page.value = 1; runFetch(1) } })
 
 onMounted(async () => {
@@ -278,6 +250,7 @@ onMounted(async () => {
     selectedCategoryId.value = bySlug ? (bySlug.id || '') : rq
   }
   runFetch()
+  ensureCoordsIfShowing()  // persisted "Show me" on → load coords for the blue dot
 })
 </script>
 

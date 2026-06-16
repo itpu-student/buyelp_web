@@ -77,6 +77,10 @@
                     </svg>
                   </button>
                   <div v-if="menuOpen" class="place-menu-dropdown" @click.stop>
+                    <button type="button" class="place-menu-item" :class="{ active: showMe }" @click="toggleShowMeMenu">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                      {{ showMe ? t('place.hide_me') : t('place.show_me') }}
+                    </button>
                     <button v-if="isOwner" type="button" class="place-menu-item" @click="goEdit">
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
                       {{ t('place.edit') }}
@@ -225,6 +229,8 @@
                 <SvgMapItem
                   :lat="place.lat ?? null"
                   :lon="place.lon ?? null"
+                  :user-lat="userCoords?.lat ?? null"
+                  :user-lon="userCoords?.lon ?? null"
                   svgSrc="/Tashkent_map_with_captions.svg"
                   :show-coords="false"
                 />
@@ -279,6 +285,7 @@ import { listPlaceReviews, createReview } from "../api/reviews.js"
 import { normalizePlace, normalizeReview } from "../api/normalize.js"
 import { uploadFile } from "../api/files.js"
 import { categoriesState, ensureCategoriesLoaded } from "../store/categories.js"
+import { locationState, toggleShowMe, ensureCoordsIfShowing } from "../store/userLocation.js"
 import ReviewCard from "../components/ReviewCard.vue"
 import ReviewInput from "../components/ReviewInput.vue"
 import ReviewDetailModal from "../components/ReviewDetailModal.vue"
@@ -414,6 +421,14 @@ function goEdit() {
   }
 }
 
+// Shared "Show me" toggle — controls the blue "you are here" dot on the map
+const showMe = computed(() => locationState.showMe)
+const userCoords = computed(() => (locationState.showMe ? locationState.coords : null))
+function toggleShowMeMenu() {
+  menuOpen.value = false
+  toggleShowMe()
+}
+
 const isSaved = computed(() => !!place.value && store.isPlaceSaved(place.value._uuid))
 function toggleSaved() {
   if (!store.isLoggedIn) { router.push('/login'); return }
@@ -535,6 +550,7 @@ watch(() => route.params.id, (id) => {
 
 onMounted(() => {
   loadPlace(route.params.id)
+  ensureCoordsIfShowing()  // persisted "Show me" on → load coords for the blue dot
   nextTick(() => {
     const el = carouselViewportRef.value
     if (el && typeof ResizeObserver !== "undefined") {
@@ -630,6 +646,8 @@ onBeforeUnmount(() => {
 }
 .place-menu-item svg { flex-shrink: 0; color: var(--text-3); }
 .place-menu-item:hover { background: var(--surface-2); }
+.place-menu-item.active { color: var(--primary); }
+.place-menu-item.active svg { color: var(--primary); }
 .place-menu-item.danger:hover { background: rgba(239,68,68,0.08); color: #dc2626; }
 .place-menu-item.danger:hover svg { color: #dc2626; }
 
