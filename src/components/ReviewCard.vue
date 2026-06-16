@@ -46,8 +46,8 @@
         <div class="review-date-row">
           <span class="review-date">{{ formatDate(review.date) }}</span>
           <span v-if="review.prevCount > 0" class="edited-badge">{{ review.prevCount }}</span>
-          <span v-if="review.priceRating" class="sub-rating">{{ t('review.price') }}: {{ review.priceRating }}</span>
-          <span v-if="review.qualityRating" class="sub-rating">{{ t('review.quality') }}: {{ review.qualityRating }}</span>
+          <span v-if="review.priceRating" class="sub-rating">{{ t('review.price') }}: {{ PRICE_ICONS[review.priceRating - 1] }}</span>
+          <span v-if="review.qualityRating" class="sub-rating">{{ t('review.quality') }}: {{ QUALITY_ICONS[review.qualityRating - 1] }}</span>
         </div>
       </div>
       <StarRating :rating="review.rating" :size="15" mode="simple" />
@@ -67,8 +67,8 @@
       <StarRating :rating="review.rating" :size="15" mode="simple" />
       <span class="review-date">{{ formatDate(review.date) }}</span>
       <span v-if="review.prevCount > 0" class="edited-badge">{{ review.prevCount }}</span>
-      <span v-if="review.priceRating" class="sub-rating">{{ t('review.price') }}: {{ review.priceRating }}</span>
-      <span v-if="review.qualityRating" class="sub-rating">{{ t('review.quality') }}: {{ review.qualityRating }}</span>
+      <span v-if="review.priceRating" class="sub-rating">{{ t('review.price') }}: {{ PRICE_ICONS[review.priceRating - 1] }}</span>
+      <span v-if="review.qualityRating" class="sub-rating">{{ t('review.quality') }}: {{ QUALITY_ICONS[review.qualityRating - 1] }}</span>
     </div>
     <p class="review-text">{{ review.text }}</p>
 
@@ -142,6 +142,7 @@ import StarRating from './StarRating.vue'
 import ImageLightbox from './ImageLightbox.vue'
 import { store } from '../store/index.js'
 import { categoriesState } from '../store/categories.js'
+import { PRICE_ICONS, QUALITY_ICONS } from '../data/ratingScales.js'
 import { t } from '../i18n/index.js'
 
 const props = defineProps({

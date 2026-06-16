@@ -111,6 +111,10 @@
                 <span class="today-label">{{ t("place.today_hours") }}:</span>
                 {{ todayHoursDisplay }}
               </span>
+              <template v-if="place.priceRating || place.qualityRating">
+                <span class="meta-dot" aria-hidden="true">·</span>
+                <RatingBreakdown :price="place.priceRating" :quality="place.qualityRating" />
+              </template>
             </div>
           </div>
           </div>
@@ -281,6 +285,7 @@ import ReviewDetailModal from "../components/ReviewDetailModal.vue"
 import ReportModal from "../components/ReportModal.vue"
 import ClaimModal from "../components/ClaimModal.vue"
 import StarRating from "../components/StarRating.vue"
+import RatingBreakdown from "../components/RatingBreakdown.vue"
 import SidebarHours from "../components/SidebarHours.vue"
 import SvgMapItem from "../components/SvgMapItem.vue"
 import Pagination from "../components/Pagination.vue"

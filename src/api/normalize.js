@@ -44,6 +44,8 @@ export function normalizePlace(api) {
     phone: api.phone || "",
     description: bilingual(api.description),
     rating: Number(api.avg_ratings?.star) || 0,
+    priceRating: Number(api.avg_ratings?.price) || 0,
+    qualityRating: Number(api.avg_ratings?.quality) || 0,
     reviewCount: api.review_count || 0,
     lat: api.lat,
     lon: api.lon,

@@ -117,6 +117,12 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { t } from '../i18n/index.js'
+import {
+  PRICE_ICONS as coinIcons,
+  PRICE_HINTS as coinHints,
+  QUALITY_ICONS as recommendIcons,
+  QUALITY_HINTS as recommendHints,
+} from '../data/ratingScales.js'
 
 const emit = defineEmits(['submit'])
 
@@ -131,11 +137,6 @@ const recommendLevel = ref(0)
 const hoverRecommend = ref(0)
 const text = ref('')
 const media = ref([])
-
-const coinIcons = ['🪙', '💵', '💶', '💰', '💎']
-const coinHints = ['Cheap', 'Affordable', 'Mid-range', 'Pricey', 'Luxury']
-const recommendIcons = ['❌', '⚠️', '🆗', '✅', '👑']
-const recommendHints = ['Avoid', 'Mixed', 'Okay', 'Recommended', 'Must-try']
 
 const canSubmit = computed(() => rating.value > 0 && text.value.trim().length > 0)
 

@@ -97,13 +97,12 @@ import ImageLightbox from './ImageLightbox.vue'
 import { getReviewPrevs } from '../api/reviews.js'
 import { normalizeReview } from '../api/normalize.js'
 import { t } from '../i18n/index.js'
+import { PRICE_ICONS as coinIcons, QUALITY_ICONS as recommendIcons } from '../data/ratingScales.js'
 
 const props = defineProps({
   review: { type: Object, required: true },
 })
 
-const coinIcons = ['🪙', '💵', '💶', '💰', '💎']
-const recommendIcons = ['❌', '⚠️', '🆗', '✅', '👑']
 defineEmits(['close'])
 
 const copied = ref(false)
