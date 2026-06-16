@@ -88,11 +88,20 @@
           <span v-else-if="loadError" class="error-text">{{ loadError }}</span>
           <span v-else>{{ t('search.places_found', { count: total }) }}</span>
         </p>
+        <button
+          class="show-me-toggle"
+          :class="{ active: showMe }"
+          :aria-pressed="showMe"
+          @click="showMe = !showMe"
+        >
+          <span class="on-dot"></span>
+          {{ t('search.show_me') }}
+        </button>
       </div>
       <p v-if="geoError" class="geo-error">📍 {{ geoError }}</p>
 
       <div v-if="places.length" class="place-row-list">
-        <PlaceRow v-for="place in places" :key="place.id" :place="place" />
+        <PlaceRow v-for="place in places" :key="place.id" :place="place" :user-coords="userCoords" />
         <Pagination v-if="totalPages > 1" :current="page" :total="totalPages" @go="goToPage" />
       </div>
       <div v-else-if="!loading" class="empty-state">
@@ -124,6 +133,9 @@ const page = ref(1)
 
 const sortBy = ref('top')
 const openNow = ref(false)
+const showMe = ref(false)
+// Coords passed to each map's blue "you are here" dot — only while "Show me" is on
+const userCoords = computed(() => (showMe.value ? coords.value : null))
 const coords = ref(null)        // cached {lat, lon} once granted — avoids re-prompting
 const geoLoading = ref(false)
 const geoError = ref('')
@@ -241,6 +253,20 @@ watch(query, resetAndFetch)
 watch(selectedCategoryId, () => { page.value = 1; runFetch(1) })
 watch(sortBy, () => { page.value = 1; runFetch(1) })
 watch(openNow, () => { page.value = 1; runFetch(1) })
+// "Show me" needs the user's location; request it once, reusing any cached fix
+watch(showMe, async (on) => {
+  if (!on || coords.value) return
+  geoLoading.value = true
+  geoError.value = ''
+  try {
+    coords.value = await getCoords()
+  } catch (e) {
+    geoError.value = e.message
+    showMe.value = false
+  } finally {
+    geoLoading.value = false
+  }
+})
 watch(maxDistance, () => { if (sortBy.value === 'nearest') { page.value = 1; runFetch(1) } })
 
 onMounted(async () => {
@@ -284,6 +310,7 @@ onMounted(async () => {
   .results-bar { grid-template-columns: 1fr; justify-items: center; gap: 14px; }
   .sort-wrap { justify-self: center; }
   .results-count { grid-column: auto; }
+  .show-me-toggle { grid-column: auto; justify-self: center; }
 }
 
 .sort-segment {
@@ -340,6 +367,31 @@ onMounted(async () => {
 .open-now-toggle.active .on-dot {
   background: #16a34a;
   box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.22);
+}
+
+/* right-side toggle — primary (teal) accent when on */
+.show-me-toggle {
+  grid-column: 3;
+  justify-self: end;
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 14px;
+  font-size: 0.8rem; font-weight: 600;
+  color: var(--text-2);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: color var(--transition), background var(--transition), border-color var(--transition);
+}
+.show-me-toggle:hover:not(.active) { color: var(--text); border-color: var(--text-3); }
+.show-me-toggle.active {
+  color: var(--primary);
+  background: rgba(13, 148, 136, 0.12);
+  border-color: rgba(13, 148, 136, 0.4);
+}
+.show-me-toggle.active .on-dot {
+  background: var(--primary);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.22);
 }
 
 .radius-dd { position: relative; }

@@ -357,6 +357,7 @@ export const messages = {
       radius: "Search radius",
       locating: "Locating…",
       open_now: "Open",
+      show_me: "Show me",
       geo_error: "Couldn't get your location.",
     },
     common: {
@@ -779,6 +780,7 @@ export const messages = {
       radius: "Qidiruv radiusi",
       locating: "Aniqlanmoqda…",
       open_now: "Ochiq",
+      show_me: "Menga ko'rsat",
       geo_error: "Joylashuvni aniqlab bo'lmadi.",
     },
     common: {

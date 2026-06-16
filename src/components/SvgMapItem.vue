@@ -18,7 +18,7 @@
 
 <script setup>
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
-import { defaultMarkerStyle } from './svgMapMarkers.js'
+import { defaultMarkerStyle, placeMarkerUserLocation } from './svgMapMarkers.js'
 
 const props = defineProps({
   /**
@@ -63,6 +63,24 @@ const props = defineProps({
     default: '#e11d2e',
   },
 
+  /** Latitude of the user's location (blue dot). Null = hidden. */
+  userLat: {
+    type: Number,
+    default: null,
+  },
+
+  /** Longitude of the user's location (blue dot). Null = hidden. */
+  userLon: {
+    type: Number,
+    default: null,
+  },
+
+  /** User-location marker fill colour. */
+  userMarkerColor: {
+    type: String,
+    default: '#2563eb',
+  },
+
   /** Whether to show a lat/lon label below the map. */
   showCoords: {
     type: Boolean,
@@ -77,6 +95,7 @@ const loadError = ref(null)
 
 let svgEl = null
 let markerEl = null
+let userMarkerEl = null
 let drawnBounds = null
 const geoBoundsFromSvg = ref(null)
 
@@ -131,10 +150,27 @@ function updateMarker() {
   })
 }
 
+function updateUserMarker() {
+  // Remove when no coords (e.g. "Show me" toggled off)
+  if (props.userLat == null || props.userLon == null) {
+    if (userMarkerEl?.parentNode) userMarkerEl.parentNode.removeChild(userMarkerEl)
+    userMarkerEl = null
+    return
+  }
+  const geo = activeGeoBounds()
+  if (!svgEl || !drawnBounds || !geo) return
+  const { x, y } = geoToSvg(props.userLat, props.userLon, geo, drawnBounds)
+  userMarkerEl = placeMarkerUserLocation(svgEl, userMarkerEl, x, y, {
+    radius: props.markerRadius,
+    color: props.userMarkerColor,
+  })
+}
+
 async function loadSvg() {
   svgLoaded.value = false
   loadError.value = null
   markerEl = null
+  userMarkerEl = null
   svgEl = null
   drawnBounds = null
 
@@ -169,6 +205,7 @@ async function loadSvg() {
     await new Promise((r) => requestAnimationFrame(r))
     drawnBounds = calcDrawnBounds(svgEl)
     updateMarker()
+    updateUserMarker()
   } catch (err) {
     loadError.value = err?.message || 'Failed to load map.'
   }
@@ -188,9 +225,16 @@ watch(
   { deep: true },
 )
 
+// Re-place the user marker when their coords change (or toggle on/off)
+watch(
+  () => [props.userLat, props.userLon],
+  updateUserMarker,
+)
+
 onBeforeUnmount(() => {
   svgEl = null
   markerEl = null
+  userMarkerEl = null
   drawnBounds = null
 })
 

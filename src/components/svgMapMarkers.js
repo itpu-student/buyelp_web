@@ -159,7 +159,7 @@ export function placeMarkerRadarSonarRipple(svgEl, markerEl, x, y, opts) {
 
   if (!markerEl) {
     const g = document.createElementNS(SVG_NS, 'g')
-    g.id = 'latLonRadar'
+    g.id = opts.id || 'latLonRadar'
 
     for (let i = 0; i < ringCount; i++) {
       const ring = document.createElementNS(SVG_NS, 'circle')
@@ -323,6 +323,15 @@ export function placeMarkerWarmGradientBlob(svgEl, markerEl, x, y, opts) {
   return markerEl
 }
 
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// User Location ("blue dot")
+// Same pulsing radar as the place marker — only the colour differs — so the user's
+// position reads with the identical visual language, just "you" instead of a place.
+// ═══════════════════════════════════════════════════════════════════════════════
+export function placeMarkerUserLocation(svgEl, markerEl, x, y, opts) {
+  return placeMarkerRadarSonarRipple(svgEl, markerEl, x, y, { ...opts, id: 'userLocRadar' })
+}
 
 /** Default marker style (fallback). */
 export const defaultMarkerStyle = placeMarkerRadarSonarRipple

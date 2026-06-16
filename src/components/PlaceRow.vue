@@ -98,6 +98,8 @@
       <SvgMapItem
         :lat="place.lat ?? null"
         :lon="place.lon ?? null"
+        :user-lat="userCoords?.lat ?? null"
+        :user-lon="userCoords?.lon ?? null"
         :svgSrc="mapSrc"
         :show-coords="true"
       />
@@ -125,6 +127,12 @@ const props = defineProps({
   mapSrc: {
     type: String,
     default: '/Tashkent_map_with_captions.svg',
+  },
+
+  /** User's current location {lat, lon} — shows a blue dot on the map. Null = hidden. */
+  userCoords: {
+    type: Object,
+    default: null,
   },
 })
 
