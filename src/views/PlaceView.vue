@@ -47,19 +47,51 @@
           <div class="place-title-block">
             <div class="place-title-row">
               <h1 class="place-title">{{ placeName }}</h1>
-              <button
-                type="button"
-                class="save-btn"
-                :class="{ 'save-btn--active': isSaved }"
-                :aria-pressed="isSaved"
-                :aria-label="isSaved ? t('place.saved') : t('place.save')"
-                @click="toggleSaved"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" :fill="isSaved ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-                </svg>
-                <span>{{ isSaved ? t("place.saved") : t("place.save") }}</span>
-              </button>
+              <div class="place-header-actions">
+                <button
+                  type="button"
+                  class="save-btn"
+                  :class="{ 'save-btn--active': isSaved }"
+                  :aria-pressed="isSaved"
+                  :aria-label="isSaved ? t('place.saved') : t('place.save')"
+                  @click="toggleSaved"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" :fill="isSaved ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                  </svg>
+                  <span>{{ isSaved ? t("place.saved") : t("place.save") }}</span>
+                </button>
+
+                <div v-if="store.isLoggedIn" class="place-menu">
+                  <button
+                    type="button"
+                    class="place-menu-btn"
+                    :class="{ 'is-open': menuOpen }"
+                    :aria-expanded="menuOpen"
+                    aria-haspopup="true"
+                    :aria-label="t('place.more_actions')"
+                    @click="menuOpen = !menuOpen"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <circle cx="12" cy="5" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="12" cy="19" r="2" />
+                    </svg>
+                  </button>
+                  <div v-if="menuOpen" class="place-menu-dropdown" @click.stop>
+                    <button v-if="isOwner" type="button" class="place-menu-item" @click="goEdit">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+                      {{ t('place.edit') }}
+                    </button>
+                    <button v-if="canClaim" type="button" class="place-menu-item" @click="openClaim">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+                      {{ t('place.claim_this') }}
+                    </button>
+                    <button type="button" class="place-menu-item danger" @click="openReport">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+                      {{ t('place.report_this') }}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="place-title-meta">
               <span class="cat-pill">{{ categoryIcon }} {{ categoryLabel }}</span>
@@ -185,49 +217,6 @@
                 </div>
               </div>
 
-              <div v-if="store.isLoggedIn" class="report-place-wrap">
-                <div class="divider-sidebar"></div>
-                <div class="place-actions-row">
-                  <button type="button" class="report-place-btn" @click="placeReportOpen = true">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-                    {{ t('place.report_this') }}
-                  </button>
-                  <button v-if="canClaim" type="button" class="report-place-btn claim-place-btn" @click="claimModalOpen = true">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-                    {{ t('place.claim_this') }}
-                  </button>
-                </div>
-              </div>
-
-              <div v-if="isOwner" class="ownership-block">
-                <div class="divider-sidebar"></div>
-
-                <button v-if="!editOpen" type="button" class="btn btn-secondary btn-sm" @click="openEdit">
-                  {{ t('place.edit') }}
-                </button>
-                <div v-if="isOwner && editOpen" class="ownership-form">
-                  <label class="form-row"><span>{{ t('add_place.label_phone') }}</span><input v-model="editForm.phone" class="form-input" /></label>
-                  <label class="form-row"><span>{{ t('add_place.label_desc_en') }}</span><textarea v-model="editForm.descEn" class="form-input" rows="2"></textarea></label>
-                  <label class="form-row"><span>{{ t('add_place.label_desc_uz') }}</span><textarea v-model="editForm.descUz" class="form-input" rows="2"></textarea></label>
-                  <label class="form-row"><span>{{ t('add_place.label_logo') }}</span><input type="file" accept="image/*" @change="onEditLogoPick" /></label>
-                  <label class="form-row"><span>{{ t('place.label_add_images') }}</span><input type="file" accept="image/*" multiple @change="onEditImagesPick" /></label>
-                  <ul v-if="editForm.images.length" class="image-keys">
-                    <li v-for="(k, i) in editForm.images" :key="k">
-                      <span>{{ k }}</span>
-                      <button class="btn-link" type="button" @click="removeEditImage(i)">×</button>
-                    </li>
-                  </ul>
-                  <small v-if="editUploading" class="text-muted">{{ t('common.uploading') }}</small>
-                  <div class="row-gap">
-                    <button class="btn btn-primary btn-sm" :disabled="editSaving" @click="saveEdit">
-                      {{ editSaving ? t('common.saving') : t('common.save') }}
-                    </button>
-                    <button class="btn btn-ghost btn-sm" @click="editOpen = false">{{ t('common.cancel') }}</button>
-                  </div>
-                </div>
-                <p v-if="editMsg" class="text-xs text-muted">{{ editMsg }}</p>
-              </div>
-
               <div class="sidebar-map-wrap">
                 <SvgMapItem
                   :lat="place.lat ?? null"
@@ -241,6 +230,8 @@
         </div>
       </div>
     </template>
+
+    <div v-if="menuOpen" class="place-menu-overlay" @click="menuOpen = false"></div>
   </div>
 
   <ReviewDetailModal
@@ -274,12 +265,12 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch, nextTick, onMounted, onBeforeUnmount } from "vue"
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { t, i18nState } from "../i18n/index.js"
 import { resolveTodayHours } from "../data/places.js"
 import { store } from "../store/index.js"
-import { getPlace, updatePlace, getPlaceAISummary } from "../api/places.js"
+import { getPlace, getPlaceAISummary } from "../api/places.js"
 import { listPlaceReviews, createReview } from "../api/reviews.js"
 import { normalizePlace, normalizeReview } from "../api/normalize.js"
 import { uploadFile } from "../api/files.js"
@@ -391,75 +382,31 @@ function closeReviewDetail() {
   }
 }
 
+// Header actions menu (3-dots)
+const menuOpen = ref(false)
+
 // Report modal
 const reportTarget = ref(null)
 const placeReportOpen = ref(false)
+const claimModalOpen = ref(false)
 
 function openReviewReport(review) {
   reportTarget.value = { id: review.id, type: 'review' }
 }
 
-const claimModalOpen = ref(false)
-
-const editOpen = ref(false)
-const editForm = reactive({ phone: "", descEn: "", descUz: "", logo_key: "", images: [] })
-const editSaving = ref(false)
-const editMsg = ref("")
-const editUploading = ref(false)
-
-function openEdit() {
-  if (!place.value) return
-  editForm.phone = place.value.phone || ""
-  editForm.descEn = place.value.description?.en || ""
-  editForm.descUz = place.value.description?.uz || ""
-  editForm.logo_key = place.value._logoKey || ""
-  editForm.images = [...(place.value._imageKeys || [])]
-  editOpen.value = true
+function openReport() {
+  placeReportOpen.value = true
+  menuOpen.value = false
 }
-
-async function onEditLogoPick(e) {
-  const file = e.target.files?.[0]
-  if (!file) return
-  editUploading.value = true
-  try {
-    const r = await uploadFile(file, "place")
-    editForm.logo_key = r.key
-  } catch (err) { editMsg.value = err.message || "Upload failed" }
-  finally { editUploading.value = false }
+function openClaim() {
+  claimModalOpen.value = true
+  menuOpen.value = false
 }
-
-async function onEditImagesPick(e) {
-  const files = Array.from(e.target.files || [])
-  if (!files.length) return
-  editUploading.value = true
-  try {
-    for (const f of files) {
-      const r = await uploadFile(f, "place")
-      editForm.images.push(r.key)
-    }
-  } catch (err) { editMsg.value = err.message || "Upload failed" }
-  finally { editUploading.value = false }
-}
-
-function removeEditImage(i) { editForm.images.splice(i, 1) }
-
-async function saveEdit() {
-  if (!place.value) return
-  editSaving.value = true
-  editMsg.value = ""
-  try {
-    const payload = {
-      phone: editForm.phone,
-      description: { en: editForm.descEn, uz: editForm.descUz || editForm.descEn },
-      logo_key: editForm.logo_key,
-      images: editForm.images,
-    }
-    const fresh = await updatePlace(place.value._uuid, payload)
-    place.value = normalizePlace(fresh)
-    editOpen.value = false
-  } catch (e) {
-    editMsg.value = e.message || "Save failed"
-  } finally { editSaving.value = false }
+function goEdit() {
+  menuOpen.value = false
+  if (place.value) {
+    router.push({ name: 'business-place-edit', params: { alias: place.value.slug || place.value._uuid } })
+  }
 }
 
 const isSaved = computed(() => !!place.value && store.isPlaceSaved(place.value._uuid))
@@ -651,6 +598,38 @@ onBeforeUnmount(() => {
 .save-btn--active { background: var(--primary); border-color: var(--primary); color: #fff; }
 .save-btn--active:hover { background: var(--primary); color: #fff; }
 
+.place-header-actions { flex-shrink: 0; display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+
+.place-menu { position: relative; }
+.place-menu-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 38px; height: 38px; border: 1px solid var(--border); border-radius: 999px;
+  background: var(--surface); color: var(--text-2); cursor: pointer;
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+.place-menu-btn:hover, .place-menu-btn.is-open { background: var(--surface-2); border-color: var(--primary); color: var(--primary); }
+
+.place-menu-dropdown {
+  position: absolute; top: calc(100% + 8px); right: 0; z-index: 50;
+  min-width: 200px; padding: 6px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-md); box-shadow: var(--shadow-lg, 0 12px 32px rgba(0,0,0,0.18));
+  display: flex; flex-direction: column; gap: 2px;
+  animation: fadeUp 0.16s ease;
+}
+.place-menu-item {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 9px 10px; border: none; border-radius: var(--radius-sm);
+  background: none; color: var(--text); font-size: 0.875rem; font-weight: 500;
+  text-align: left; cursor: pointer; transition: background var(--transition), color var(--transition);
+}
+.place-menu-item svg { flex-shrink: 0; color: var(--text-3); }
+.place-menu-item:hover { background: var(--surface-2); }
+.place-menu-item.danger:hover { background: rgba(239,68,68,0.08); color: #dc2626; }
+.place-menu-item.danger:hover svg { color: #dc2626; }
+
+.place-menu-overlay { position: fixed; inset: 0; z-index: 40; }
+
 .cat-pill { display: inline-block; font-size: 0.8rem; font-weight: 600; color: var(--text-2); margin-bottom: 12px; }
 
 .place-rating-row {
@@ -711,14 +690,6 @@ onBeforeUnmount(() => {
 .info-section { margin-bottom: 32px; }
 .sidebar-desc { color: var(--text-2); line-height: 1.6; font-size: 0.95rem; padding-bottom: 4px; }
 .divider-sidebar { height: 1px; background: var(--border-light); margin: 8px 0 12px; }
-.ownership-block { display: flex; flex-direction: column; gap: 10px; padding: 0 4px; }
-.ownership-form { display: flex; flex-direction: column; gap: 8px; }
-.ownership-form .form-row { display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem; color: var(--text-2); }
-.ownership-form .form-input { padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text); font-size: 0.85rem; }
-.row-gap { display: flex; gap: 8px; }
-.image-keys { list-style: none; padding: 0; margin: 4px 0; display: flex; flex-direction: column; gap: 4px; font-size: 0.75rem; color: var(--text-2); }
-.image-keys li { display: flex; justify-content: space-between; gap: 8px; align-items: center; padding: 4px 8px; background: var(--surface-2); border-radius: 4px; }
-.btn-link { background: none; border: none; cursor: pointer; color: var(--text-2); font-size: 1rem; padding: 0 4px; }
 
 .ai-summary-card {
   background: linear-gradient(135deg, var(--surface-2) 0%, var(--surface) 100%);
@@ -794,17 +765,6 @@ onBeforeUnmount(() => {
 .attribution-line { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text-3); }
 .attribution-line svg { flex-shrink: 0; }
 .attr-name { color: var(--text-2); font-weight: 600; }
-
-.report-place-wrap { padding: 0 0 4px; }
-.place-actions-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.report-place-btn {
-  background: none; border: none; cursor: pointer;
-  display: flex; align-items: center; gap: 6px;
-  font-size: 0.8rem; color: var(--text-3); padding: 4px 0;
-  transition: color var(--transition);
-}
-.report-place-btn:hover { color: #dc2626; }
-.claim-place-btn:hover { color: var(--primary); }
 
 .sidebar-map-wrap {
   margin-top: 16px; padding: 12px;
