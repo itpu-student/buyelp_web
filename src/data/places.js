@@ -42,7 +42,7 @@ export const places = [
         rating: 5,
         text: "Hands down the best plov I've ever had in all of Tashkent. The rice is perfectly cooked — each grain separate and fragrant with cumin and barberry. The lamb was fall-off-the-bone tender. Sat in the garden under the grape vines and it felt like stepping back in time. The staff were warm and unhurried, which I really appreciated. Already planning my next visit!",
         date: "2025-03-10",
-        images: [
+        media: [
           "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=80",
           "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&q=80",
         ],
@@ -53,7 +53,7 @@ export const places = [
         rating: 4,
         text: "Love the garden setting — it's genuinely one of the most charming outdoor dining spaces in the city. The shashlik skewers were smoky and juicy, and the non bread straight from the tandir was phenomenal. Only reason I'm giving 4 stars instead of 5 is that it gets quite crowded on Friday evenings and the wait for a table was nearly 30 minutes. Definitely come early or book ahead on weekends.",
         date: "2025-02-28",
-        images: [
+        media: [
           "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&q=80",
           "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=400&q=80",
           "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=80",
@@ -70,7 +70,7 @@ export const places = [
         rating: 5,
         text: "Authentic flavors that take you straight to your grandmother's kitchen. The lagman soup was rich and hearty, with hand-pulled noodles and a broth that tasted like it had been simmering for hours. Great service — our waiter checked in without being intrusive and made excellent recommendations. The samsa pastries as a starter were crisp and perfectly spiced. Will definitely be returning with family.",
         date: "2025-01-15",
-        images: [
+        media: [
           "https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=400&q=80",
           "https://images.unsplash.com/photo-1481070414801-51fd732d7184?w=400&q=80",
         ],
@@ -81,7 +81,7 @@ export const places = [
         rating: 5,
         text: "We celebrated my husband's birthday here and the team went above and beyond. They set up a corner of the garden with a little surprise cake and brought out fresh fruit without us asking. The manti dumplings were enormous and filled generously with spiced minced meat. Honestly the whole evening felt special. The fairy lights strung through the garden at night create a magical atmosphere. Cannot recommend highly enough.",
         date: "2025-03-22",
-        images: [
+        media: [
           "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=400&q=80",
           "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=400&q=80",
         ],
@@ -92,7 +92,7 @@ export const places = [
         rating: 4,
         text: "Really solid traditional Uzbek food in a beautiful setting. I ordered the dimlama (vegetable and meat stew) which was warming and full of flavour. Portion sizes are very generous — I couldn't finish my plate. The only minor issue was that the tea took a while to arrive and was lukewarm by the time it came. Everything else was excellent though, including the freshly squeezed apricot juice. Would come back.",
         date: "2025-03-01",
-        images: [
+        media: [
           "https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?w=400&q=80",
         ],
       },
@@ -102,7 +102,7 @@ export const places = [
         rating: 3,
         text: "The food itself is genuinely tasty and the ambience is lovely, but I had a frustrating experience with the billing — we were charged for a dish we didn't order and it took a while to get it corrected. When it was sorted out the manager was apologetic. I'd probably give it another shot because the plov really is exceptional, but it dampened the experience a bit. Hopefully just a one-off.",
         date: "2025-02-10",
-        images: [],
+        media: [],
       },
       {
         id: "r1d",
@@ -110,7 +110,7 @@ export const places = [
         rating: 5,
         text: "Came here on a friend's recommendation and I completely understand the hype now. The garden is absolutely stunning in spring — flowers everywhere and the sound of a small fountain in the background. We ordered the full spread: plov, shashlik, samsa, lagman, and chak-chak for dessert. Everything was excellent. The staff were friendly and patient with our large group of 10. Prices are reasonable for the quality. This is my new favourite place in Tashkent.",
         date: "2025-04-02",
-        images: [
+        media: [
           "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&q=80",
           "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=80",
           "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&q=80",
@@ -160,7 +160,7 @@ export const places = [
         rating: 5,
         text: "Karavan is in a league of its own when it comes to ambience. Walking in feels like entering a caravanserai from the Silk Road era — the arched ceilings, intricate tilework, and hanging lanterns are breathtaking. But the food matches the setting: the samsa were golden and flaky with a juicy minced lamb filling, and the shurpa broth was deeply flavoured with vegetables and fragrant herbs. Service was attentive and polished. A real gem.",
         date: "2025-03-05",
-        images: [
+        media: [
           "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&q=80",
           "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=400&q=80",
         ],
@@ -171,7 +171,7 @@ export const places = [
         rating: 4,
         text: "Yes, it's pricey by Tashkent standards, but for a special occasion it's absolutely worth it. Took my wife here for our anniversary and the staff organised a beautiful table by the courtyard fountain. The kebab platter for two was outstanding — tender, smoky, and perfectly seasoned. The wine list is also surprisingly good with some decent Georgian options. Would have given 5 stars but the dessert menu felt a bit thin.",
         date: "2025-02-14",
-        images: [
+        media: [
           "https://images.unsplash.com/photo-1424847651672-bf20a4b0982b?w=400&q=80",
         ],
       },
@@ -181,7 +181,7 @@ export const places = [
         rating: 5,
         text: "I've been to a lot of upscale restaurants in Central Asia and Karavan sits right at the top. The bread basket alone — different types of non, breadsticks, and lavash — was enough to make me happy. Then the tandoor-baked quail arrived and I was completely won over. The spice blend is subtle and complex. The interior design is jaw-dropping for photos too. If you only eat at one restaurant in Tashkent, make it this one.",
         date: "2025-03-18",
-        images: [
+        media: [
           "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=400&q=80",
           "https://images.unsplash.com/photo-1544148103-0773bf10d330?w=400&q=80",
         ],
@@ -192,7 +192,7 @@ export const places = [
         rating: 3,
         text: "Great setting and decent food but service let it down on our visit. We waited almost 25 minutes to have our order taken on a Thursday evening when the restaurant wasn't even full. The plov was good but not exceptional for the price. The architectural interior is genuinely stunning though, so I can see why people love it. Maybe we caught them on an off night — might give it another try.",
         date: "2025-01-25",
-        images: [],
+        media: [],
       },
     ],
   },
@@ -238,7 +238,7 @@ export const places = [
         rating: 5,
         text: "Brought my Chevrolet Malibu in for a transmission rebuild that two other garages had quoted at astronomical prices. AutoPro diagnosed it accurately in under an hour and fixed it the same day at nearly half the price. The mechanic walked me through exactly what was wrong, showed me the worn parts, and explained each step of the repair. Transparent, professional, and fast. Genuinely one of the best auto service experiences I've had.",
         date: "2025-03-01",
-        images: [
+        media: [
           "https://images.unsplash.com/photo-1487754180451-c456f719a1fc?w=400&q=80",
         ],
       },
@@ -248,7 +248,7 @@ export const places = [
         rating: 4,
         text: "Solid and thorough service. They did a full inspection, oil change, and brake pad replacement on my Nexia 3. The technicians clearly know what they're doing and didn't try to upsell me on unnecessary parts, which I really appreciated. The wait was about 2.5 hours but they have a comfortable waiting area with Wi-Fi and tea, so it wasn't bad. Pricing felt fair. Would use them again for regular maintenance.",
         date: "2025-01-20",
-        images: [
+        media: [
           "https://images.unsplash.com/photo-1530046339160-ce3e530c7d2f?w=400&q=80",
           "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=400&q=80",
         ],
@@ -259,7 +259,7 @@ export const places = [
         rating: 5,
         text: "My engine light came on the evening before a long road trip to Samarkand and I was panicking. AutoPro opened at 8am and they plugged in their diagnostic tool straight away. Turned out to be a faulty oxygen sensor — they had the part in stock and it was replaced within 90 minutes. The road trip went perfectly. These guys literally saved my plans. Staff were calm, efficient, and the price was more than fair. Five stars without hesitation.",
         date: "2025-02-18",
-        images: [
+        media: [
           "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=400&q=80",
         ],
       },

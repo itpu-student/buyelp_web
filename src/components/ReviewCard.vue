@@ -72,12 +72,12 @@
     </div>
     <p class="review-text">{{ review.text }}</p>
 
-    <!-- Review Images — small strip carousel -->
-    <div v-if="reviewImages.length" class="review-carousel-outer">
+    <!-- Review Media — small strip carousel -->
+    <div v-if="reviewMedia.length" class="review-carousel-outer">
       <div ref="viewportRef" class="carousel-viewport" role="region" aria-label="Review photos">
         <div class="carousel__track" :style="trackStyle">
           <div
-            v-for="(src, i) in reviewImages"
+            v-for="(src, i) in reviewMedia"
             :key="i"
             class="carousel__slide"
             :style="{ width: `${slideWidthPx}px` }"
@@ -161,10 +161,10 @@ const viewportWidth = ref(0)
 const startIndex = ref(0)
 let resizeObserver = null
 
-const reviewImages = computed(() => (props.review.images || []).filter(Boolean))
+const reviewMedia = computed(() => (props.review.media || []).filter(Boolean))
 
 const visibleCount = computed(() => {
-  const n = reviewImages.value.length
+  const n = reviewMedia.value.length
   const w = viewportWidth.value
   if (!n || !w) return 1
   const raw = Math.floor(w / MIN_SLIDE)
@@ -178,7 +178,7 @@ const slideWidthPx = computed(() => {
   return w / v
 })
 
-const maxStart = computed(() => Math.max(0, reviewImages.value.length - visibleCount.value))
+const maxStart = computed(() => Math.max(0, reviewMedia.value.length - visibleCount.value))
 const dotCount = computed(() => maxStart.value + 1)
 
 const trackStyle = computed(() => ({
@@ -225,7 +225,7 @@ const lbStart = ref(0)
 const lbOpen = ref(false)
 
 function openLightbox(i) {
-  lbImages.value = reviewImages.value
+  lbImages.value = reviewMedia.value
   lbStart.value = i
   lbOpen.value = true
   document.body.style.overflow = 'hidden'

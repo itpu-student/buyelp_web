@@ -46,15 +46,15 @@
 
         <p v-if="review.text" class="review-text">{{ review.text }}</p>
 
-        <div v-if="reviewImages.length" class="images-strip">
+        <div v-if="reviewMedia.length" class="images-strip">
           <img
-            v-for="(src, i) in reviewImages"
+            v-for="(src, i) in reviewMedia"
             :key="i"
             :src="src"
             alt="Review photo"
             class="strip-img"
             loading="lazy"
-            @click="openLightbox(reviewImages, i)"
+            @click="openLightbox(reviewMedia, i)"
           />
         </div>
 
@@ -75,8 +75,8 @@
                   <span v-if="prev.qualityRating">{{ t('review.quality') }}: {{ prev.qualityRating }}</span>
                 </div>
                 <p class="prev-text">{{ prev.text }}</p>
-                <div v-if="prev.images?.length" class="prev-images">
-                  <img v-for="(src, i) in prev.images" :key="i" :src="src" alt="Review photo" class="prev-img" loading="lazy" @click="openLightbox(prev.images, i)" />
+                <div v-if="prev.media?.length" class="prev-images">
+                  <img v-for="(src, i) in prev.media" :key="i" :src="src" alt="Review photo" class="prev-img" loading="lazy" @click="openLightbox(prev.media, i)" />
                 </div>
               </div>
             </div>
@@ -114,7 +114,7 @@ function copyShareLink() {
   })
 }
 
-const reviewImages = computed(() => props.review.images || [])
+const reviewMedia = computed(() => props.review.media || [])
 
 function formatDate(d) {
   if (!d) return ''

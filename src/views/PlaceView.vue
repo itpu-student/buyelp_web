@@ -529,7 +529,7 @@ async function handleReviewSubmit(payload) {
         const r = await uploadFile(f, "review")
         keys.push(r.key)
       }
-      body.images = keys
+      body.media = keys
     }
     await createReview(place.value._uuid, body)
     reviewSubmitted.value = true
